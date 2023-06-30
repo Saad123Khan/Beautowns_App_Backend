@@ -146,9 +146,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 const forgetPassword = asyncHandler(async (req, res) => {
-  
   let user = await User.findOne({ email: req.body.email });
-  if (!user) return res.status(404).send({status:false,message:"Email already exists."});  
+  if (!user) return res.status(404).send({status:false,message:"Email does not exists."});  
   
 
   await UserVerification.deleteMany({ email: req.body.email });
@@ -183,6 +182,8 @@ const forgetPassword = asyncHandler(async (req, res) => {
 
 
 const updatePassword = asyncHandler(async (req, res) => {
+  console.log(req.body)
+
   const { error } = validate(req.body);
   if (error) {
     return res
