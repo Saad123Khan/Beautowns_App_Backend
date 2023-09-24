@@ -47,7 +47,7 @@ const StaffSchema = new mongoose.Schema({
 function validateStaff(service) {
     const schema = Joi.object({
         store_Id: Joi.string().required(),
-        salon_staff_Id: Joi.string().required(),
+        salon_staff_Id: Joi.any(),
         title: Joi.string().required(),
         description: Joi.string().required(),
         workingSchedule: Joi.array().items(Joi.object({

@@ -1,29 +1,34 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { Staffs, validateStaff} from "#models/staff_model";
 import { Store  } from "#models/store_model";
-
+import { User } from "#models/user_model";
+import _ from "lodash";
 
 const createStaff = asyncHandler(async (req, res) => {
-    const { error } = validateStaff(req.body);
+    const createStaff = await new User(_.pick(req.body,['role','name','email','password'])).save();
+    if (!createStaff) {
+        return res
+            .status(400)
+            .send({ status: false, message: "Something error while creating staff" });
+    }
+
+    req.body.salon_staff_Id = createStaff?._id
+
+    const { role , email , password , name , ...rest} = req.body
+    const { error } = validateStaff(rest);
     if (error) {
         return res
             .status(400)
             .send({ status: false, message: error?.details[0]?.message });
     }
-    const store = await Store.findOne({storeId:req.body.storeId,isSuspend : false , isDeleted:false})
+
+    const store = await Store.findOne({_id:req.body.store_Id,isSuspend : false , isDeleted:false})
 
     if (!store) {
      return res
          .status(404)
          .send({ status: false, message: "Store record not exists" });
      }
-     const storeStaffFind = await User.findOne({_id:  req.body.salon_owner_Id ,role:'staff', isSuspend : false , isDeleted:false})
-
-     if (!storeStaffFind) {
-      return res
-          .status(404)
-          .send({ status: false, message: "Store staff record not exists" });
-  }
 
     const staff = await new Staffs(req.body).save();
     if (staff) {
@@ -40,7 +45,8 @@ const createStaff = asyncHandler(async (req, res) => {
 })
 
 const getAllStoreStaffs = asyncHandler(async (req, res) => {
-    const store = await Store.findOne({storeId:req.params.id,isSuspend : false , isDeleted:false})
+    console.log(req.params.id)
+    const store = await Store.findOne({_id:req.params.id,isSuspend : false , isDeleted:false})
 
     if (!store) {
      return res
@@ -48,7 +54,7 @@ const getAllStoreStaffs = asyncHandler(async (req, res) => {
          .send({ status: false, message: "Store record not exists" });
      }
     
-    const Staff = await Staffs.find({ storeId : req.params.id, isDeleted:false,isSuspend:false});
+    const Staff = await Staffs.find({ store_Id : req.params.id, isDeleted:false,isSuspend:false});
     if (Staff?.length > 0) {
         return res
             .status(200)

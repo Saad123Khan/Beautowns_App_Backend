@@ -13,7 +13,7 @@ const createService = asyncHandler(async (req, res) => {
     }
 
     
-    const store = await Store.findOne({storeId:req.body.storeId,isSuspend : false , isDeleted:false})
+    const store = await Store.findOne({_id:req.body.store_Id,isSuspend : false , isDeleted:false})
 
     if (!store) {
      return res
@@ -21,7 +21,7 @@ const createService = asyncHandler(async (req, res) => {
          .send({ status: false, message: "Store record not exists" });
      }
 
-      const storeCategory = await StoreCategories.findOne({store_category_Id:req.body.store_category_Id,isSuspend : false , isDeleted:false})
+      const storeCategory = await StoreCategories.findOne({_id:req.body.store_category_Id, isDeleted:false})
 
       if (!storeCategory) {
        return res
@@ -44,7 +44,7 @@ const createService = asyncHandler(async (req, res) => {
 })
 
 const getAllStoreServices = asyncHandler(async (req, res) => {
-    const store = await Store.findOne({storeId:req.params.id,isSuspend : false , isDeleted:false})
+    const store = await Store.findOne({_id:req.params.id,isSuspend : false , isDeleted:false})
 
     if (!store) {
      return res
@@ -52,7 +52,7 @@ const getAllStoreServices = asyncHandler(async (req, res) => {
          .send({ status: false, message: "Store record not exists" });
      }
 
-    const service = await Service.find({ storeId : req.params.id, isDeleted:false,isSuspend:false});
+    const service = await Service.find({ store_Id : req.params.id, isDeleted:false,isSuspend:false});
     if (service?.length > 0) {
         return res
             .status(200)

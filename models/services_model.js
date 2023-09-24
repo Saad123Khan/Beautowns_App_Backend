@@ -22,11 +22,11 @@ const ServicesSchema = new mongoose.Schema({
     noOfPeople: {
         type: Number
     },
-    segment_Id: [
+    segment_Id: 
         {
             enum: [1, 2, 3],
             type: Number
-        }],
+        },
     duration: {
         type: Number,
     },
@@ -52,7 +52,7 @@ function validateServices(service) {
         description: Joi.string().required(),
         value: Joi.number().required(),
         noOfPeople: Joi.number().required(),
-        segment_Id: Joi.array().items(Joi.number().valid(1, 2, 3)).required(),
+        segment_Id: Joi.number().valid(1, 2, 3).required(),
         duration: Joi.number().required(),
         gallery: Joi.array().items(Joi.string()),
         isDeleted: Joi.boolean(),

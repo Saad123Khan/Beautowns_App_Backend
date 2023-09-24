@@ -10,7 +10,7 @@ const createStoreCategory = asyncHandler(async (req, res) => {
             .send({ status: false, message: error?.details[0]?.message });
     }
 
-    const store = await Store.findOne({storeId:req.body.storeId,isSuspend : false , isDeleted:false})
+    const store = await Store.findOne({_id:req.body.store_Id,isSuspend : false , isDeleted:false})
 
     if (!store) {
      return res
@@ -24,7 +24,7 @@ const createStoreCategory = asyncHandler(async (req, res) => {
     if (category) {
         return res
             .status(201)
-            .send({ status: true, message: "Sucessfully created category" });
+            .send({ status: true, message: "Sucessfully created store category" });
     }
     else {
         return res
@@ -35,7 +35,7 @@ const createStoreCategory = asyncHandler(async (req, res) => {
 })
 
 const getAllCategories = asyncHandler(async (req, res) => {
-    const storeCategories = await StoreCategories.find({ storeId:req.params.id,isDeleted:false,isSuspend:false});
+    const storeCategories = await StoreCategories.find({ store_Id:req.params.id,isDeleted:false});
     if (storeCategories?.length > 0) {
         return res
             .status(200)
@@ -51,7 +51,7 @@ const getAllCategories = asyncHandler(async (req, res) => {
 
 
 const getOneCategory = asyncHandler(async (req, res) => {
-    const storeCategories = await StoreCategories.findOne({_id: req.params.id ,isDeleted:false,isSuspend:false});
+    const storeCategories = await StoreCategories.findOne({_id: req.params.id ,isDeleted:false});
     
     if (storeCategories) {
         return res

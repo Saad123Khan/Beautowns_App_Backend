@@ -6,13 +6,12 @@ import { User } from "#models/user_model";
 import { Categories} from "#models/category_model";
 
 const createStore = asyncHandler(async (req, res) => {
-    // const { error } = validateStores(req.body);
-    // if (error) {
-    //     return res
-    //         .status(400)
-    //         .send({ status: false, message: error?.details[0]?.message });
-    // }
-console.log(req.body)
+    const { error } = validateStores(req.body);
+    if (error) {
+        return res
+            .status(400)
+            .send({ status: false, message: error?.details[0]?.message });
+    }
    const storeOwnerFind = await User.findOne({_id:  req.body.salon_owner_Id ,role:'store', isSuspend : false , isDeleted:false})
 
    if (!storeOwnerFind) {
@@ -71,8 +70,8 @@ const getOneStore = asyncHandler(async (req, res) => {
     const store = await Store.findOne({_id: req.params.id ,isDeleted:false,isSuspend:false});
    
     if (store) {
-        const services = await Service.find({storeId: store?._id ,isDeleted:false,isSuspend:false});
-        const staff = await Staffs.find({ storeId : store?._id, isDeleted:false,isSuspend:false});
+        const services = await Service.find({store_Id: store?._id ,isDeleted:false,isSuspend:false});
+        const staff = await Staffs.find({ store_Id : store?._id, isDeleted:false,isSuspend:false});
  
         const data = {store , services , staff}
         return res
