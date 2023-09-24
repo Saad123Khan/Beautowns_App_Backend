@@ -49,7 +49,7 @@ const StoreSchema = new mongoose.Schema({
                 type: String,
             },
         }],
-    gallery:
+        images:
         [{
             type: String,
         }],
@@ -84,7 +84,7 @@ function validateStores(store) {
             from: Joi.string().required(),
             to: Joi.string().required(),
         })),
-        gallery: Joi.array().items(Joi.string()),
+        images: Joi.array().items(Joi.string()),
         rating: Joi.number(),
         isSuspend: Joi.boolean(),
         isDeleted: Joi.boolean(),

@@ -5,7 +5,7 @@ import { multerUpload } from '#utils/multer';
 
 const storeRoute = express.Router();
 
-storeRoute.route('/').post(multerUpload.array('gallery'),createStore).get(getAllStore);
+storeRoute.route('/').post(multerUpload.array('images'),createStore).get(getAllStore);
 storeRoute.route('/:id').get(validateObjectId,getOneStore);
 
 export default storeRoute ;

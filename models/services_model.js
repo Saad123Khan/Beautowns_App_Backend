@@ -30,7 +30,7 @@ const ServicesSchema = new mongoose.Schema({
     duration: {
         type: Number,
     },
-    gallery: [{
+    images: [{
         type: String
     }],
     isDeleted: {
@@ -54,7 +54,7 @@ function validateServices(service) {
         noOfPeople: Joi.number().required(),
         segment_Id: Joi.number().valid(1, 2, 3).required(),
         duration: Joi.number().required(),
-        gallery: Joi.array().items(Joi.string()),
+        images: Joi.array().items(Joi.string()),
         isDeleted: Joi.boolean(),
         isSuspend: Joi.boolean(),
     });
