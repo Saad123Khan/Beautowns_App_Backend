@@ -16,13 +16,22 @@ import { User , validateUser } from "#models/user_model";
 
 const validate = (req) => {
   const schema = Joi.object({
+    role:Joi.string().valid('user', 'admin', 'store', 'staff').required(),
     email: Joi.string().required().email(),
     password: Joi.string().min(8).max(255).required(),
   });
 
   return schema.validate(req);
 };
+const validateForget = (req) => {
+  const schema = Joi.object({
+    
+    role:Joi.string().valid('user', 'admin', 'store', 'staff').required(),
+    email: Joi.string().required().email(),
+  });
 
+  return schema.validate(req);
+};
 /**
  @desc     Authenticate User Registered
  @route    POST /api/auth/register
@@ -44,7 +53,7 @@ const createUser = asyncHandler(async (req, res) => {
     return res.status(400).send({status:false,message:"Email already exists."});  
   }
   else{
-     await new User(_.pick(req.body,['name','email','password'])).save();
+     await new User(_.pick(req.body,['role','name','email','password'])).save();
   }
   
 
@@ -87,7 +96,7 @@ const loginUser = asyncHandler(async (req, res) => {
       .send({ status: false, message: error?.details[0]?.message });
   }
 
-  let user = await User.findOne({ email: req.body.email });
+  let user = await User.findOne({ email: req.body.email , role : req.body.role});
   if (!user) return res.status(404).send({status:false,message:"Invalid email or password."});
 
   const validPassword = await bcrypt.compareSync(req.body.password, user?.password);
@@ -146,7 +155,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 const forgetPassword = asyncHandler(async (req, res) => {
-  let user = await User.findOne({ email: req.body.email });
+  const { error } = validateForget(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .send({ status: false, message: error?.details[0]?.message });
+  }
+  let user = await User.findOne({ email: req.body.email , role:req.body.role});
   if (!user) return res.status(404).send({status:false,message:"Email does not exists."});  
   
 
@@ -191,17 +206,17 @@ const updatePassword = asyncHandler(async (req, res) => {
       .send({ status: false, message: error?.details[0]?.message });
   }
 
-  let user = await User.findOne({ email: req.body.email });
+  let user = await User.findOne({role:req.body.role, email: req.body.email });
   if (!user) return res.status(404).send({status:false,message:"Email does not exists."});  
  
   const salt = await bcrypt.genSalt(10);
   let password = await bcrypt.hash(req.body.password,salt);
 
-  await User.findOneAndUpdate({email:req.body.email},{password:password});
+  await User.findOneAndUpdate({role:req.body.role,email:req.body.email},{password:password});
 
   return res.status(200).json({
     status: true,
-    message: "Password reset successfully!",
+    message: "Password updated successfully!",
   });
 });
 
