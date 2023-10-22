@@ -51,7 +51,7 @@ const createUser = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Email already exists." });
   } else {
     await new User(
-      _.pick(req.body, ["role", "name", "email", "password"])
+      _.pick(req.body, ["role", "name","gender", "email", "password"])
     ).save();
   }
 
@@ -92,33 +92,15 @@ const loginUser = asyncHandler(async (req, res) => {
       .send({ status: false, message: error?.details[0]?.message });
   }
 
-  // const findStoreByOwner = await store.find((e)=>{})
-  // if (store?.length > 0) {
-  //     return res
-  //         .status(200)
-  //         .send({ status: true, store:store});
-  // }
-
   let user = await User.findOne({ email: req.body.email, role: req.body.role });
-  let checkStore = null;
-  const registeredStore = await Store.find({
-    salon_owner_Id: user?._id,
-    isDeleted: false,
-    isSuspend: false,
-  });
-  if (registeredStore) {
-    checkStore = registeredStore[0];
-  }
-
+  
   if (!user)
     return res
       .status(404)
       .send({ status: false, message: "Invalid email or password." });
-
-  const validPassword = await bcrypt.compareSync(
-    req.body.password,
-    user?.password
-  );
+console.log(req.body.password)
+console.log(user?.password)
+const validPassword = await bcrypt.compareSync(req.body.password, user?.password);
 
   if (!validPassword)
     return res
@@ -148,7 +130,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   let updatedUser = await User.findOne({ email: req.body.email }).select(
-    "role email name phone isVerified"
+    "role email name phone gender isVerified"
   );
   const token = updatedUser.generateAuthToken();
 
@@ -156,14 +138,13 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("x-auth-token", token, {
       httpOnly: true,
       maxAge: 365 * 24 * 60 * 60 * 1000,
-    }) // maxAge expire after 1 hour
+    }) 
     .header("x-auth-token", token)
     .header("access-control-expose-headers", "x-auth-token")
     .status(200)
     .send({
       status: true,
-      storeInfo: checkStore || null,
-      message: `${user?.role} login successfully`,
+      message: `Login successfully`,
       user: updatedUser,
     });
 });
@@ -292,7 +273,7 @@ const otpVerify = asyncHandler(async (req, res) => {
       .status(200)
       .send({
         status: true,
-        message: "User Verified successfully",
+        message: "Verified successfully",
         user: user,
       });
   } else {

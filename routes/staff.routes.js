@@ -1,11 +1,13 @@
 import express from 'express';
-import { createStaff , getAllStoreStaffs , getOneStaff } from '#controllers/staff.controller';
+import { updateStaff,createSalonStaff , getAllStoreStaffs , getOneStaff } from '#controllers/staff.controller';
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from '#utils/multer';
 
 const staffRoute = express.Router();
 
-staffRoute.route('/').post(multerUpload.single('image'),createStaff);
+staffRoute.route('/').post(multerUpload.single('image'),createSalonStaff);
+
+staffRoute.route('/update/:id').put([validateObjectId,multerUpload.single('image')],updateStaff);
 
 staffRoute.route('/store/:id').get(validateObjectId,getAllStoreStaffs);
 

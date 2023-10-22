@@ -1,5 +1,6 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { Categories, validateCategories} from "#models/category_model";
+import { PATH } from "#constant/constant";
 
 const createCategory = asyncHandler(async (req, res) => {
     const { error } = validateCategories(req.body);
@@ -8,7 +9,12 @@ const createCategory = asyncHandler(async (req, res) => {
             .status(400)
             .send({ status: false, message: error?.details[0]?.message });
     }
+
+    const image = req?.file?.filename;
+    req.body.image = image ? `${PATH}/uploads/${image}` : ''
+  
     const category = await new Categories(req.body).save();
+    
     if (category) {
         return res
             .status(201)

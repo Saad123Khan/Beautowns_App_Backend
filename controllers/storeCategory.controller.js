@@ -1,6 +1,7 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { StoreCategories, validateStoreCategories} from "#models/store_categories_model";
 import { Store } from "#models/store_model";
+import { PATH } from "#constant/constant";
 
 const createStoreCategory = asyncHandler(async (req, res) => {
     const { error } = validateStoreCategories(req.body);
@@ -18,13 +19,15 @@ const createStoreCategory = asyncHandler(async (req, res) => {
          .send({ status: false, message: "Store record not exists" });
      }
 
- 
+     const image = req?.file?.filename;
+     req.body.image = image ? `${PATH}/uploads/${image}` : ''
+   
 
     const category = await new StoreCategories(req.body).save();
     if (category) {
         return res
             .status(201)
-            .send({ status: true, message: "Sucessfully created store category" });
+            .send({ status: true, message: "Sucessfully created store category",category });
     }
     else {
         return res

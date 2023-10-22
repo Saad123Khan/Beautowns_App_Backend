@@ -2,15 +2,44 @@ import asyncHandler from "#middlewares/asyncHandler";
 import {
   Store,
   validateStores,
-  StoreTime,
-  ValidateStoreTime,
-  StoreDocuments,
-  ValidateStoreDocument,
 } from "#models/store_model";
+import { PATH } from "#constant/constant";
 import { Service } from "#models/services_model";
 import { Staffs } from "#models/staff_model";
+import _ from "lodash";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
+import Joi from "joi";
+
+
+function validateUpdateStores(store) {
+  const schema = Joi.object({
+    name: Joi.string(),
+    country: Joi.string(),
+    city: Joi.string(),
+    phone: Joi.number(),
+    latitude: Joi.number(),
+    longitude: Joi.number(),
+    store_timings: Joi.array().items(
+      Joi.object({
+        day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
+        from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+        to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+        isAvailable: Joi.boolean().required(),
+      })
+    ).min(7).max(7).unique('day', { ignoreUndefined: true }),
+    documents: Joi.array().items(Joi.string()),
+    segment_Id: Joi.number().valid(1, 2, 3),
+    image: Joi.string(),
+    completeProgess: Joi.number(),
+    gallery: Joi.array().items(Joi.string()),
+    rating: Joi.number(),
+    isSuspend: Joi.boolean(),
+    isDeleted: Joi.boolean(),
+  });
+  return schema.validate(store);
+}
+
 
 const createStore = asyncHandler(async (req, res) => {
   const { error } = validateStores(req.body);
@@ -44,13 +73,13 @@ const createStore = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store owner record not exists" });
   }
 
-  //     const categoryFind = await Categories.findOne({_id:  req.body.category_Id,isSuspend : false , isDeleted:false})
+  const categoryFind = await Categories.findOne({ _id: req.body.category_Id, isSuspend: false, isDeleted: false })
 
-  //     if (!categoryFind) {
-  //      return res
-  //          .status(404)
-  //          .send({ status: false, message: "Category record not exists" });
-  //  }
+  if (!categoryFind) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Category record not exists" });
+  }
 
   if (!storeOwnerFind?.isVerified) {
     return res
@@ -58,19 +87,17 @@ const createStore = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store owner not verified" });
   }
 
+
+  const image = req?.file?.filename;
+  req.body.image = image ? `${PATH}/uploads/${image}` : ''
+
   const store = await new Store(req.body).save();
+
   if (store) {
-    const updatedStore = await Store.findByIdAndUpdate(
-      store._id,
-      {
-        $set: { store_pofile_progess: 1 },
-      },
-      { new: true }
-    );
     return res.status(201).send({
       status: true,
       message: "Sucessfully created store",
-      store: updatedStore,
+      store: store,
     });
   } else {
     return res
@@ -79,45 +106,69 @@ const createStore = asyncHandler(async (req, res) => {
   }
 });
 
-const createStoreTiming = asyncHandler(async (req, res) => {
-  const { error } = ValidateStoreTime(req.body);
+
+const updateStore = asyncHandler(async (req, res) => {
+
+  const { error } = validateUpdateStores(req.body);
   if (error) {
     return res
       .status(400)
       .send({ status: false, message: error?.details[0]?.message });
   }
-
-  const isStoreExist = await Store.find({
-    _id: req.body.store_id,
+  const isStoreExist = await Store.findOne({
+    _id: req.params.id,
     isDeleted: false,
     isSuspend: false,
   });
 
   if (!isStoreExist) {
-    return res.status(400).send({ status: false, message: "Store Not Exist" });
+    return res.status(400).send({ status: false, message: "Store not exist" });
   }
 
-  const saveTiming = await new StoreTime(req.body).save();
+  const documentUrls = [];
+  if (req?.files?.documents) {
+    req?.files?.documents?.forEach((document) => {
+      const documentUrl = `${PATH}/uploads/${document?.filename}`;
+      documentUrls.push(documentUrl);
+    });
+  }
 
-  if (saveTiming) {
-    const updatedStore = await Store.findByIdAndUpdate(
-      req.body.store_id,
-      {
-        $set: { store_pofile_progess: 2 },
-      },
-      { new: true }
-    );
-    return res.status(201).send({
+  req.body.documents = documentUrls?.length > 0 ? [...documentUrls,...isStoreExist?.documents] : isStoreExist?.documents
+
+  const galleryUrls = [];
+  if (req?.files?.gallery) {
+    req?.files?.gallery?.forEach((galleryImage) => {
+      const galleryImageUrl = `${PATH}/uploads/${galleryImage?.filename}`;
+      galleryUrls.push(galleryImageUrl);
+    });
+  }
+    
+  req.body.gallery = galleryUrls?.length > 0 ? [...galleryUrls,...isStoreExist?.gallery] : isStoreExist?.gallery
+
+   const imageUrls = [];
+   if (req?.files?.image) {
+     req?.files?.image.forEach((image) => {
+       const imageUrl = `${PATH}/uploads/${image?.filename}`;
+       imageUrls.push(imageUrl);
+     });
+   }
+
+
+   req.body.image = imageUrls?.length > 0 ? imageUrls?.[0] : isStoreExist?.image
+
+ let updatedStore = await Store.findByIdAndUpdate(
+    isStoreExist?._id,
+     _.pick(req.body, ["segment_Id","name","country", "city", "phone","latitude","longitude","image","documents","gallery","store_timings","completeProgess"]),     
+     { new: true }
+     );
+    return res.status(200).send({
       status: true,
-      message: "Sucessfully Saved Store Timing",
+      message: "Updated store details successfully",
       store: updatedStore,
     });
-  } else {
-    return res
-      .status(400)
-      .send({ status: false, message: "Something Error while Saving Time" });
-  }
+
 });
+
 
 const changeStoreStatus = asyncHandler(async (req, res) => {
   const isStoreExist = await Store.find({
@@ -136,64 +187,18 @@ const changeStoreStatus = asyncHandler(async (req, res) => {
     });
     return res.status(200).send({
       status: true,
-      message: "Sucessfully Updated Store Status",
+      message: "Sucessfully verified successfully",
     });
   } else {
     return res
       .status(400)
       .send({
         status: false,
-        message: "Something Error while Changing Store Status",
+        message: "Something Error while verifying store",
       });
   }
 });
 
-const createStoreDocuments = asyncHandler(async (req, res) => {
-  const { error } = ValidateStoreDocument({
-    store_id: req.params.id,
-    images: req.body.images,
-  });
-  if (error) {
-    return res
-      .status(400)
-      .send({ status: false, message: error?.details[0]?.message });
-  }
-
-  const isStoreExist = await Store.find({
-    _id: req.body.store_id,
-    isDeleted: false,
-    isSuspend: false,
-  });
-
-  if (!isStoreExist) {
-    return res.status(400).send({ status: false, message: "Store Not Exist" });
-  }
-
-  const saveDocuments = await new StoreDocuments({
-    store_id: req.params.id,
-    images: req.body.images,
-  }).save();
-
-  if (saveDocuments) {
-    const updatedStore = await Store.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: { store_pofile_progess: 3 },
-      },
-      { new: true }
-    );
-    return res.status(201).send({
-      status: true,
-      message: "Sucessfully Saved Store Dcouments",
-      store: updatedStore,
-    });
-  } else {
-    return res.status(400).send({
-      status: false,
-      message: "Something Error while Saving Dcouments",
-    });
-  }
-});
 
 const getAllStore = asyncHandler(async (req, res) => {
   const store = await Store.find({ isDeleted: false, isSuspend: false });
@@ -209,12 +214,32 @@ const getAllStore = asyncHandler(async (req, res) => {
 });
 
 const getOneStore = asyncHandler(async (req, res) => {
-  const store = await Store.findOne({
-    _id: req.params.id,
-    isDeleted: false,
-    isSuspend: false,
-  });
-
+ 
+  let store ;
+  if(req.query.type === "owner")
+  {
+    store = await Store.findOne({
+      salon_owner_Id: req.params.id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+  }
+  else if(req.query.type === "store")
+  {
+    store = await Store.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+  }
+  else{
+    return res.status(404).send({
+      status: false,
+      message: "Invalid type",
+      storeData: [],
+    });
+  }
+ 
   if (store) {
     const services = await Service.find({
       store_Id: store?._id,
@@ -238,49 +263,11 @@ const getOneStore = asyncHandler(async (req, res) => {
   }
 });
 
-const getStoreTiming = asyncHandler(async (req, res) => {
-  const store_time = await StoreTime.findOne({
-    store_id: req.params.id,
-    isDeleted: false,
-    isSuspend: false,
-  });
-
-  if (store_time) {
-    return res.status(200).send({ status: true, storeTime: store_time });
-  } else {
-    return res.status(404).send({
-      status: false,
-      message: "Store Time record does not exists",
-      storeData: [],
-    });
-  }
-});
-
-const getStoreDocuments = asyncHandler(async (req, res) => {
-  const store_docs = await StoreDocuments.findOne({
-    store_id: req.params.id,
-    isDeleted: false,
-    isSuspend: false,
-  });
-
-  if (store_docs) {
-    return res.status(200).send({ status: true, storeDocs: store_docs });
-  } else {
-    return res.status(404).send({
-      status: false,
-      message: "Store Documents record does not exists",
-      storeData: [],
-    });
-  }
-});
 
 export {
   createStore,
   getAllStore,
   getOneStore,
-  createStoreTiming,
-  getStoreTiming,
-  createStoreDocuments,
-  getStoreDocuments,
   changeStoreStatus,
+  updateStore
 };

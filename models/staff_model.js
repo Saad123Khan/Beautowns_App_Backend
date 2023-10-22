@@ -10,29 +10,30 @@ const StaffSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
-    title:{
+    title: {
         type: String,
     },
-    name:{
+    name: {
         type: String,
     },
     description: {
         type: String,
     },
-    workingSchedule:
-        [{
-
-            day : {
-                type: String,
-                enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat','Sun']
-            },
-            from: {
-                type: String,
-            },
-            to: {
-                type: String,
-            },                
-        }],
+    workingSchedule: [
+        {
+            day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
+            from: String,
+            to: String,
+            isAvailable: Boolean,
+        },
+    ],
+    gender: {
+        type: String,
+        enum: ["male", "female", "other"],
+    },
+    phone:{
+        type:String
+    },
     image: {
         type: String
     },
@@ -50,15 +51,20 @@ const StaffSchema = new mongoose.Schema({
 function validateStaff(service) {
     const schema = Joi.object({
         store_Id: Joi.string().required(),
-        salon_staff_Id: Joi.any(),
+        salon_staff_Id: Joi.string(),
         title: Joi.string().required(),
         name: Joi.string().required(),
+    phone: Joi.number().required(),
+        gender: Joi.string().valid('male', 'female', 'other').required(),
         description: Joi.string().required(),
-        workingSchedule: Joi.array().items(Joi.object({
-            day: Joi.string().valid('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat','Sun').required(),
-            from: Joi.string().required(),
-            to: Joi.string().required(),
-        })),
+        workingSchedule: Joi.array().items(
+            Joi.object({
+                day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
+                from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+                to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+                isAvailable: Joi.boolean().required(),
+            })
+        ).min(7).max(7).unique('day', { ignoreUndefined: true }),
         image: Joi.string(),
         isDeleted: Joi.boolean(),
         isSuspend: Joi.boolean(),

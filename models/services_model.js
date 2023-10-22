@@ -6,10 +6,10 @@ const ServicesSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Store",
     },
-    // store_category_Id: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Store_Categories",
-    // },
+    service_category_Id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Store_Categories",
+    },
     name: {
         type: String
     },
@@ -30,9 +30,9 @@ const ServicesSchema = new mongoose.Schema({
     duration: {
         type: Number,
     },
-    images: [{
+    image: {
         type: String
-    }],
+    },
     isDeleted: {
         type: Boolean,
         default: false,
@@ -47,14 +47,14 @@ const ServicesSchema = new mongoose.Schema({
 function validateServices(service) {
     const schema = Joi.object({
         store_Id: Joi.string().required(),
-        // store_category_Id: Joi.string().required(),
+        service_category_Id: Joi.string().required(),
         name: Joi.string().required(),
         description: Joi.string().required(),
         value: Joi.number().required(),
         noOfPeople: Joi.number().required(),
         segment_Id: Joi.number().valid(1, 2, 3).required(),
         duration: Joi.number().required(),
-        images: Joi.array().items(Joi.string()),
+        image: Joi.string(),
         isDeleted: Joi.boolean(),
         isSuspend: Joi.boolean(),
     });

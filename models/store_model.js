@@ -7,18 +7,20 @@ const StoreSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    store_pofile_progess: { type: Number, default: 0 },
-    isActive: { type: Boolean, default: false },
+    category_Id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Categories",
+    },
     name: {
       type: String,
+    },
+    phone:{
+      type: String,  
     },
     country: {
       type: String,
     },
     city: {
-      type: String,
-    },
-    street_name: {
       type: String,
     },
     latitude: {
@@ -27,11 +29,27 @@ const StoreSchema = new mongoose.Schema(
     longitude: {
       type: Number,
     },
+    documents: [
+      {
+        type: String,
+      },
+    ],
+    store_timings: [
+      {
+        day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
+        from: String,
+        to: String,
+        isAvailable: Boolean,
+      },
+    ],
     segment_Id: {
       enum: [1, 2, 3],
       type: Number,
     },
-    image: [
+    image: {
+      type: String,
+    },
+    gallery: [
       {
         type: String,
       },
@@ -40,32 +58,7 @@ const StoreSchema = new mongoose.Schema(
       type: Number,
       default: 5,
     },
-    isSuspend: {
-      type: Boolean,
-      default: false,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { timestamps: true }
-);
-
-const storeTimingSchema = new mongoose.Schema(
-  {
-    store_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-    },
-    store_timings: [
-      {
-        day: String,
-        from: String,
-        to: String,
-        isAvailable: Boolean,
-      },
-    ],
+    completeProgess: { type: Number, default: 1 },
 
     isSuspend: {
       type: Boolean,
@@ -75,92 +68,44 @@ const storeTimingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isActive: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-const storeDocuments = new mongoose.Schema(
-  {
-    store_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-    },
-    images: [
-      {
-        type: String,
-      },
-    ],
 
-    isSuspend: {
-      type: Boolean,
-      default: false,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { timestamps: true }
-);
 
 function validateStores(store) {
   const schema = Joi.object({
     salon_owner_Id: Joi.string().required(),
+    category_Id: Joi.string().required(),
     name: Joi.string().required(),
     country: Joi.string().required(),
     city: Joi.string().required(),
-    state: Joi.string().required(),
     phone: Joi.number().required(),
-    street_name: Joi.string().required(),
     latitude: Joi.number().required(),
     longitude: Joi.number().required(),
+    store_timings: Joi.array().items(
+      Joi.object({
+        day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
+        from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+        to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+        isAvailable: Joi.boolean().required(),
+      })
+    ).min(7).max(7).unique('day', { ignoreUndefined: true }),
+    documents: Joi.array().items(Joi.string()),
     segment_Id: Joi.number().valid(1, 2, 3).required(),
-    images: Joi.array().items(Joi.string()),
+    image: Joi.string(),
+    gallery: Joi.array().items(Joi.string()),
     rating: Joi.number(),
+    completeProgess: Joi.number(),
     isSuspend: Joi.boolean(),
     isDeleted: Joi.boolean(),
   });
   return schema.validate(store);
 }
 
-function ValidateStoreTime(store) {
-  const schema = Joi.object({
-    store_id: Joi.string().required(),
-    store_timings: Joi.array(),
-    //   .items(
-    //     Joi.object().keys({
-    //       day: Joi.string(),
-    //       isAvailable: Joi.boolean(),
-    //       from: Joi.string(),
-    //       to: Joi.string(),
-    //     })
-    //   ),
-    isSuspend: Joi.boolean(),
-    isDeleted: Joi.boolean(),
-  });
-  return schema.validate(store);
-}
-
-function ValidateStoreDocument(store) {
-  const schema = Joi.object({
-    store_id: Joi.string().required(),
-    images: Joi.array(),
-    //   .items(
-    //     Joi.object().keys({
-    //       day: Joi.string(),
-    //       isAvailable: Joi.boolean(),
-    //       from: Joi.string(),
-    //       to: Joi.string(),
-    //     })
-    //   ),
-    isSuspend: Joi.boolean(),
-    isDeleted: Joi.boolean(),
-  });
-  return schema.validate(store);
-}
 
 const Store = mongoose.model("Store", StoreSchema);
-const StoreTime = mongoose.model("StoreTime", storeTimingSchema);
-const StoreDocuments = mongoose.model("StoreDocuments", storeDocuments);
 
-export { Store, StoreTime, StoreDocuments, validateStores,ValidateStoreDocument, ValidateStoreTime };
+export { Store, validateStores};

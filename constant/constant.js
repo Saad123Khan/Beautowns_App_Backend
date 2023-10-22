@@ -4,10 +4,7 @@ const JPEG = "image/jpeg";
 const JWT_ERRORS = [""];
 const TOKEN_EXPIRE_TIME = "5d";
 
-const WALLET_TYPES = {
-  SPOT: 1,
-  MARGIN: 2,
-  FUNDING: 3,
-};
+const PATH = "http://localhost:5000";
 
-export { PNG, JPG, JPEG, JWT_ERRORS, TOKEN_EXPIRE_TIME, WALLET_TYPES };
+
+export { PATH,PNG, JPG, JPEG, JWT_ERRORS, TOKEN_EXPIRE_TIME };
