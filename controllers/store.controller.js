@@ -28,11 +28,11 @@ function validateUpdateStores(store) {
         isAvailable: Joi.boolean().required(),
       })
     ).min(7).max(7).unique('day', { ignoreUndefined: true }),
-    documents: Joi.array().items(Joi.string()),
+    documents: Joi.array(),
     segment_Id: Joi.number().valid(1, 2, 3),
     image: Joi.string(),
     completeProgess: Joi.number(),
-    gallery: Joi.array().items(Joi.string()),
+    gallery: Joi.array(),
     rating: Joi.number(),
     isSuspend: Joi.boolean(),
     isDeleted: Joi.boolean(),
@@ -108,7 +108,7 @@ const createStore = asyncHandler(async (req, res) => {
 
 
 const updateStore = asyncHandler(async (req, res) => {
-
+console.log(req.files,"FILES")
   const { error } = validateUpdateStores(req.body);
   if (error) {
     return res

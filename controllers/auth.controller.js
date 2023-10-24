@@ -83,6 +83,77 @@ const createUser = asyncHandler(async (req, res) => {
  @access   Public
  */
 
+// const loginUser = asyncHandler(async (req, res) => {
+//   const { error } = validate(req.body);
+
+//   if (error) {
+//     return res
+//       .status(400)
+//       .send({ status: false, message: error?.details[0]?.message });
+//   }
+
+//   let user = await User.findOne({ email: req.body.email, role: req.body.role });
+  
+//   if (!user)
+//     return res
+//       .status(404)
+//       .send({ status: false, message: "Invalid email or password." });
+
+//       console.log(req.body.password)
+//       console.log(user?.password)
+
+// const validPassword = await bcrypt.compareSync(req.body.password, user?.password);
+
+//   if (!validPassword)
+//     return res
+//       .status(404)
+//       .send({ status: false, message: "Invalid email or password." });
+
+//   if (user?.isVerified === false) {
+//     await UserVerification.deleteMany({ email: req.body.email });
+
+//     let OTP = otpGenerator.generate(4, {
+//       digits: true,
+//       upperCaseAlphabets: false,
+//       lowerCaseAlphabets: false,
+//       specialChars: false,
+//     });
+
+//     let verification = await new UserVerification({
+//       email: req.body.email,
+//       otp: OTP,
+//     }).save();
+    
+//     email(verification?.email, OTP);
+
+//     return res.status(404).json({
+//       status: true,
+//       message: "We have sent you an OTP via email for verification.!",
+//     });
+//   }
+
+//   let updatedUser = await User.findOne({ email: req.body.email }).select(
+//     "role email name phone gender isVerified"
+//   );
+//   const token = updatedUser.generateAuthToken();
+
+//   return res
+//     .cookie("x-auth-token", token, {
+//       httpOnly: true,
+//       maxAge: 365 * 24 * 60 * 60 * 1000,
+//     }) 
+//     .header("x-auth-token", token)
+//     .header("access-control-expose-headers", "x-auth-token")
+//     .status(200)
+//     .send({
+//       status: true,
+//       message: `Login successfully`,
+//       user: updatedUser,
+//     });
+// });
+
+
+
 const loginUser = asyncHandler(async (req, res) => {
   const { error } = validate(req.body);
 
@@ -93,14 +164,16 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   let user = await User.findOne({ email: req.body.email, role: req.body.role });
-  
+
   if (!user)
     return res
       .status(404)
       .send({ status: false, message: "Invalid email or password." });
-console.log(req.body.password)
-console.log(user?.password)
-const validPassword = await bcrypt.compareSync(req.body.password, user?.password);
+  const validPassword = await bcrypt.compareSync(
+    req.body.password,
+    user?.password
+  );
+
 
   if (!validPassword)
     return res
@@ -129,6 +202,12 @@ const validPassword = await bcrypt.compareSync(req.body.password, user?.password
     });
   }
 
+  const isStoreExist = await Store.findOne({
+    salon_owner_Id: user?._id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
   let updatedUser = await User.findOne({ email: req.body.email }).select(
     "role email name phone gender isVerified"
   );
@@ -138,7 +217,7 @@ const validPassword = await bcrypt.compareSync(req.body.password, user?.password
     .cookie("x-auth-token", token, {
       httpOnly: true,
       maxAge: 365 * 24 * 60 * 60 * 1000,
-    }) 
+    })
     .header("x-auth-token", token)
     .header("access-control-expose-headers", "x-auth-token")
     .status(200)
@@ -146,8 +225,10 @@ const validPassword = await bcrypt.compareSync(req.body.password, user?.password
       status: true,
       message: `Login successfully`,
       user: updatedUser,
+      store:isStoreExist
     });
 });
+
 
 //@desc  User forget password
 //@route  /auth/forget
