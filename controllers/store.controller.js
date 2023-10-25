@@ -20,11 +20,20 @@ function validateUpdateStores(store) {
     phone: Joi.number(),
     latitude: Joi.number(),
     longitude: Joi.number(),
+    // store_timings: Joi.array().items(
+    //   Joi.object({
+    //     day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
+    //     from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+    //     to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+    //     isAvailable: Joi.boolean().required(),
+    //   })
+    // ).min(7).max(7).unique('day', { ignoreUndefined: true }),
+  
     store_timings: Joi.array().items(
       Joi.object({
         day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
-        from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-        to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
+        from: Joi.when('isAvailable', { is: true, then: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required() }),
+        to: Joi.when('isAvailable', { is: true, then: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required() }),
         isAvailable: Joi.boolean().required(),
       })
     ).min(7).max(7).unique('day', { ignoreUndefined: true }),

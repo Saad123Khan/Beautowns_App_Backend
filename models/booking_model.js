@@ -14,6 +14,10 @@ const BookingSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Number,
         ref: "Coupon",
     },
+    salon_staff_Id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     date: {
         type: String,
         required: true,
@@ -56,6 +60,8 @@ function validateBooking(booking) {
         service_Id: Joi.string().required(),
         user_Id: Joi.string().required(),
         coupons_Id: Joi.string(),
+        coupons_Id: Joi.string(),
+        salon_staff_Id:Joi.string(),
         date: Joi.string().required(),
         time: Joi.string().required(),
         vat: Joi.number().required(),

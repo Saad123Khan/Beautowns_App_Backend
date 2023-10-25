@@ -6,8 +6,10 @@ import {
   changeStoreStatus,
   updateStore
 } from "#controllers/store.controller";
+
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from "#utils/multer";
+import { getStoreAvailableSlots } from "#controllers/slots.controller";
 
 const storeRoute = express.Router();
 
@@ -34,6 +36,11 @@ storeRoute
 
 
 storeRoute.route("/:id").get(validateObjectId, getOneStore);
+
+
+storeRoute.route("/slots/:id").get(validateObjectId, getStoreAvailableSlots);
+
+
 
 storeRoute
   .route("/change-status/:id")
