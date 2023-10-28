@@ -10,8 +10,26 @@ import moment from 'moment-timezone';
 
 
 const getStoreAvailableSlots = asyncHandler(async (req, res) => {
-  const wantedToBookSlot = { duration: 300, date: "27 October 2023" };
+  const wantedToBookSlot = { duration: req.query.duration };
+
+
+  const bookedSlotsForDate = [
+    { duration: 700, start: "10:00am", date: "28 October 2023" },
+    { duration: 700, start: "10:00am", date: "28 October 2023" },
+
+    // { duration: 30, start: "9:30pm", date: "30 October 2023" },
+    
+    // { duration: 30, start: "9:30pm", date: "30 October 2023" },
+   
+    // { duration: 30, start: "10:30am", date: "28 October 2023" },
+    
+    // { duration: 30, start: "10:30am", date: "28 October 2023" },
+    ];
+
+
   const eachSlotsAllowed = 2;
+
+
 
   const user = await User.findOne({
     _id: req.params.id,
@@ -35,15 +53,16 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
   }
 
   const availableTimings = store.store_timings;
+
+
   const currentDate = moment.tz("Asia/Karachi");
-
-  const endDate = new Date(currentDate);
-  endDate.setMonth(endDate.getMonth() + 3);
-
-  const bookedSlotsForDate = [
-    { duration: 120, start: "02:00pm", date: "27 October 2023" },
-    { duration: 120, start: "02:00pm", date: "27 October 2023" },
-   ];
+  let endDate;
+  if (req.query.date) {
+    endDate = moment(req.query.date).add(1, 'day');
+  }
+  else {
+    endDate = moment(currentDate).add(3, 'months');
+  }
 
   function createSlots(fromTime, toTime, wantedDuration, date) {
     const startTime = moment(fromTime, "hh:mma").tz("Asia/Karachi");
@@ -51,29 +70,30 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
     if (endTime.isBefore(startTime)) {
       endTime.add(1, "day");
     }
+
     let arr = [];
 
     while (startTime <= endTime) {
       const slotTime = new moment(startTime).format("hh:mma");
 
-      // Check if the slot is booked for the specific date
       let isSlotAvailable = true;
-      
-      
+
       if (bookedSlotsForDate?.length > 0) {
-        bookedSlotsForDate.map((item)=>{
-         if(date === item.date)
-         {
-          isSlotAvailable = !isSlotBooked(slotTime, bookedSlotsForDate, date, eachSlotsAllowed);
-         } 
+        bookedSlotsForDate.map((item) => {
+          if (date === item.date) {
+            isSlotAvailable = !isSlotBooked(slotTime, bookedSlotsForDate, date, eachSlotsAllowed);
+          }
         })
       }
 
-      if (isSlotAvailable) { 
-        const slotEndTime = moment(slotTime, "hh:mma").add(wantedDuration, "minutes");
-        if (slotEndTime.isBefore(endTime) || slotEndTime.isSame(endTime)) {
+      if (isSlotAvailable) {
+       
           arr.push(slotTime);
-        }
+       
+        // const slotEndTime = moment(slotTime, "hh:mma").add(wantedDuration, "minutes");
+        // if (slotEndTime.isBefore(endTime)) {
+        //   arr.push(slotTime);
+        // }
       }
 
       startTime.add(15, "minutes");
@@ -99,26 +119,60 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
     const dayDate = `${date} ${month} ${year}`;
     const dayTimings = availableTimings.find((timing) => timing.day === day);
 
-    if (dayTimings) {
+    if (dayTimings?.isAvailable) {
       const from = dayTimings.from;
       const to = dayTimings.to;
 
       const resultArray = createSlots(from, to, wantedToBookSlot.duration, dayDate);
 
       if (resultArray.length > 0) {
-        arr.push({ date: { day, date, month, year }, slots: resultArray });
+        arr.push({ date: { day, date, month, year }, slots: resultArray ,isAvailable : dayTimings?.isAvailable});
       } else {
-        arr.push({ date: { day, date, month, year }, slots: ["Store is closed"] });
+        arr.push({ date: { day, date, month, year }, slots: ["Store is over booked"] , isAvailable : dayTimings?.isAvailable });
       }
-    } else {
-      arr.push({ date: { day, date, month, year }, slots: ["Store is closed"] });
+    }
+
+    else {
+      arr.push({ date: { day, date, month, year }, slots: ["Store is closed"] , isAvailable : dayTimings?.isAvailable });
     }
 
     currentDay.setDate(currentDay.getDate() + 1);
   }
 
-  return res.status(200).json({ status: true, data: arr });
+  const result = arr.filter((item => {
+    let res = item.slots.filter((x) => {
+      const timeSlotsValid = createValidSlots(x, item.slots)
+      if (timeSlotsValid == x) {
+        return x
+      }
+    })
+    
+    res = res.length > 0 ? item.isAvailable ? res.slice(0, -1) : ["Store is closed"] : ["Store is over booked"]
+    
+    item.slots = res.length > 0 ? res : ["Store is over booked"]
+    return item
+  }))
+
+  function createValidSlots(fromTime, availableSlots) {
+    const startTime = moment(fromTime, 'hh:mma');
+    const endTime = moment(startTime).add(wantedToBookSlot?.duration - 1, 'minutes');
+    const slots = [];
+
+    while (startTime.isBefore(endTime) || startTime.isSame(endTime)) {
+      slots.push(startTime.format('hh:mma'));
+      startTime.add(15, 'minutes');
+    }
+
+    const allExist = slots.every(slot => availableSlots.includes(slot));
+    if (allExist) {
+      return fromTime;
+    }
+  }
+  
+  return res.status(200).json({ status: true, data: result });
 });
+
+
 
 function isSlotBooked(slotTime, bookedSlots, date, eachSlotsAllowed) {
   const time = moment(slotTime, "hh:mma");
@@ -130,16 +184,13 @@ function isSlotBooked(slotTime, bookedSlots, date, eachSlotsAllowed) {
       if (time.isSameOrAfter(bookedTime) && time.isBefore(endTime)) {
         bookedCount++;
         if (bookedCount >= eachSlotsAllowed) {
-          return true; // Slot is booked
+          return true;
         }
       }
     }
   }
-  return false; // Slot is available
+  return false;
 }
-
-
-
 
 
 
