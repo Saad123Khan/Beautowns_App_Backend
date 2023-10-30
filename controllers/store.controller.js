@@ -28,7 +28,14 @@ function validateUpdateStores(store) {
     //     isAvailable: Joi.boolean().required(),
     //   })
     // ).min(7).max(7).unique('day', { ignoreUndefined: true }),
-  
+
+    details: Joi.string().required(),
+
+
+    location: Joi.string().required(),
+
+
+
     store_timings: Joi.array().items(
       Joi.object({
         day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
@@ -117,7 +124,7 @@ const createStore = asyncHandler(async (req, res) => {
 
 
 const updateStore = asyncHandler(async (req, res) => {
-console.log(req.files,"FILES")
+  console.log(req.files, "FILES")
   const { error } = validateUpdateStores(req.body);
   if (error) {
     return res
@@ -142,7 +149,7 @@ console.log(req.files,"FILES")
     });
   }
 
-  req.body.documents = documentUrls?.length > 0 ? [...documentUrls,...isStoreExist?.documents] : isStoreExist?.documents
+  req.body.documents = documentUrls?.length > 0 ? [...documentUrls, ...isStoreExist?.documents] : isStoreExist?.documents
 
   const galleryUrls = [];
   if (req?.files?.gallery) {
@@ -151,30 +158,30 @@ console.log(req.files,"FILES")
       galleryUrls.push(galleryImageUrl);
     });
   }
-    
-  req.body.gallery = galleryUrls?.length > 0 ? [...galleryUrls,...isStoreExist?.gallery] : isStoreExist?.gallery
 
-   const imageUrls = [];
-   if (req?.files?.image) {
-     req?.files?.image.forEach((image) => {
-       const imageUrl = `${PATH}/uploads/${image?.filename}`;
-       imageUrls.push(imageUrl);
-     });
-   }
+  req.body.gallery = galleryUrls?.length > 0 ? [...galleryUrls, ...isStoreExist?.gallery] : isStoreExist?.gallery
 
-
-   req.body.image = imageUrls?.length > 0 ? imageUrls?.[0] : isStoreExist?.image
-
- let updatedStore = await Store.findByIdAndUpdate(
-    isStoreExist?._id,
-     _.pick(req.body, ["segment_Id","name","country", "city", "phone","latitude","longitude","image","documents","gallery","store_timings","completeProgess"]),     
-     { new: true }
-     );
-    return res.status(200).send({
-      status: true,
-      message: "Updated store details successfully",
-      store: updatedStore,
+  const imageUrls = [];
+  if (req?.files?.image) {
+    req?.files?.image.forEach((image) => {
+      const imageUrl = `${PATH}/uploads/${image?.filename}`;
+      imageUrls.push(imageUrl);
     });
+  }
+
+
+  req.body.image = imageUrls?.length > 0 ? imageUrls?.[0] : isStoreExist?.image
+
+  let updatedStore = await Store.findByIdAndUpdate(
+    isStoreExist?._id,
+    _.pick(req.body, ["segment_Id", "name", "country", "city", "phone", "latitude", "longitude", "image", "documents", "gallery", "store_timings", "completeProgess", "details", "location"]),
+    { new: true }
+  );
+  return res.status(200).send({
+    status: true,
+    message: "Updated store details successfully",
+    store: updatedStore,
+  });
 
 });
 
@@ -223,45 +230,76 @@ const getAllStore = asyncHandler(async (req, res) => {
 });
 
 const getOneStore = asyncHandler(async (req, res) => {
- 
-  let store ;
-  if(req.query.type === "owner")
-  {
+
+  let store;
+  if (req.query.type === "owner") {
     store = await Store.findOne({
       salon_owner_Id: req.params.id,
       isDeleted: false,
       isSuspend: false,
     });
   }
-  else if(req.query.type === "store")
-  {
+  else if (req.query.type === "store") {
     store = await Store.findOne({
       _id: req.params.id,
       isDeleted: false,
       isSuspend: false,
     });
   }
-  else{
+  else {
     return res.status(404).send({
       status: false,
       message: "Invalid type",
       storeData: [],
     });
   }
- 
+
   if (store) {
-    const services = await Service.find({
+    const servicesData = await Service.find({
       store_Id: store?._id,
       isDeleted: false,
       isSuspend: false,
+    }).populate("service_category_Id");
+
+
+    const services = {};
+    let serviceId = 1
+    servicesData.forEach((service) => {
+      const category = service.service_category_Id ? service.service_category_Id.name : 'Uncategorized';
+
+      if (!services[category]) {
+        services[category] = [];
+      }
+
+      const serviceObject = { ...service.toObject() }; // Convert Mongoose Document to plain object
+      // serviceObject.id = serviceId++;
+      services[category].push(serviceObject);
     });
+
+
+    let id = 1;
+
+    for (const category in services) {
+      if (services.hasOwnProperty(category)) {
+        const items = services[category];
+        for (const item of items) {
+          item.id = id++;
+        }
+      }
+    }
+
+
+    const categories = Object.keys(services);
+
     const staff = await Staffs.find({
       store_Id: store?._id,
       isDeleted: false,
       isSuspend: false,
     });
 
-    const data = { store, services, staff };
+
+    const data = { store, services, staff, serviceCategory: categories };
+
     return res.status(200).send({ status: true, storeData: data });
   } else {
     return res.status(404).send({

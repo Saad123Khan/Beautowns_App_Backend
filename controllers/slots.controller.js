@@ -10,12 +10,12 @@ import moment from 'moment-timezone';
 
 
 const getStoreAvailableSlots = asyncHandler(async (req, res) => {
-  const wantedToBookSlot = { duration: req.query.duration };
+  const wantedToBookSlot = { duration: req.query.duration || 0 };
 
 
   const bookedSlotsForDate = [
-    { duration: 700, start: "10:00am", date: "28 October 2023" },
-    { duration: 700, start: "10:00am", date: "28 October 2023" },
+    { duration: 800, start: "10:00am", date: "30 October 2023" },
+    { duration: 800, start: "10:00am", date: "30 October 2023" },
 
     // { duration: 30, start: "9:30pm", date: "30 October 2023" },
     
@@ -31,19 +31,19 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
 
 
 
-  const user = await User.findOne({
-    _id: req.params.id,
-    role: "user",
-    isDeleted: false,
-    isSuspend: false,
-  });
+  // const user = await User.findOne({
+  //   _id: req.params.id,
+  //   role: "user",
+  //   isDeleted: false,
+  //   isSuspend: false,
+  // });
 
-  if (!user) {
-    return res.status(404).json({ status: false, message: "User does not exist" });
-  }
+  // if (!user) {
+  //   return res.status(404).json({ status: false, message: "User does not exist" });
+  // }
 
   const store = await Store.findOne({
-    _id: req.query.store_id,
+    _id: req.params.id,
     isDeleted: false,
     isSuspend: false,
   });
@@ -126,14 +126,14 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
       const resultArray = createSlots(from, to, wantedToBookSlot.duration, dayDate);
 
       if (resultArray.length > 0) {
-        arr.push({ date: { day, date, month, year }, slots: resultArray ,isAvailable : dayTimings?.isAvailable});
+        arr.push({ date: { day, date, month, year ,completeDate:dayDate }, slots: resultArray ,isAvailable : dayTimings?.isAvailable});
       } else {
-        arr.push({ date: { day, date, month, year }, slots: ["Store is over booked"] , isAvailable : dayTimings?.isAvailable });
+        arr.push({ date: { day, date, month, year ,completeDate:dayDate }, slots: ["Store is fully booked today date"] , isAvailable : dayTimings?.isAvailable });
       }
     }
 
     else {
-      arr.push({ date: { day, date, month, year }, slots: ["Store is closed"] , isAvailable : dayTimings?.isAvailable });
+      arr.push({ date: { day, date, month, year,completeDate:dayDate }, slots: ["We are closed today"] , isAvailable : dayTimings?.isAvailable });
     }
 
     currentDay.setDate(currentDay.getDate() + 1);
@@ -147,9 +147,11 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
       }
     })
     
-    res = res.length > 0 ? item.isAvailable ? res.slice(0, -1) : ["Store is closed"] : ["Store is over booked"]
+    res = res.length > 0 ? item.isAvailable ? res.slice(0, -1) : ["We are closed today"] : ["Try selecting different services to see more availability"] 
     
-    item.slots = res.length > 0 ? res : ["Store is over booked"]
+    item.slots = res.length > 0 ? res : ["Store is fully booked today date"]
+    item.isAvailable = res.length > 0 ? item.isAvailable : false
+    
     return item
   }))
 

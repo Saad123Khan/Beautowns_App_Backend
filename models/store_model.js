@@ -14,8 +14,14 @@ const StoreSchema = new mongoose.Schema(
     name: {
       type: String,
     },
+    details: {
+      type: String,
+    },
     phone:{
       type: String,  
+    },   
+    location: {
+      type: String,
     },
     country: {
       type: String,
@@ -80,6 +86,10 @@ function validateStores(store) {
     salon_owner_Id: Joi.string().required(),
     category_Id: Joi.string().required(),
     name: Joi.string().required(),
+
+    details: Joi.string().required(),
+    location: Joi.string().required(),
+
     country: Joi.string().required(),
     city: Joi.string().required(),
     phone: Joi.number().required(),
