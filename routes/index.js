@@ -7,6 +7,7 @@ import storeCategoryRoute from "#routes/storeCategory.routes";
 import categoryRoute from "#routes/category.routes";
 import staffRoute from "#routes/staff.routes";
 import membershipRoute from "#routes/membership.routes";
+import bookingRoute from "#routes/booking.routes";
 
 const routes = (app) => {
   // app.get("*",(req,res)=>{
@@ -38,5 +39,10 @@ const routes = (app) => {
 
   // MemberShips
   app.use("/api/membership", membershipRoute);
+
+  // Booking
+  app.use("/api/booking", bookingRoute);
+
+  
 };
 export default routes;

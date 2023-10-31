@@ -20,6 +20,8 @@ function validateUpdateStores(store) {
     phone: Joi.number(),
     latitude: Joi.number(),
     longitude: Joi.number(),
+    
+    no_of_slots: Joi.number(),  
     // store_timings: Joi.array().items(
     //   Joi.object({
     //     day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
@@ -29,10 +31,10 @@ function validateUpdateStores(store) {
     //   })
     // ).min(7).max(7).unique('day', { ignoreUndefined: true }),
 
-    details: Joi.string().required(),
+    details: Joi.string(),
 
 
-    location: Joi.string().required(),
+    location: Joi.string(),
 
 
 
@@ -124,7 +126,6 @@ const createStore = asyncHandler(async (req, res) => {
 
 
 const updateStore = asyncHandler(async (req, res) => {
-  console.log(req.files, "FILES")
   const { error } = validateUpdateStores(req.body);
   if (error) {
     return res
@@ -174,7 +175,7 @@ const updateStore = asyncHandler(async (req, res) => {
 
   let updatedStore = await Store.findByIdAndUpdate(
     isStoreExist?._id,
-    _.pick(req.body, ["segment_Id", "name", "country", "city", "phone", "latitude", "longitude", "image", "documents", "gallery", "store_timings", "completeProgess", "details", "location"]),
+    _.pick(req.body, ["segment_Id", "name", "country", "city", "phone", "latitude", "longitude", "image", "documents", "gallery", "store_timings", "completeProgess", "details", "location","no_of_slots"]),
     { new: true }
   );
   return res.status(200).send({

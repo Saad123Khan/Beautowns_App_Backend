@@ -3,7 +3,7 @@ import Joi from "joi";
 
 const StoreSchema = new mongoose.Schema(
   {
-    salon_owner_Id: {
+     salon_owner_Id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -48,6 +48,9 @@ const StoreSchema = new mongoose.Schema(
         isAvailable: Boolean,
       },
     ],
+    no_of_slots:{
+      type: Number,
+    },
     segment_Id: {
       enum: [1, 2, 3],
       type: Number,
@@ -93,6 +96,7 @@ function validateStores(store) {
     country: Joi.string().required(),
     city: Joi.string().required(),
     phone: Joi.number().required(),
+    no_of_slots: Joi.number().required(),    
     latitude: Joi.number().required(),
     longitude: Joi.number().required(),
     store_timings: Joi.array().items(

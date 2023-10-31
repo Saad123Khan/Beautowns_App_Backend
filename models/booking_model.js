@@ -2,16 +2,20 @@ import mongoose from "mongoose";
 import Joi from "joi";
 
 const BookingSchema = new mongoose.Schema({
-    service_Id: {
-        type: mongoose.Schema.Types.Number,
+    service_Ids: [{
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Service",
-    },
+    }],
     user_Id: {
-        type: mongoose.Schema.Types.Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    store_Id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Store",
+    },
     coupons_Id: {
-        type: mongoose.Schema.Types.Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Coupon",
     },
     salon_staff_Id: {
@@ -27,10 +31,15 @@ const BookingSchema = new mongoose.Schema({
         required: true,
     },
     vat: {
-        type: Number,
-        required: true,
+        type: Number
     },
-    endAt: {
+    amount: {
+        type: Number
+    },
+    duration: {
+        type: Number
+    },
+    end: {
         type: String
     },
     isCancel: {
@@ -42,7 +51,8 @@ const BookingSchema = new mongoose.Schema({
         default: false,
     },
     rating: {
-        type: [Number],
+        salon : Number,
+        user : Number,
     },
     paymentDone: {
         type: Boolean,
@@ -57,18 +67,20 @@ const BookingSchema = new mongoose.Schema({
 
 function validateBooking(booking) {
     const schema = Joi.object({
-        service_Id: Joi.string().required(),
+        service_Ids: Joi.array().items(Joi.string()).min(1).required(),
         user_Id: Joi.string().required(),
-        coupons_Id: Joi.string(),
+        store_Id: Joi.string(),
         coupons_Id: Joi.string(),
         salon_staff_Id:Joi.string(),
         date: Joi.string().required(),
         time: Joi.string().required(),
-        vat: Joi.number().required(),
-        endAt: Joi.string(),
+        vat: Joi.number(),
+        amount: Joi.number(),
+        duration: Joi.number(),
+        end: Joi.string(),
         isCancel: Joi.boolean(),
         isCheckIn: Joi.boolean(),
-        rating: Joi.array().items(Joi.number()),
+        rating: Joi.object().items(Joi.number()),
         paymentDone: Joi.boolean(),
         isDeleted: Joi.boolean(),
     });
