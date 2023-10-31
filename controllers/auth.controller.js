@@ -13,6 +13,7 @@ import asyncHandler from "#middlewares/asyncHandler";
 import { email } from "#utils/email";
 import { User, validateUser } from "#models/user_model";
 import { Store } from "#models/store_model";
+import { Wallet } from "#models/wallet_model";
 const validate = (req) => {
   const schema = Joi.object({
     role: Joi.string().valid("user", "admin", "store", "staff").required(),
@@ -49,8 +50,8 @@ const createUser = asyncHandler(async (req, res) => {
     return res
       .status(400)
       .send({ status: false, message: "Email already exists." });
-  } else {
-    await new User(
+  } else {  
+   await new User(
       _.pick(req.body, ["role", "name","gender", "email", "password"])
     ).save();
   }
@@ -211,6 +212,15 @@ const loginUser = asyncHandler(async (req, res) => {
   let updatedUser = await User.findOne({ email: req.body.email }).select(
     "role email name phone gender isVerified"
   );
+
+  let wallet = await Wallet.findOne({user_Id:updatedUser?._id})
+
+    if(!wallet)
+    {
+      wallet = await new Wallet({user_Id:updatedUser?._id,role:updatedUser?.role}).save();
+    }
+    
+    let {balance} = wallet ;
   const token = updatedUser.generateAuthToken();
 
   return res
@@ -225,6 +235,7 @@ const loginUser = asyncHandler(async (req, res) => {
       status: true,
       message: `Login successfully`,
       user: updatedUser,
+      wallet:{balance},
       store:isStoreExist
     });
 });
@@ -336,14 +347,22 @@ const otpVerify = asyncHandler(async (req, res) => {
   if (otpFind?.otp === req.body.otp) {
     await UserVerification.deleteMany({ email: req.body.email });
 
+    
     const user = await User.findOneAndUpdate(
       { email: emailValid?.email },
       { $set: { isVerified: true } },
       { new: true }
     ).select("role email name phone isVerified");
 
+    let wallet = await Wallet.findOne({user_Id:user?._id})
+
+    if(!wallet)
+    {
+      wallet = await new Wallet({user_Id:user?._id,role:user?.role}).save();
+    }
     const token = user.generateAuthToken();
 
+    let {balance} = wallet ;
     return res
       .cookie("x-auth-token", token, {
         httpOnly: true,
@@ -356,6 +375,7 @@ const otpVerify = asyncHandler(async (req, res) => {
         status: true,
         message: "Verified successfully",
         user: user,
+        wallet:{balance}
       });
   } else {
     return res.status(404).send({ status: false, message: "Otp was wrong!" });

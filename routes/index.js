@@ -8,6 +8,9 @@ import categoryRoute from "#routes/category.routes";
 import staffRoute from "#routes/staff.routes";
 import membershipRoute from "#routes/membership.routes";
 import bookingRoute from "#routes/booking.routes";
+import couponRoute from "#routes/coupon.routes";
+import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
+
 
 const routes = (app) => {
   // app.get("*",(req,res)=>{
@@ -43,6 +46,13 @@ const routes = (app) => {
   // Booking
   app.use("/api/booking", bookingRoute);
 
+  // Coupon
+  app.use("/api/coupon", couponRoute);
+
   
+// Admin Coupon 
+app.use("/api/admin/coupon", adminCouponRoute);
+  
+
 };
 export default routes;

@@ -10,6 +10,8 @@ import { Service } from "#models/services_model";
 import { getAvailableSlots } from "#controllers/slots.controller";
 import moment from "moment";
 import { Booking } from "#models/booking_model";
+import { validateBookingCoupon } from "#controllers/coupon.controller";
+import { Coupon } from "#models/coupons_model";
 
 function validateBooking(service) {
     const schema = Joi.object({
@@ -18,7 +20,7 @@ function validateBooking(service) {
         service_Ids: Joi.array().items(Joi.string()).min(1).required(),
         time: Joi.string().pattern(/^(0?[1-9]|1[0-2]):[0-5][0-9][ap]m$/i).message('Invalid time format. Please use this format hh:mmam or hh:mmpm').required(),
         date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).message("Invalid date format. Please use this format YYYY-MM-DD").required(),
-      
+        couponCode :Joi.string()
     });
 
     return schema.validate(service);
@@ -132,20 +134,56 @@ if (!salonTiming?.isAvailable) {
     const endTime = time.format("h:mma");
     const formattedDate = moment(req.body.date, "YYYY-MM-DD").format("D MMMM YYYY");
 
-    let booking = await new Booking({user_Id:req.body.user_Id ,store_Id:req.body.store_Id,service_Ids:req.body.service_Ids,time:req.body.time,date:formattedDate,end:endTime,duration:req.body.duration,amount:totalValue}).save();
-    
-    if(booking)
+    if(req.body.couponCode)
     {
-        return res
-        .status(200)
-        .send({ status: true, message: "Booking created successfully" ,booking});
-
+       const coupon = await validateBookingCoupon(req,res)
+       if(coupon)
+       {
+        let discountAmount  = coupon?.type?.fixedAmount ? parseFloat(coupon?.type?.fixedAmount) : totalValue * parseFloat(coupon?.type?.percentage) / 100 ;
+        await Coupon.findOneAndUpdate({_id:coupon?._id},{$inc : {quantity:-1 , totalAmount : discountAmount}})
+        totalValue = totalValue - discountAmount;
+       
+        let booking = await new Booking({ coupons_Id:coupon?._id ,user_Id:req.body.user_Id ,store_Id:req.body.store_Id,service_Ids:req.body.service_Ids,time:req.body.time,date:formattedDate,end:endTime,duration:req.body.duration,amount:totalValue}).save();
+    
+        if(booking)
+        {
+            return res
+            .status(200)
+            .send({ status: true, message: "Booking created successfully" ,booking});
+    
+        }
+        else{
+            return res
+            .status(400)
+            .send({ status: false, message: "Error while creating booking"});
+        }
+    
     }
     else{
         return res
         .status(404)
-        .send({ status: false, message: "Error while creating booking"});
+        .send({ status: false, message: "Invalid coupon code"});
     }
+       
+
+    }
+    else{
+        let booking = await new Booking({user_Id:req.body.user_Id ,store_Id:req.body.store_Id,service_Ids:req.body.service_Ids,time:req.body.time,date:formattedDate,end:endTime,duration:req.body.duration,amount:totalValue}).save();
+    
+        if(booking)
+        {
+            return res
+            .status(200)
+            .send({ status: true, message: "Booking created successfully" ,booking});
+    
+        }
+        else{
+            return res
+            .status(400)
+            .send({ status: false, message: "Error while creating booking"});
+        }
+    }
+   
 })
 
 
