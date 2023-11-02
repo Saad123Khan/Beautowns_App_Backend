@@ -38,3 +38,40 @@ export const email =async(email,OTP)=>{
         }
       });
 }
+
+export const contactEmail =async(email,data)=>{
+  
+  const info = {
+    name: data?.name,
+    email: data?.email,
+    phone: data?.phone,
+    address: data?.address
+  };
+
+  const htmlText = await ejs.renderFile(
+    `${__dirname}/template/htmlContact.ejs`,
+    info
+  );
+
+  const mailOptions = {
+        from: "sk5908774@gmail.com",
+        to: email ,
+        subject: "Salon requested OnBoard Beautowns",
+        html: htmlText
+    }
+    
+    let transport = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "sk5908774@gmail.com",
+          pass: "otwduudpsiaonjaz",
+        },
+      });
+      transport.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log(info?.response);
+        }
+      });
+}

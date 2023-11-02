@@ -14,6 +14,10 @@ import { email } from "#utils/email";
 import { User, validateUser } from "#models/user_model";
 import { Store } from "#models/store_model";
 import { Wallet } from "#models/wallet_model";
+import { Contact,validateContact } from "#models/contact_model";
+import { contactEmail } from "#utils/email";
+
+
 const validate = (req) => {
   const schema = Joi.object({
     role: Joi.string().valid("user", "admin", "store", "staff").required(),
@@ -23,6 +27,7 @@ const validate = (req) => {
 
   return schema.validate(req);
 };
+
 const validateForget = (req) => {
   const schema = Joi.object({
     role: Joi.string().valid("user", "admin", "store", "staff").required(),
@@ -197,7 +202,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }).save();
     email(verification?.email, OTP);
 
-    return res.status(404).json({
+    return res.status(200).json({
       status: true,
       message: "We have sent you an OTP via email for verification.!",
     });
@@ -392,7 +397,33 @@ const logout = asyncHandler(async (req, res) => {
   res.cookie("x-auth-token", null).send("Successfully logout");
 });
 
+
+
+/**
+ @desc     Authenticate User Registered
+ @route    POST /api/auth/register
+ @access   Public
+ */
+
+ const salonContact = asyncHandler(async (req, res) => {
+  const { error } = validateContact(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .send({ status: false, message: error?.details[0]?.message });
+  }
+
+  const contact = await new Contact(req.body).save();
+
+  contactEmail("mohammadsaadkhan69@gmail.com",contact);
+
+  return res.status(200).json({
+    status: true,
+    message: "We will contact you soon.!",
+  });
+});
 export {
+  salonContact,
   createUser,
   loginUser,
   otpVerify,
