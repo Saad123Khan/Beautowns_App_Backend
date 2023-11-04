@@ -1,7 +1,7 @@
 import express from "express";
 import validateObjectId from "#middlewares/validateObjectId";
 
-import { getAllUser,getOneUser } from "#controllers/user.controller";
+import { getAllUser,getOneUser ,updateUserProfileToken,getUserNotification,userNotificationSeen} from "#controllers/user.controller";
 import authMiddleware from "#middlewares/auth.middleware";
 
 const userRoute = express.Router();
@@ -13,6 +13,19 @@ userRoute.get("/:id",[validateObjectId,authMiddleware],getOneUser);
 
 //Get All User
 userRoute.get("/",[authMiddleware],getAllUser);
+
+
+//Get User Notification
+
+userRoute.get("/notification/:id",[authMiddleware],getUserNotification);
+
+//Seen User Notification
+
+userRoute.get("/notification-seen/:id",[authMiddleware],userNotificationSeen);
+
+
+//Update User Profile Token
+userRoute.post("/update-token/:id",[authMiddleware,validateObjectId],updateUserProfileToken);
 
 
 export default userRoute;

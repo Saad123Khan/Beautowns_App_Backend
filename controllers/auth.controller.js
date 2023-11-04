@@ -16,6 +16,7 @@ import { Store } from "#models/store_model";
 import { Wallet } from "#models/wallet_model";
 import { Contact,validateContact } from "#models/contact_model";
 import { contactEmail } from "#utils/email";
+import { firebaseNotification } from "#utils/firebaseNotification";
 
 
 const validate = (req) => {
@@ -366,8 +367,27 @@ const otpVerify = asyncHandler(async (req, res) => {
       wallet = await new Wallet({user_Id:user?._id,role:user?.role}).save();
     }
     const token = user.generateAuthToken();
-
     let {balance} = wallet ;
+    
+    if(!emailValid?.isVerified)
+    {
+ 
+      const notification = {
+        title: "Welcome to Beautowns",
+        body: `Beautowns offers a curated selection of salons and beauty experts, all at your fingertips. Whether you're in search of a haircut, a spa day, a fresh manicure, or any other beauty treatment, we've got you covered. Our user-friendly app allows you to effortlessly explore the services, prices, and availability of your preferred salons, ensuring you find the perfect fit for your beauty needs.`
+      }
+  
+      await firebaseNotification(
+        notification,
+        [user],
+        "news",
+        "Specific-User",
+        "system",
+        "users"
+      )
+     
+    }
+    
     return res
       .cookie("x-auth-token", token, {
         httpOnly: true,

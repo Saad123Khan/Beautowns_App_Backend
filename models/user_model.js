@@ -23,6 +23,9 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
   },
+  not_token: {
+    type: String
+  },
   image: {
     type: String
   },
@@ -63,6 +66,7 @@ function validateUser(user) {
     gender: Joi.string().valid('male', 'female', 'other').required(),
     password: Joi.string().min(8).max(255).required(),
     image: Joi.string(),
+    not_token:Joi.string(),
     isDeleted: Joi.boolean(),
     isSuspend: Joi.boolean(),
   });

@@ -25,6 +25,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.8.0",
     "otp-generator": "^4.0.0",
+    "request-promise": "^4.2.6",
+    "socket.io": "^4.7.2",
     "winston": "^3.8.2",
     "winston-mongodb": "^5.1.0"
   },
@@ -39,6 +41,7 @@
     "#models/*": "./models/*.js",
     "#routes/*": "./routes/*.js",
     "#utils/*": "./utils/*.js",
-    "#constant/*": "./constant/*.js"
+    "#constant/*": "./constant/*.js",
+    "#sockets/*": "./sockets/*.js"
   }
 }

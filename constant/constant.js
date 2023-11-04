@@ -7,4 +7,6 @@ const TOKEN_EXPIRE_TIME = "5d";
 const PATH = "http://localhost:5000";
 
 
-export { PATH,PNG, JPG, JPEG, JWT_ERRORS, TOKEN_EXPIRE_TIME };
+const SOCKET_ORIGINS = ['http://localhost:*']
+
+export {SOCKET_ORIGINS, PATH,PNG, JPG, JPEG, JWT_ERRORS, TOKEN_EXPIRE_TIME };

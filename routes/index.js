@@ -10,6 +10,7 @@ import membershipRoute from "#routes/membership.routes";
 import bookingRoute from "#routes/booking.routes";
 import couponRoute from "#routes/coupon.routes";
 import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
+import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 
 
 const routes = (app) => {
@@ -52,6 +53,11 @@ const routes = (app) => {
   
 // Admin Coupon 
 app.use("/api/admin/coupon", adminCouponRoute);
+
+// Admin Notification 
+app.use("/api/admin/notification", adminNotificationRoute);
+
+
   
 
 };

@@ -75,3 +75,43 @@ export const contactEmail =async(email,data)=>{
         }
       });
 }
+
+const sendNotificationEmail = async (email,notification) => {
+  
+  const data = {
+    email: email,
+    notification: notification
+  };
+  const htmlText = await ejs.renderFile(
+    `${__dirname}/template/notification.ejs`,
+    data
+  );
+
+  
+  const mailOptions = {   
+    user: "sk5908774@gmail.com",   
+    to: email,
+    subject: notification?.title,
+    html:htmlText
+  
+  };
+
+
+  let transport = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "sk5908774@gmail.com",
+      pass: "otwduudpsiaonjaz",
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+  transport.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    }
+  });
+};
+
+export {sendNotificationEmail}

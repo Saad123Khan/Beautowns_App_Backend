@@ -4,6 +4,9 @@ import express from "express"
 import winston from "winston";
 import BodyParser from "body-parser";
 
+import SocketServer from "#sockets/SocketServer";
+import { createServer } from "http";
+
 /*****  Modules  *****/
 import connectDB from "#config/db";
 import logger from "#utils/logger";
@@ -11,6 +14,7 @@ import routes from "#routes/index";
 import {envConfig} from "#utils/env";
 import cookieParser from "cookie-parser";
 import log from "#middlewares/log";
+import { SOCKET_ORIGINS } from "#constant/constant";
 
 envConfig();
 connectDB();
@@ -29,4 +33,17 @@ app.use('/uploads', express.static('uploads'));
 
 routes(app);
 
-app.listen(PORT, () => winston.info(`Server is Listening on port ${PORT}.`));
+const server = createServer(app);
+const sockets = new SocketServer(server, {
+  cors: SOCKET_ORIGINS,
+  transports: ["websocket", "polling"],
+});
+
+export { sockets };
+
+server.listen(PORT, () =>
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
+);
+
+
+// app.listen(PORT, () => winston.info(`Server is Listening on port ${PORT}.`));
