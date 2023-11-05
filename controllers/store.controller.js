@@ -73,16 +73,16 @@ const createStore = asyncHandler(async (req, res) => {
     isDeleted: false,
   });
 
-  const isStoreExist = await Store.find({
+  const isStoreExist = await Store.findOne({
     salon_owner_Id: req.body.salon_owner_Id,
     isDeleted: false,
     isSuspend: false,
   });
 
-  if (isStoreExist?.length > 0) {
+  if (isStoreExist) {
     return res
       .status(400)
-      .send({ status: false, message: "Your Store is already Registered." });
+      .send({ status: false, message: "This Store Id is already Registered." });
   }
 
   if (!storeOwnerFind) {

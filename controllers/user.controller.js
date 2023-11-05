@@ -10,7 +10,7 @@ import Notification from "#models/notificationModel";
 const getAllUser = asyncHandler(async (req, res) => {
 
   const user = await User.find({}).select('role email name phone isVerified');
-  if (user) {
+  if (user?.length > 0) {
     return res.status(200).json({
       status: true,
       user

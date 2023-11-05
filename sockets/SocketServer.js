@@ -12,7 +12,7 @@ class SocketServer {
                 })
             })
     }
-     sendVerificationSuccess(userData) {
+      sendVerificationSuccess(userData) {
         this.socket.emit("verificationSuccess", userData);
       }
       sendNotificationSucess(notData) {
@@ -21,8 +21,8 @@ class SocketServer {
       sendNotificationAdminSucess(notData) {
         this.socket.emit("notification-admin", notData);
       }
-      sendSessionExpired(token) {
-        this.socket.emit("sessionExpired", token);
+      sendSessionExpired(notData) {
+        this.socket.emit("sessionExpired", notData);
       }
       
 };

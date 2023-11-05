@@ -11,6 +11,7 @@ import bookingRoute from "#routes/booking.routes";
 import couponRoute from "#routes/coupon.routes";
 import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
 import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
+import paymentRoute from "#routes/payment.routes";
 
 
 const routes = (app) => {
@@ -57,6 +58,10 @@ app.use("/api/admin/coupon", adminCouponRoute);
 // Admin Notification 
 app.use("/api/admin/notification", adminNotificationRoute);
 
+
+
+// Payment
+app.use("/api/payment", paymentRoute);
 
   
 

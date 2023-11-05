@@ -22,6 +22,10 @@ const BookingSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    payment_Id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Payment",
+    },
     date: {
         type: String,
         required: true,
@@ -61,7 +65,11 @@ const BookingSchema = new mongoose.Schema({
     isDeleted: {
         type: Boolean,
         default: false,
-    }
+    },
+  isSessionExpired: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 
@@ -70,6 +78,7 @@ function validateBooking(booking) {
         service_Ids: Joi.array().items(Joi.string()).min(1).required(),
         user_Id: Joi.string().required(),
         store_Id: Joi.string(),
+        payment_Id:Joi.string(),
         coupons_Id: Joi.string(),
         salon_staff_Id:Joi.string(),
         date: Joi.string().required(),
@@ -83,6 +92,7 @@ function validateBooking(booking) {
         rating: Joi.object().items(Joi.number()),
         paymentDone: Joi.boolean(),
         isDeleted: Joi.boolean(),
+        isSessionExpired:Joi.boolean()
     });
 
     return schema.validate(booking);

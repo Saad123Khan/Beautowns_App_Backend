@@ -31,7 +31,7 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
     return res.status(404).json({ status: false, message: "Store does not exists" });
   }
 
-let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDeleted:false,isCancel:false}).select("duration time date")
+let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDeleted:false,isCancel:false,isSessionExpired:false}).select("duration time date")
  
 // const bookedSlotsForDate = [
 //     { duration: 15, time: "10:00am", date: "3 November 2023" },
@@ -192,9 +192,14 @@ let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDelete
 
 const getStoreAvailableSlots = asyncHandler(async (req, res) => {
   const wantedToBookSlot = { duration: req.query.duration || 0 };
+  
+  if(req.query.user_Id)
+  {
+    await Booking.deleteMany({ user_Id:req.query.user_Id,paymentDone:false,isCheckIn:false, isDeleted :false, isCancel:false})
+  }
+  
 
-
-  let bookedSlotsForDate = await Booking.find({store_Id:req.params.id,isDeleted:false,isCancel:false}).select("duration time date")
+  let bookedSlotsForDate = await Booking.find({store_Id:req.params.id,isDeleted:false,isCancel:false,isSessionExpired:false}).select("duration time date")
 
   // const bookedSlotsForDate = [
   //   { duration: 15, start: "10:00am", date: "31 October 2023" },
