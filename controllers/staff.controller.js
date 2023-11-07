@@ -141,7 +141,7 @@ const getAllStoreStaffs = asyncHandler(async (req, res) => {
 
 
 const getOneStaff = asyncHandler(async (req, res) => {
-    const staff = await Staffs.findOne({salon_staff_Id: req.params.id ,isDeleted:false,isSuspend:false});
+    const staff = await Staffs.findOne({_id: req.params.id ,isDeleted:false,isSuspend:false});
     
     if (staff) {
         return res

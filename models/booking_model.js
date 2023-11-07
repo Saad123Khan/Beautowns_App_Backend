@@ -40,6 +40,9 @@ const BookingSchema = new mongoose.Schema({
     amount: {
         type: Number
     },
+    discount: {
+        type: Number
+    },
     duration: {
         type: Number
     },
@@ -85,6 +88,10 @@ function validateBooking(booking) {
         time: Joi.string().required(),
         vat: Joi.number(),
         amount: Joi.number(),
+
+        discount: Joi.number(),
+
+        
         duration: Joi.number(),
         end: Joi.string(),
         isCancel: Joi.boolean(),

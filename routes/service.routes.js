@@ -1,5 +1,5 @@
 import express from 'express';
-import {updateService, createService , getAllStoreServices , getOneService } from '#controllers/service.controller';
+import {updateService, createService , getAllStoreServices , getOneService ,getServiceSpecific } from '#controllers/service.controller';
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from '#utils/multer';
 
@@ -13,5 +13,9 @@ serviceRoute.route('/update/:id').put([validateObjectId,multerUpload.single('ima
 serviceRoute.route('/store/:id').get(validateObjectId,getAllStoreServices);
 
 serviceRoute.route('/:id').get(validateObjectId,getOneService);
+
+
+serviceRoute.route('/specific').post(getServiceSpecific);
+
 
 export default serviceRoute;

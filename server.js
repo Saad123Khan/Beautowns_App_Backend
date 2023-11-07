@@ -8,6 +8,7 @@ import SocketServer from "#sockets/SocketServer";
 import { createServer } from "http";
 import { Booking } from "#models/booking_model";
 import moment from 'moment-timezone';
+import { User } from "#models/user_model";
 
 /*****  Modules  *****/
 import connectDB from "#config/db";
@@ -50,11 +51,37 @@ schedule.scheduleJob("*/5 * * * * *", async () => {
     // console.log(timeDifference)
    if (timeDifference > 20) {
       let bookDetails =await Booking.findByIdAndUpdate(booking?._id,{isSessionExpired:true},{new:true})
+     if(booking?.coupons_Id && booking?.discount)
+     {
+      await Coupon.findByIdAndUpdate(
+        booking?.coupons_Id,
+        {
+          $inc: { quantity: 1, totalAmount: -booking?.discount},
+        }
+      );
+     }
       await sockets.sendSessionExpired(bookDetails?.user_Id)
     }
   }
 });
 
+
+
+schedule.scheduleJob("0 1 * * *", async () => {
+  const notification = {
+    title: "Appointment Reminder",
+    body: `Appointment Reminder: Your party makeup booking is scheduled for 4:00 PM at Rose Beauty Salon. Please stay reminded`
+  }
+  const user  = await User.findOne({email:'sk5908774@gmail.com'})
+  await firebaseNotification(
+    notification,
+    [user],
+    "news",
+    "Specific-User",
+    "system",
+    "users"
+  )
+});
 const server = createServer(app);
 const sockets = new SocketServer(server, {
   cors: SOCKET_ORIGINS,

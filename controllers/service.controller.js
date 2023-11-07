@@ -128,6 +128,23 @@ const getAllStoreServices = asyncHandler(async (req, res) => {
 })
 
 
+const getServiceSpecific = asyncHandler(async (req, res) => {
+   console.log(req.body)
+    const services = await Service.find({_id: { $in: req.body.service_Ids },isDeleted:false,isSuspend:false});
+    
+    if (services?.length > 0) {
+        return res
+            .status(200)
+            .send({ status: true, services});
+    }
+    else {
+        return res
+            .status(404)
+            .send({ status: false, message: "Service does not exists"});
+    }
+
+})
+
 const getOneService = asyncHandler(async (req, res) => {
     const service = await Service.findOne({_id: req.params.id ,isDeleted:false,isSuspend:false});
     
@@ -144,4 +161,4 @@ const getOneService = asyncHandler(async (req, res) => {
 
 })
 
-export { createService,getAllStoreServices ,getOneService ,updateService}
+export { createService,getAllStoreServices ,getOneService ,updateService,getServiceSpecific}

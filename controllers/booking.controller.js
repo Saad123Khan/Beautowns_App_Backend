@@ -31,7 +31,7 @@ const createBooking = asyncHandler(async (req, res) => {
     // await Booking.deleteMany({ user_Id:req.body.user_Id,paymentDone:false,isCheckIn:false, isDeleted :false, isCancel:false})
   
 console.log(req.body)
-req.body.date = moment(req.body.date, 'D MMMM YYYY').format('YYYY-MM-DD');
+req.body.date = moment(req.body.date).format('YYYY-MM-DD');
 console.log(req.body?.date)
 
     const { error } = validateBooking(req.body);
@@ -44,14 +44,18 @@ console.log(req.body?.date)
 
 
 
-    const currentDate = moment.tz("Asia/Karachi").startOf('day');
-    const bookingDate = moment(req.body.date).tz("Asia/Karachi").startOf('day');
+    const currentDate = moment()
+    const bookingDate = moment(req.body.date)
 
-    if (currentDate.isAfter(bookingDate)) {
-        return res
-            .status(400)
-            .send({ status: false, message: "The date of booking should be in the future" });
-    }
+    console.log(req.body.date,"bookingDate")
+    
+    console.log(currentDate,"currentDate")
+    
+    // if (currentDate.isAfter(bookingDate)) {
+    //     return res
+    //         .status(400)
+    //         .send({ status: false, message: "The date of booking should be in the future" });
+    // }
 
     const user = await User.findOne({ _id: req.body.user_Id, role: "user", isSuspend: false, isDeleted: false, isVerified: true })
 
@@ -82,7 +86,7 @@ console.log(req.body?.date)
     const salonCloseTime = moment(req.body.date + " " + salonTiming.to, "YYYY-MM-DD hh:mma");
     const bookingDateTime = moment(req.body.date + " " + req.body.time, "YYYY-MM-DD hh:mma");
 
-    if (bookingDateTime.isBefore(salonOpenTime) || bookingDateTime.isSameOrAfter(salonCloseTime)) {
+    if (bookingDateTime.isBefore(salonOpenTime)) {
         return res.status(400).send({
             status: false,
             message: `Sorry, the salon is closed at ${req.body.time} on ${bookingDate}. Salon opens at ${salonTiming.from} and closes at ${salonTiming.to} on ${moment(bookingDate).format('dddd')}.`
@@ -218,6 +222,12 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
 //@acess  private
 
 const couponCodeBookingAdded = asyncHandler(async (req, res) => {
+
+   if(req.body.couponCode === "")
+   {
+return res.status(400).send({status:false,message:'Coupon Code field is not empty'})
+   }
+console.log(req.body)
     const booking = await Booking.findOne({ _id: req.body.booking_Id,user_Id:req.body.user_Id,isCheckIn:false, isCancel: false, isDeleted: false, isSessionExpired: false, paymentDone: false })
     if (!booking) {
         return res
@@ -227,7 +237,7 @@ const couponCodeBookingAdded = asyncHandler(async (req, res) => {
     if (booking?.coupons_Id) {
         return res
             .status(400)
-            .send({ status: false, message: "At a time, only one coupon can be added." });
+            .send({ status: false, message: "Coupon already applied"});
     }
 
     const coupon = await validateBookingCoupon(req, res)
@@ -236,7 +246,7 @@ const couponCodeBookingAdded = asyncHandler(async (req, res) => {
         await Coupon.findOneAndUpdate({ _id: coupon?._id }, { $inc: { quantity: -1, totalAmount: discountAmount } })
         let totalValue = booking?.amount - discountAmount;
 
-        let bookingUpdate = await Booking.findByIdAndUpdate(booking?._id, { coupons_Id: coupon?._id, amount: totalValue },{new : true});
+        let bookingUpdate = await Booking.findByIdAndUpdate(booking?._id, { coupons_Id: coupon?._id, amount: totalValue , discount : discountAmount},{new : true});
 
         if (bookingUpdate) {
             return res

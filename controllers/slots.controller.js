@@ -6,6 +6,7 @@ import { User } from "#models/user_model";
 import { Store } from "#models/store_model";
 import moment from 'moment-timezone';
 import { Booking } from "#models/booking_model";
+import { Coupon } from "#models/coupons_model";
 
 //@desc Get Available Slots for the Next 6 Months
 //@route /slots
@@ -192,11 +193,40 @@ let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDelete
 
 const getStoreAvailableSlots = asyncHandler(async (req, res) => {
   const wantedToBookSlot = { duration: req.query.duration || 0 };
+  console.log(req.query.user_Id)
+  if (req.query.user_Id) {
+    const query = {
+      user_Id: req.query.user_Id,
+      paymentDone: false,
+      isCheckIn: false,
+      isDeleted: false,
+      isCancel: false,
+    };
   
-  if(req.query.user_Id)
-  {
-    await Booking.deleteMany({ user_Id:req.query.user_Id,paymentDone:false,isCheckIn:false, isDeleted :false, isCancel:false})
+    const bookingsToDelete = await Booking.find(query);
+  
+    if (bookingsToDelete.length > 0) {
+      const couponIdsToUpdate = bookingsToDelete
+        .filter((item) => item.discount && item.coupons_Id)
+        .map((item) => item.coupons_Id);
+  
+      if (couponIdsToUpdate.length > 0) {
+        const totalDiscount = bookingsToDelete
+          .filter((item) => item.discount && item.coupons_Id)
+          .reduce((total, item) => total + item.discount, 0);
+  
+        await Coupon.updateMany(
+          { _id: { $in: couponIdsToUpdate } },
+          {
+            $inc: { quantity: 1, totalAmount: -totalDiscount },
+          }
+        );
+      }
+  
+      await Booking.deleteMany(query);
+    }
   }
+  
   
 
   let bookedSlotsForDate = await Booking.find({store_Id:req.params.id,isDeleted:false,isCancel:false,isSessionExpired:false}).select("duration time date")
@@ -344,7 +374,7 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
       
       if(!item?.slots?.includes("Store is fully booked today date") && !item?.slots?.includes("We are closed today") && !item?.slots?.includes("Try selecting different services to see more availability") && item?.slots?.length > 0 && item?.isAvailable && item.date?.completeDate === currentDate)
     {
-       item.slots = item?.slots?.filter(slot => moment(slot, 'hh:mma').isSameOrAfter(currentMoment));
+       item.slots = item?.slots?.filter(slot => moment(slot, 'hh:mma').isAfter(currentMoment));
     }
     return item
   }))

@@ -14,9 +14,11 @@ const validateBookingCoupon = asyncHandler(async (req, res) => {
 
   const coupon = await Coupon.findOne({ value: req.body.couponCode, isDeleted: false, isSuspend: false })
   
+  console.log(coupon,"coupon")
   if (coupon) {
     
-   const book = await Booking.findOne({coupons_Id:coupon?._id,user_Id:req.body.user_Id,paymentDone:true})
+   const book = await Booking.findOne({coupons_Id:coupon?._id,user_Id:req.body.user_Id,paymentDone:false})
+   console.log(book)
    if (book) {
     return false
   }
