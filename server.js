@@ -19,6 +19,7 @@ import cookieParser from "cookie-parser";
 import log from "#middlewares/log";
 import { SOCKET_ORIGINS } from "#constant/constant";
 
+import { firebaseNotification } from "#utils/firebaseNotification";
 
 envConfig();
 connectDB();
@@ -73,6 +74,7 @@ schedule.scheduleJob("0 1 * * *", async () => {
     body: `Appointment Reminder: Your party makeup booking is scheduled for 4:00 PM at Rose Beauty Salon. Please stay reminded`
   }
   const user  = await User.findOne({email:'sk5908774@gmail.com'})
+console.log(user)
   await firebaseNotification(
     notification,
     [user],
