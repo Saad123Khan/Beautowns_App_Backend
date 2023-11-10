@@ -12,13 +12,14 @@ import moment from "moment";
 import { Booking } from "#models/booking_model";
 import { validateBookingCoupon } from "#controllers/coupon.controller";
 import { Coupon } from "#models/coupons_model";
+import { firebaseNotification } from "#utils/firebaseNotification";
 
 function validateBooking(service) {
     const schema = Joi.object({
         user_Id: Joi.string().required(),
         store_Id: Joi.string().required(),
         service_Ids: Joi.array().items(Joi.string()).min(1).required(),
-        time: Joi.string().pattern(/^(0?[1-9]|1[0-2]):[0-5][0-9][ap]m$/i).message('Invalid time format. Please use this format hh:mmam or hh:mmpm').required(),
+        time: Joi.string().pattern(/^(0?[0-9]|1[0-2]):[0-5][0-9][ap]m$/i).message('Invalid time format. Please use this format hh:mmam or hh:mmpm').required(),
         date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).message("Invalid date format. Please use this format YYYY-MM-DD").required(),
         couponCode: Joi.string()
     });
@@ -29,10 +30,10 @@ function validateBooking(service) {
 const createBooking = asyncHandler(async (req, res) => {
 
     // await Booking.deleteMany({ user_Id:req.body.user_Id,paymentDone:false,isCheckIn:false, isDeleted :false, isCancel:false})
-  
-console.log(req.body)
-req.body.date = moment(req.body.date).format('YYYY-MM-DD');
-console.log(req.body?.date)
+
+    console.log(req.body)
+    req.body.date = moment(req.body.date).format('YYYY-MM-DD');
+    console.log(req.body?.date)
 
     const { error } = validateBooking(req.body);
     if (error) {
@@ -47,10 +48,10 @@ console.log(req.body?.date)
     const currentDate = moment()
     const bookingDate = moment(req.body.date)
 
-    console.log(req.body.date,"bookingDate")
-    
-    console.log(currentDate,"currentDate")
-    
+    console.log(req.body.date, "bookingDate")
+
+    console.log(currentDate, "currentDate")
+
     // if (currentDate.isAfter(bookingDate)) {
     //     return res
     //         .status(400)
@@ -223,12 +224,11 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
 
 const couponCodeBookingAdded = asyncHandler(async (req, res) => {
 
-   if(req.body.couponCode === "")
-   {
-return res.status(400).send({status:false,message:'Coupon Code field is not empty'})
-   }
-console.log(req.body)
-    const booking = await Booking.findOne({ _id: req.body.booking_Id,user_Id:req.body.user_Id,isCheckIn:false, isCancel: false, isDeleted: false, isSessionExpired: false, paymentDone: false })
+    if (req.body.couponCode === "") {
+        return res.status(400).send({ status: false, message: 'Coupon Code field is not empty' })
+    }
+    console.log(req.body)
+    const booking = await Booking.findOne({ _id: req.body.booking_Id, user_Id: req.body.user_Id, isCheckIn: false, isCancel: false, isDeleted: false, isSessionExpired: false, paymentDone: false })
     if (!booking) {
         return res
             .status(404)
@@ -237,7 +237,7 @@ console.log(req.body)
     if (booking?.coupons_Id) {
         return res
             .status(400)
-            .send({ status: false, message: "Coupon already applied"});
+            .send({ status: false, message: "Coupon already applied" });
     }
 
     const coupon = await validateBookingCoupon(req, res)
@@ -246,12 +246,12 @@ console.log(req.body)
         await Coupon.findOneAndUpdate({ _id: coupon?._id }, { $inc: { quantity: -1, totalAmount: discountAmount } })
         let totalValue = booking?.amount - discountAmount;
 
-        let bookingUpdate = await Booking.findByIdAndUpdate(booking?._id, { coupons_Id: coupon?._id, amount: totalValue , discount : discountAmount},{new : true});
+        let bookingUpdate = await Booking.findByIdAndUpdate(booking?._id, { coupons_Id: coupon?._id, amount: totalValue, discount: discountAmount }, { new: true });
 
         if (bookingUpdate) {
             return res
                 .status(200)
-                .send({ status: true, message: "Coupon added successfully", booking:bookingUpdate });
+                .send({ status: true, message: "Coupon added successfully", booking: bookingUpdate });
         }
         else {
             return res
@@ -281,7 +281,7 @@ const getUserBooking = asyncHandler(async (req, res) => {
             .status(404)
             .send({ status: false, message: "User does not exists" });
     }
-    const booking = await Booking.find({ user_Id: req.params.id, isDeleted: false, isSessionExpired: false });
+    const booking = await Booking.find({ user_Id: req.params.id, isDeleted: false, isSessionExpired: false }).populate('service_Ids store_Id');
     if (booking?.length > 0) {
         return res.status(200).send({ status: true, booking: booking });
     } else {
@@ -301,7 +301,16 @@ const getUserBooking = asyncHandler(async (req, res) => {
 
 
 const cancelledBooking = asyncHandler(async (req, res) => {
-    const booking = await Booking.findById(req.params.id)
+  
+    const user = await User.findOne({ _id: req.body.user_Id, role: "user", isSuspend: false, isDeleted: false, isVerified: true })
+
+    if (!user) {
+        return res
+            .status(404)
+            .send({ status: false, message: "User does not exists" });
+    }
+  
+    const booking = await Booking.findOne({_id:req.body.booking_Id,paymentDone:true,isCheckIn:false , isDeleted:false}).populate("store_Id")
     if (booking) {
         if (booking?.isSessionExpired) {
             return res.status(400).send({ status: false, message: "Booking expired" })
@@ -311,6 +320,21 @@ const cancelledBooking = asyncHandler(async (req, res) => {
         }
         const book = await Booking.findOneAndUpdate({ _id: booking?._id }, { isCancel: true }, { new: true })
         if (book) {
+            
+        
+    const notification = {
+        title: "Appointment Canceled",
+        body: `You've successfully canceled your appointment at ${booking?.store_Id?.name}. If you have any questions or need to reschedule, please don't hesitate to contact us. We look forward to serving you in the future!`,
+       };
+
+      await firebaseNotification(
+        notification,
+        [user],
+        "news",
+        "Specific-User",
+        "system",
+        "users"
+      )
             return res.status(200).send({ status: true, message: "Booking cancelled sucessfully", booking: book })
         }
         else {
@@ -330,66 +354,174 @@ const cancelledBooking = asyncHandler(async (req, res) => {
 
 
 const deleteBooking = asyncHandler(async (req, res) => {
-     await Booking.deleteMany({ user_Id:req.params.id,paymentDone:false,isCheckIn:false,isSessionExpired : false , isDeleted :false, isCancel:false,isDeleted:false})
+    await Booking.deleteMany({ user_Id: req.params.id, paymentDone: false, isCheckIn: false, isSessionExpired: false, isDeleted: false, isCancel: false, isDeleted: false })
     return res.status(200).send({ status: true, message: "Booking deleted successfully" })
 })
 
 //@desc Booking Confirm
-//@route  /book/confirm/:id
-//@request PUT Request
+//@route  /book/confirmed
+//@request POST Request
 //@acess  private
 
-export const bookingConfirm = async (req, res, next) => {
-    try {
-        const bookingFind = await Booking.findOne({ _id: req.params.id, isCheckIn: false, isCancel: false, isDeleted: false });
+const bookingConfirm = asyncHandler(async (req, res) => {
+console.log(req.body)
 
+    const user = await User.findOne({ _id: req.body.user_Id, role: "user", isSuspend: false, isDeleted: false, isVerified: true })
+
+    if (!user) {
+        return res
+            .status(404)
+            .send({ status: false, message: "User does not exists" });
+    }
+    const bookingFind = await Booking.findOne({ _id: req.body.booking_Id,user_Id: req.body.user_Id, isCheckIn: false, isCancel: false, isDeleted: false }).populate('store_Id');
+
+    if (!bookingFind) {
+        return res
+            .status(404)
+            .json({ status: false, message: "Booking record not found!" });
+    }
+
+    if (bookingFind?.isSessionExpired) {
+        return res
+            .status(409)
+            .json({ status: false, message: "Booking session expired" });
+    }
+
+    if (bookingFind?.paymentDone) {
+        return res
+            .status(200)
+            .json({ status: false, message: "Booking already Confirmed" });
+    }
+
+
+    // const paymentFind = await Payment.findOne({
+    //     payment_Id: req.body.payment_Id,
+    // });
+
+    // if (!paymentFind) {
+    //     return res
+    //         .status(404)
+    //         .json({ status: false, message: "Payment record not found!" });
+    // }
+
+    // if (paymentFind?.booking_Id === bookingFind?._id) {
+
+    const booking = await Booking.findOneAndUpdate(
+        { _id: req.body.booking_Id},
+
+        {
+            // payment_Id: req.body.payment_Id,
+            paymentDone: true,
+        },
+        { new: true }
+    );
+
+    const notification = {
+        title: "Booking Confirmed",
+        body: `Your appointment at ${bookingFind?.store_Id?.name} on ${booking?.date} has been successfully booked. We look forward to serving you!`,
+      };
+
+
+      await firebaseNotification(
+        notification,
+        [user],
+        "news",
+        "Specific-User",
+        "system",
+        "users"
+      )
+
+
+    return res.status(200).json({ status: true, message: "Booking is confirmed!", booking });
+
+    // } 
+    // else {
+    //     return res
+    //         .status(404)
+    //         .json({
+    //             status: false,
+    //             message: "Please kindly proceed the payment for this booking!",
+    //         });
+    // }
+
+});
+
+
+
+//@desc Booking Confirm
+//@route  /book/checkIn
+//@request POST Request
+//@acess  private
+
+const bookingCheckIn = asyncHandler(async (req, res) => {
+    
+
+        const bookingFind = await Booking.findOne({ _id: req.body.booking_Id,store_Id: req.body.store_Id, isCheckIn: false, isCancel: false, isDeleted: false }).populate("store_Id user_Id");
+    
         if (!bookingFind) {
             return res
                 .status(404)
                 .json({ status: false, message: "Booking record not found!" });
         }
 
-        if (bookingFind?.isSessionExpired) {
+        if (bookingFind?.isCheckIn) {
             return res
-                .status(404)
-                .json({ status: false, message: "Booking session expired" });
+                .status(200)
+                .json({ status: false, message: "Booking already CheckIn" });
         }
+    
+    
+        // const paymentFind = await Payment.findOne({
+        //     payment_Id: req.body.payment_Id,
+        // });
+    
+        // if (!paymentFind) {
+        //     return res
+        //         .status(404)
+        //         .json({ status: false, message: "Payment record not found!" });
+        // }
+    
+        // if (paymentFind?.booking_Id === bookingFind?._id) {
+    
+        const booking = await Booking.findOneAndUpdate(
+            { _id: req.body.booking_Id},
+    
+            {
+                // payment_Id: req.body.payment_Id,
+                isCheckIn: true,
+            },
+            { new: true }
+        );
+    
+
+        
+    const notification = {
+        title: "Appointment Checked In",
+        body: `You've successfully checked in for your appointment at ${bookingFind?.store_Id?.name}. Our team is ready to make your experience exceptional. Enjoy your time with us!`,
+    };
 
 
+      await firebaseNotification(
+        notification,
+        [bookingFind?.user_Id],
+        "news",
+        "Specific-User",
+        "system",
+        "users"
+      )
+        return res.status(200).json({ status: true, message: "Booking is check-in", booking });
+    
+        // } 
+        // else {
+        //     return res
+        //         .status(404)
+        //         .json({
+        //             status: false,
+        //             message: "Please kindly proceed the payment for this booking!",
+        //         });
+        // }
+    
+    });
 
-        const paymentFind = await Payment.findOne({
-            payment_Id: req.body.payment_Id,
-        });
 
-        if (!paymentFind) {
-            return res
-                .status(404)
-                .json({ status: false, message: "Payment record not found!" });
-        }
-
-        if (paymentFind?.booking_Id === bookingFind?._id) {
-            const booking = await Book.findOneAndUpdate(
-                { booking_Id: req.params.id },
-
-                {
-                    payment_Id: req.body.payment_Id,
-                    paymentDone: true,
-                },
-                { new: true }
-            );
-
-            return res.status(200).json({ status: true, message: "Booking is confirmed!", booking });
-        } else {
-            return res
-                .status(404)
-                .json({
-                    status: false,
-                    message: "Please kindly proceed the payment for this booking!",
-                });
-        }
-    } catch (err) {
-        next(err);
-    }
-};
-
-export { createBooking, getAllStoreBooking, getUserBooking, cancelledBooking, couponCodeBookingAdded ,deleteBooking}
+export {bookingConfirm, bookingCheckIn,createBooking, getAllStoreBooking, getUserBooking, cancelledBooking, couponCodeBookingAdded, deleteBooking }
