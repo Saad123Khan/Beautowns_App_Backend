@@ -1,7 +1,7 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { StoreCategories, validateStoreCategories} from "#models/store_categories_model";
 import { Store } from "#models/store_model";
-import { PATH } from "#constant/constant";
+import { PATH,LIVEPATH } from "#constant/constant";
 
 const createStoreCategory = asyncHandler(async (req, res) => {
     const { error } = validateStoreCategories(req.body);
@@ -20,7 +20,7 @@ const createStoreCategory = asyncHandler(async (req, res) => {
      }
 
      const image = req?.file?.filename;
-     req.body.image = image ? `${PATH}/uploads/${image}` : ''
+     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : ''
    
 
     const category = await new StoreCategories(req.body).save();

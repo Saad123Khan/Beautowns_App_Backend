@@ -2,7 +2,7 @@ import asyncHandler from "#middlewares/asyncHandler";
 import { User } from "#models/user_model";
 import Joi from "joi";
 import _ from "lodash";
-import { PATH } from "#constant/constant";
+import { PATH ,LIVEPATH} from "#constant/constant";
 import { Coupon } from "#models/coupons_model";
 import { Booking } from "#models/booking_model";
 

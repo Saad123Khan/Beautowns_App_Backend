@@ -2,7 +2,7 @@ import AdminNotification from "#models/adminNotificationModel";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { User } from "#models/user_model";
 import asyncHandler from "#middlewares/asyncHandler";
-import { PATH } from "#constant/constant";
+import { PATH,LIVEPATH } from "#constant/constant";
 
 /*
 @desc     POST Notification Send
@@ -12,7 +12,7 @@ import { PATH } from "#constant/constant";
 const sendPushNotification = asyncHandler(async (req, res) => {
 
     const image = req?.file?.filename;
-    req.body.image = image ? `${PATH}/upload/${image}` : false;
+    req.body.image = image ? `${LIVEPATH}/upload/${image}` : false;
   
   
     let notification = req.body.image ? {

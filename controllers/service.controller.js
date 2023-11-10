@@ -2,7 +2,7 @@ import asyncHandler from "#middlewares/asyncHandler";
 import { Service, validateServices } from "#models/services_model";
 import { Store } from "#models/store_model";
 import { StoreCategories} from "#models/store_categories_model";
-import { PATH } from "#constant/constant";
+import { PATH ,LIVEPATH} from "#constant/constant";
 import Joi from "joi";
 
 function validateUpdateServices(service) {
@@ -52,7 +52,7 @@ const createService = asyncHandler(async (req, res) => {
        
 
   const image = req?.file?.filename;
-  req.body.image = image ? `${PATH}/uploads/${image}` : ''
+  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : ''
 
     const service = await new Service(req.body).save();
     if (service) {
@@ -89,7 +89,7 @@ const updateService = asyncHandler(async (req, res) => {
        
 
   const image = req?.file?.filename;
-  req.body.image = image ? `${PATH}/uploads/${image}` : serviceFind?.image
+  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : serviceFind?.image
   
     const service = await Service.findByIdAndUpdate(serviceFind?._id,req.body,{new:true});
     if (service) {
