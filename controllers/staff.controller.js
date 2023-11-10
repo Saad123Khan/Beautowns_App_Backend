@@ -4,7 +4,7 @@ import { Store  } from "#models/store_model";
 import { User } from "#models/user_model";
 import _ from "lodash";
 import bcrypt from "bcryptjs";
-import { PATH } from "#constant/constant";
+import { PATH,LIVEPATH } from "#constant/constant";
 import Joi from "joi";
 
 
@@ -53,7 +53,7 @@ const createSalonStaff = asyncHandler(async (req, res) => {
      }
     
     const image = req?.file?.filename;
-    req.body.image = image ? `${PATH}/uploads/${image}` : ''
+    req.body.image = image ? `${LIVEPATH}/uploads/${image}` : ''
   
     let createStaff = await User.findOne({ email: req.body.email , isDeleted : false , isSuspend:false });
     if (createStaff) {

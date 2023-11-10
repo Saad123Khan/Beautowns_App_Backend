@@ -3,7 +3,7 @@ import {
   Store,
   validateStores,
 } from "#models/store_model";
-import { PATH } from "#constant/constant";
+import { PATH ,LIVEPATH} from "#constant/constant";
 import { Service } from "#models/services_model";
 import { Staffs } from "#models/staff_model";
 import _ from "lodash";
@@ -107,7 +107,7 @@ const createStore = asyncHandler(async (req, res) => {
 
 
   const image = req?.file?.filename;
-  req.body.image = image ? `${PATH}/uploads/${image}` : ''
+  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : ''
 
   const store = await new Store(req.body).save();
 
@@ -145,7 +145,7 @@ const updateStore = asyncHandler(async (req, res) => {
   const documentUrls = [];
   if (req?.files?.documents) {
     req?.files?.documents?.forEach((document) => {
-      const documentUrl = `${PATH}/uploads/${document?.filename}`;
+      const documentUrl = `${LIVEPATH}/uploads/${document?.filename}`;
       documentUrls.push(documentUrl);
     });
   }
@@ -155,7 +155,7 @@ const updateStore = asyncHandler(async (req, res) => {
   const galleryUrls = [];
   if (req?.files?.gallery) {
     req?.files?.gallery?.forEach((galleryImage) => {
-      const galleryImageUrl = `${PATH}/uploads/${galleryImage?.filename}`;
+      const galleryImageUrl = `${LIVEPATH}/uploads/${galleryImage?.filename}`;
       galleryUrls.push(galleryImageUrl);
     });
   }
@@ -165,7 +165,7 @@ const updateStore = asyncHandler(async (req, res) => {
   const imageUrls = [];
   if (req?.files?.image) {
     req?.files?.image.forEach((image) => {
-      const imageUrl = `${PATH}/uploads/${image?.filename}`;
+      const imageUrl = `${LIVEPATH}/uploads/${image?.filename}`;
       imageUrls.push(imageUrl);
     });
   }

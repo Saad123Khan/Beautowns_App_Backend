@@ -4,7 +4,7 @@ import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import _ from "lodash";
 import bcrypt from "bcryptjs";
-import { PATH } from "#constant/constant";
+import { PATH ,LIVEPATH} from "#constant/constant";
 import Joi from "joi";
 import { Service } from "#models/services_model";
 import { getAvailableSlots } from "#controllers/slots.controller";
