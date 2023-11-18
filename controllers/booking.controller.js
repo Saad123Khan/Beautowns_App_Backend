@@ -28,10 +28,8 @@ function validateBooking(service) {
 }
 
 const createBooking = asyncHandler(async (req, res) => {
-
     // await Booking.deleteMany({ user_Id:req.body.user_Id,paymentDone:false,isCheckIn:false, isDeleted :false, isCancel:false})
-
-    console.log(req.body)
+    console.log(req.body,"Book")
     req.body.date = moment(req.body.date).format('YYYY-MM-DD');
     console.log(req.body?.date)
 

@@ -69,4 +69,21 @@ const getOneCategory = asyncHandler(async (req, res) => {
 
 })
 
-export { createStoreCategory,getAllCategories ,getOneCategory }
+const delete_catgory = asyncHandler(async (req, res) => {
+    const delete_cat = await StoreCategories.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { isDeleted: true } }
+    );
+  
+    if (delete_cat) {
+      return res
+        .status(200)
+        .send({ status: true, message: "Category Deleted Successfully!" });
+    } else {
+      return res
+        .status(404)
+        .send({ status: false, message: "Category does not exists" });
+    }
+  });
+
+export { createStoreCategory,getAllCategories ,getOneCategory,delete_catgory }
