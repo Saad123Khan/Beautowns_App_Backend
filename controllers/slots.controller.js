@@ -8,6 +8,7 @@ import moment from 'moment-timezone';
 import { Booking } from "#models/booking_model";
 import { Coupon } from "#models/coupons_model";
 
+import { Staffs } from "#models/staff_model";
 //@desc Get Available Slots for the Next 6 Months
 //@route /slots
 //@request Get Request
@@ -18,9 +19,6 @@ import { Coupon } from "#models/coupons_model";
 const getAvailableSlots = asyncHandler(async (req, res) => {
   const wantedToBookSlot = { duration: req.body.duration || 0 };
 
-
-
-  
 
   const store = await Store.findOne({
     _id: req.body.store_Id,
@@ -43,12 +41,26 @@ let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDelete
 
 
 
-  const availableTimings = store?.store_timings;
+let availableTimings = []
+if(req.body.staff_Id)
+{
+  const staff = await Staffs.findOne({
+    _id: req.body.staff_Id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
+  if (!staff) {
+    return res.status(404).json({ status: false, message: "Staff does not exists" });
+  }
+  availableTimings = staff?.workingSchedule;
+} else{
+  availableTimings = store?.store_timings;
+} 
 
   
   const eachSlotsAllowed = store?.no_of_slots;
 
-  
 
   const currentDate = moment(req.body.date).tz("Asia/Karachi");
   let endDate;
@@ -112,6 +124,7 @@ let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDelete
     });
     const year = currentDay.getFullYear();
     const dayDate = `${date} ${month} ${year}`;
+
     const dayTimings = availableTimings.find((timing) => timing.day === day);
 
     if (dayTimings?.isAvailable) {
@@ -193,7 +206,8 @@ let bookedSlotsForDate = await Booking.find({store_Id:req.body.store_Id,isDelete
 
 const getStoreAvailableSlots = asyncHandler(async (req, res) => {
   const wantedToBookSlot = { duration: req.query.duration || 0 };
-  console.log(req.query.user_Id)
+
+
   if (req.query.user_Id) {
     const query = {
       user_Id: req.query.user_Id,
@@ -228,6 +242,7 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
   }
   
   
+
 
   let bookedSlotsForDate = await Booking.find({store_Id:req.params.id,isDeleted:false,isCancel:false,isSessionExpired:false}).select("duration time date")
 
@@ -266,8 +281,24 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
   if (!store) {
     return res.status(404).json({ status: false, message: "Store does not exist" });
   }
-
-  const availableTimings = store.store_timings;
+  let availableTimings = []
+  if(req.query.staff_Id)
+  {
+      const staff = await Staffs.findOne({
+      _id: req.query.staff_Id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+  
+    if (!staff) {
+      return res.status(404).json({ status: false, message: "Staff does not exists" });
+    }
+  
+    availableTimings = staff?.workingSchedule;
+  } else{
+    availableTimings = store?.store_timings;
+  } 
+  
 
   const eachSlotsAllowed = store?.no_of_slots;
 
@@ -333,6 +364,7 @@ const getStoreAvailableSlots = asyncHandler(async (req, res) => {
     });
     const year = currentDay.getFullYear();
     const dayDate = `${date} ${month} ${year}`;
+    
     const dayTimings = availableTimings.find((timing) => timing.day === day);
 
     if (dayTimings?.isAvailable) {

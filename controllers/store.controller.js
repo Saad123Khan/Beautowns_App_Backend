@@ -20,7 +20,7 @@ function validateUpdateStores(store) {
     phone: Joi.number(),
     latitude: Joi.number(),
     longitude: Joi.number(),
-    
+    category_Id: Joi.string(),
     no_of_slots: Joi.number(),  
     // store_timings: Joi.array().items(
     //   Joi.object({

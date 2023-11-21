@@ -18,9 +18,12 @@ function validateBooking(service) {
     const schema = Joi.object({
         user_Id: Joi.string().required(),
         store_Id: Joi.string().required(),
+       
+        
         service_Ids: Joi.array().items(Joi.string()).min(1).required(),
         time: Joi.string().pattern(/^(0?[0-9]|1[0-2]):[0-5][0-9][ap]m$/i).message('Invalid time format. Please use this format hh:mmam or hh:mmpm').required(),
         date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).message("Invalid date format. Please use this format YYYY-MM-DD").required(),
+        staff_Id:Joi.string(),
         couponCode: Joi.string()
     });
 
@@ -150,8 +153,14 @@ const createBooking = asyncHandler(async (req, res) => {
             await Coupon.findOneAndUpdate({ _id: coupon?._id }, { $inc: { quantity: -1, totalAmount: discountAmount } })
             totalValue = totalValue - discountAmount;
 
-            let booking = await new Booking({ coupons_Id: coupon?._id, user_Id: req.body.user_Id, store_Id: req.body.store_Id, service_Ids: req.body.service_Ids, time: req.body.time, date: formattedDate, end: endTime, duration: req.body.duration, amount: totalValue }).save();
+            let booking = await new Booking({ coupons_Id: coupon?._id, user_Id: req.body.user_Id, store_Id: req.body.store_Id, service_Ids: req.body.service_Ids, time: req.body.time, date: formattedDate, end: endTime, duration: req.body.duration, amount: totalValue });
 
+            if(req.body.staff_Id)
+            {
+                booking.salon_staff_Id = req.body.staff_Id 
+            }
+            
+            await booking.save()
             if (booking) {
                 return res
                     .status(200)
@@ -174,7 +183,15 @@ const createBooking = asyncHandler(async (req, res) => {
 
     }
     else {
-        let booking = await new Booking({ user_Id: req.body.user_Id, store_Id: req.body.store_Id, service_Ids: req.body.service_Ids, time: req.body.time, date: formattedDate, end: endTime, duration: req.body.duration, amount: totalValue }).save();
+
+        let booking = await new Booking({ user_Id: req.body.user_Id, store_Id: req.body.store_Id, service_Ids: req.body.service_Ids, time: req.body.time, date: formattedDate, end: endTime, duration: req.body.duration, amount: totalValue });
+
+        if(req.body.staff_Id)
+        {
+            booking.salon_staff_Id = req.body.staff_Id 
+        }
+        
+        await booking.save()
 
         if (booking) {
             return res
