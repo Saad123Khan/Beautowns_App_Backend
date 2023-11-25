@@ -216,8 +216,16 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 
   let updatedUser = await User.findOne({ email: req.body.email }).select(
-    "role email name phone gender isVerified"
-  );
+    "role email name phone gender isVerified favourite"
+  ).populate("favourite.stores favourite.services");
+
+  await User.populate(updatedUser, {
+    path: 'favourite.services',
+    populate: {
+      path: 'store_Id',
+      model: 'Store',
+    },
+  });
 
   let wallet = await Wallet.findOne({user_Id:updatedUser?._id})
 
@@ -358,7 +366,15 @@ const otpVerify = asyncHandler(async (req, res) => {
       { email: emailValid?.email },
       { $set: { isVerified: true } },
       { new: true }
-    ).select("role email name phone isVerified");
+    ).select("role email name phone isVerified favourite").populate("favourite.stores favourite.services");
+
+    await User.populate(user, {
+      path: 'favourite.services',
+      populate: {
+        path: 'store_Id',
+        model: 'Store',
+      },
+    });
 
     let wallet = await Wallet.findOne({user_Id:user?._id})
 
