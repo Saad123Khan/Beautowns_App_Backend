@@ -20,7 +20,7 @@ function validateUpdateStores(store) {
     phone: Joi.number(),
     latitude: Joi.number(),
     longitude: Joi.number(),
-    
+    category_Id: Joi.string(),
     no_of_slots: Joi.number(),  
     // store_timings: Joi.array().items(
     //   Joi.object({
@@ -149,7 +149,7 @@ const updateStore = asyncHandler(async (req, res) => {
       documentUrls.push(documentUrl);
     });
   }
-
+  console.log(req.body,"req.body.documents")
   req.body.documents = documentUrls?.length > 0 ? [...documentUrls, ...isStoreExist?.documents] : isStoreExist?.documents
 
   const galleryUrls = [];
