@@ -1,16 +1,12 @@
 import asyncHandler from "#middlewares/asyncHandler";
-import {
-  Store,
-  validateStores,
-} from "#models/store_model";
-import { PATH ,LIVEPATH} from "#constant/constant";
+import { Store, validateStores } from "#models/store_model";
+import { PATH, LIVEPATH } from "#constant/constant";
 import { Service } from "#models/services_model";
 import { Staffs } from "#models/staff_model";
 import _ from "lodash";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
 import Joi from "joi";
-
 
 function validateUpdateStores(store) {
   const schema = Joi.object({
@@ -21,7 +17,7 @@ function validateUpdateStores(store) {
     latitude: Joi.number(),
     longitude: Joi.number(),
     category_Id: Joi.string(),
-    no_of_slots: Joi.number(),  
+    no_of_slots: Joi.number(),
     // store_timings: Joi.array().items(
     //   Joi.object({
     //     day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
@@ -33,19 +29,40 @@ function validateUpdateStores(store) {
 
     details: Joi.string(),
 
-
     location: Joi.string(),
 
-
-
-    store_timings: Joi.array().items(
-      Joi.object({
-        day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
-        from: Joi.when('isAvailable', { is: true, then: Joi.string().regex(/^([0-9]|1[0-2]|0[0-9]):[0-5][0-9][ap]m$/i).required() }),
-        to: Joi.when('isAvailable', { is: true, then: Joi.string().regex(/^([0-9]|1[0-2]|0[0-9]):[0-5][0-9][ap]m$/i).required() }),
-        isAvailable: Joi.boolean().required(),
-      })
-    ).min(7).max(7).unique('day', { ignoreUndefined: true }),
+    store_timings: Joi.array()
+      .items(
+        Joi.object({
+          day: Joi.string()
+            .valid(
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday"
+            )
+            .required(),
+          from: Joi.when("isAvailable", {
+            is: true,
+            then: Joi.string()
+              .regex(/^([0-9]|1[0-2]|0[0-9]):[0-5][0-9][ap]m$/i)
+              .required(),
+          }),
+          to: Joi.when("isAvailable", {
+            is: true,
+            then: Joi.string()
+              .regex(/^([0-9]|1[0-2]|0[0-9]):[0-5][0-9][ap]m$/i)
+              .required(),
+          }),
+          isAvailable: Joi.boolean().required(),
+        })
+      )
+      .min(7)
+      .max(7)
+      .unique("day", { ignoreUndefined: true }),
     documents: Joi.array(),
     segment_Id: Joi.number().valid(1, 2, 3),
     image: Joi.string(),
@@ -57,7 +74,6 @@ function validateUpdateStores(store) {
   });
   return schema.validate(store);
 }
-
 
 const createStore = asyncHandler(async (req, res) => {
   const { error } = validateStores(req.body);
@@ -91,7 +107,11 @@ const createStore = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store owner record not exists" });
   }
 
-  const categoryFind = await Categories.findOne({ _id: req.body.category_Id, isSuspend: false, isDeleted: false })
+  const categoryFind = await Categories.findOne({
+    _id: req.body.category_Id,
+    isSuspend: false,
+    isDeleted: false,
+  });
 
   if (!categoryFind) {
     return res
@@ -105,9 +125,8 @@ const createStore = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store owner not verified" });
   }
 
-
   const image = req?.file?.filename;
-  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : ''
+  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : "";
 
   const store = await new Store(req.body).save();
 
@@ -123,7 +142,6 @@ const createStore = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Something Error while creating store" });
   }
 });
-
 
 const updateStore = asyncHandler(async (req, res) => {
   const { error } = validateUpdateStores(req.body);
@@ -149,8 +167,11 @@ const updateStore = asyncHandler(async (req, res) => {
       documentUrls.push(documentUrl);
     });
   }
-  console.log(req.body,"req.body.documents")
-  req.body.documents = documentUrls?.length > 0 ? [...documentUrls, ...isStoreExist?.documents] : isStoreExist?.documents
+  console.log(req.body, "req.body.documents");
+  req.body.documents =
+    documentUrls?.length > 0
+      ? [...documentUrls, ...isStoreExist?.documents]
+      : isStoreExist?.documents;
 
   const galleryUrls = [];
   if (req?.files?.gallery) {
@@ -160,7 +181,10 @@ const updateStore = asyncHandler(async (req, res) => {
     });
   }
 
-  req.body.gallery = galleryUrls?.length > 0 ? [...galleryUrls, ...isStoreExist?.gallery] : isStoreExist?.gallery
+  req.body.gallery =
+    galleryUrls?.length > 0
+      ? [...galleryUrls, ...isStoreExist?.gallery]
+      : isStoreExist?.gallery;
 
   const imageUrls = [];
   if (req?.files?.image) {
@@ -170,22 +194,35 @@ const updateStore = asyncHandler(async (req, res) => {
     });
   }
 
-
-  req.body.image = imageUrls?.length > 0 ? imageUrls?.[0] : isStoreExist?.image
+  req.body.image = imageUrls?.length > 0 ? imageUrls?.[0] : isStoreExist?.image;
 
   let updatedStore = await Store.findByIdAndUpdate(
     isStoreExist?._id,
-    _.pick(req.body, ["segment_Id", "name", "country", "city", "phone", "latitude", "longitude", "image", "documents", "gallery", "store_timings", "completeProgess", "details", "location","no_of_slots"]),
+    _.pick(req.body, [
+      "segment_Id",
+      "name",
+      "country",
+      "city",
+      "phone",
+      "latitude",
+      "longitude",
+      "image",
+      "documents",
+      "gallery",
+      "store_timings",
+      "completeProgess",
+      "details",
+      "location",
+      "no_of_slots",
+    ]),
     { new: true }
-  );
+  ).populate("category_Id");
   return res.status(200).send({
     status: true,
     message: "Updated store details successfully",
     store: updatedStore,
   });
-
 });
-
 
 const changeStoreStatus = asyncHandler(async (req, res) => {
   const isStoreExist = await Store.find({
@@ -207,15 +244,12 @@ const changeStoreStatus = asyncHandler(async (req, res) => {
       message: "Sucessfully verified successfully",
     });
   } else {
-    return res
-      .status(400)
-      .send({
-        status: false,
-        message: "Something Error while verifying store",
-      });
+    return res.status(400).send({
+      status: false,
+      message: "Something Error while verifying store",
+    });
   }
 });
-
 
 const getAllStore = asyncHandler(async (req, res) => {
   const store = await Store.find({ isDeleted: false, isSuspend: false });
@@ -231,7 +265,6 @@ const getAllStore = asyncHandler(async (req, res) => {
 });
 
 const getOneStore = asyncHandler(async (req, res) => {
-
   let store;
   if (req.query.type === "owner") {
     store = await Store.findOne({
@@ -239,15 +272,13 @@ const getOneStore = asyncHandler(async (req, res) => {
       isDeleted: false,
       isSuspend: false,
     });
-  }
-  else if (req.query.type === "store") {
+  } else if (req.query.type === "store") {
     store = await Store.findOne({
       _id: req.params.id,
       isDeleted: false,
       isSuspend: false,
     });
-  }
-  else {
+  } else {
     return res.status(404).send({
       status: false,
       message: "Invalid type",
@@ -262,11 +293,12 @@ const getOneStore = asyncHandler(async (req, res) => {
       isSuspend: false,
     }).populate("service_category_Id");
 
-
     const services = {};
-    let serviceId = 1
+    let serviceId = 1;
     servicesData.forEach((service) => {
-      const category = service.service_category_Id ? service.service_category_Id.name : 'Uncategorized';
+      const category = service.service_category_Id
+        ? service.service_category_Id.name
+        : "Uncategorized";
 
       if (!services[category]) {
         services[category] = [];
@@ -276,7 +308,6 @@ const getOneStore = asyncHandler(async (req, res) => {
       // serviceObject.id = serviceId++;
       services[category].push(serviceObject);
     });
-
 
     let id = 1;
 
@@ -289,7 +320,6 @@ const getOneStore = asyncHandler(async (req, res) => {
       }
     }
 
-
     const categories = Object.keys(services);
 
     const staff = await Staffs.find({
@@ -297,7 +327,6 @@ const getOneStore = asyncHandler(async (req, res) => {
       isDeleted: false,
       isSuspend: false,
     });
-
 
     const data = { store, services, staff, serviceCategory: categories };
 
@@ -311,11 +340,41 @@ const getOneStore = asyncHandler(async (req, res) => {
   }
 });
 
+const getStoreStaffServices = asyncHandler(async (req, res) => {
+  const isExist = await Store.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+  if (isExist) {
+    const countService = await Service.countDocuments({
+      store_Id: req.params.id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+    const countStaff = await Service.countDocuments({
+      store_Id: req.params.id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+    return res.status(200).send({
+      status: true,
+      total_service: countService,
+      total_staff: countStaff,
+    });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Store record does not exists",
+    });
+  }
+});
 
 export {
   createStore,
   getAllStore,
   getOneStore,
   changeStoreStatus,
-  updateStore
+  updateStore,
+  getStoreStaffServices,
 };

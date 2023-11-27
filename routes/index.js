@@ -9,9 +9,11 @@ import staffRoute from "#routes/staff.routes";
 import membershipRoute from "#routes/membership.routes";
 import bookingRoute from "#routes/booking.routes";
 import couponRoute from "#routes/coupon.routes";
+import blogRoute from "#routes/blog.routes";
 import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
 import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 import paymentRoute from "#routes/payment.routes";
+import notificationRoute from "#routes/notification.routes";
 
 
 const routes = (app) => {
@@ -29,6 +31,8 @@ const routes = (app) => {
 
   //Store
   app.use("/api/store", storeRoute);
+  app.use("/api/blog", blogRoute);
+  app.use("/api/notification", notificationRoute);
 
   //Service
   app.use("/api/service", serviceRoute);

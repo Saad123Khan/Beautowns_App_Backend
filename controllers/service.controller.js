@@ -49,12 +49,10 @@ const createService = asyncHandler(async (req, res) => {
   });
 
   if (!storeCategory) {
-    return res
-      .status(404)
-      .send({
-        status: false,
-        message: "Store Service Category record not exists",
-      });
+    return res.status(404).send({
+      status: false,
+      message: "Store Service Category record not exists",
+    });
   }
 
   const image = req?.file?.filename;
@@ -66,12 +64,10 @@ const createService = asyncHandler(async (req, res) => {
       .status(201)
       .send({ status: true, message: "Sucessfully created service", service });
   } else {
-    return res
-      .status(400)
-      .send({
-        status: false,
-        message: "Something Error while creating service",
-      });
+    return res.status(400).send({
+      status: false,
+      message: "Something Error while creating service",
+    });
   }
 });
 
@@ -102,21 +98,16 @@ const updateService = asyncHandler(async (req, res) => {
     new: true,
   });
   if (service) {
-    return res
-      .status(200)
-      .send({
-        status: true,
-        message: "Sucessfully updated service",
-        service,
-        service,
-      });
+    return res.status(200).send({
+      status: true,
+      message: "Sucessfully updated service",
+      service,
+    });
   } else {
-    return res
-      .status(400)
-      .send({
-        status: false,
-        message: "Something Error while updating service",
-      });
+    return res.status(400).send({
+      status: false,
+      message: "Something Error while updating service",
+    });
   }
 });
 const getAllStoreServices = asyncHandler(async (req, res) => {
@@ -147,7 +138,6 @@ const getAllStoreServices = asyncHandler(async (req, res) => {
 });
 
 const getServiceSpecific = asyncHandler(async (req, res) => {
-  console.log(req.body);
   const services = await Service.find({
     _id: { $in: req.body.service_Ids },
     isDeleted: false,
@@ -168,7 +158,7 @@ const getOneService = asyncHandler(async (req, res) => {
     _id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  });
+  }).populate("service_category_Id");
 
   if (service) {
     return res.status(200).send({ status: true, service });
@@ -180,15 +170,30 @@ const getOneService = asyncHandler(async (req, res) => {
 });
 
 const delete_service = asyncHandler(async (req, res) => {
-  const delete_cat = await Service.findOneAndUpdate(
-    { _id: req.params.id },
-    { $set: { isDeleted: true } }
-  );
+  const isExist = await Service.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
 
-  if (delete_cat) {
-    return res
-      .status(200)
-      .send({ status: true, message: "Service Deleted Successfully!" });
+  if (isExist) {
+    const delete_cat = await Service.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { isDeleted: true } }
+    );
+
+    if (delete_cat) {
+      return res
+        .status(200)
+        .send({ status: true, message: "Service Deleted Successfully!" });
+    } else {
+      return res
+        .status(400)
+        .send({
+          status: false,
+          message: "Something Wents Wrong While Deleting Service",
+        });
+    }
   } else {
     return res
       .status(404)
@@ -202,5 +207,5 @@ export {
   getOneService,
   updateService,
   getServiceSpecific,
-  delete_service
+  delete_service,
 };

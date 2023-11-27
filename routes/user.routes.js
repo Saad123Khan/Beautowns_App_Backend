@@ -1,31 +1,43 @@
 import express from "express";
 import validateObjectId from "#middlewares/validateObjectId";
-
-import { getAllUser,getOneUser ,updateUserProfileToken,getUserNotification,userNotificationSeen} from "#controllers/user.controller";
+import { multerUpload } from "#utils/multer";
+import {
+  getAllUser,
+  getOneUser,
+  updateUserProfileToken,
+  getUserNotification,
+  userNotificationSeen,
+  updateUser,
+} from "#controllers/user.controller";
 import authMiddleware from "#middlewares/auth.middleware";
 
 const userRoute = express.Router();
 
 //Get One User
-userRoute.get("/:id",[validateObjectId,authMiddleware],getOneUser);
-
-
+userRoute.get("/:id", [validateObjectId, authMiddleware], getOneUser);
 
 //Get All User
-userRoute.get("/",[authMiddleware],getAllUser);
+userRoute.get("/", [authMiddleware], getAllUser);
 
+userRoute.put(
+  "/update/:id",
+  [validateObjectId, authMiddleware, multerUpload.single("image")],
+  updateUser
+);
 
 //Get User Notification
 
-userRoute.get("/notification/:id",[authMiddleware],getUserNotification);
+userRoute.get("/notification/:id", [authMiddleware], getUserNotification);
 
 //Seen User Notification
 
-userRoute.get("/notification-seen/:id",[authMiddleware],userNotificationSeen);
-
+userRoute.get("/notification-seen/:id", [authMiddleware], userNotificationSeen);
 
 //Update User Profile Token
-userRoute.post("/update-token/:id",[authMiddleware,validateObjectId],updateUserProfileToken);
-
+userRoute.post(
+  "/update-token/:id",
+  [authMiddleware, validateObjectId],
+  updateUserProfileToken
+);
 
 export default userRoute;

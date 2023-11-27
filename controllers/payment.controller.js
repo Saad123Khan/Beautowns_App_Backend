@@ -9,7 +9,6 @@ import { Booking } from "#models/booking_model";
 //@acess  private
 
 const createBookingPayment = asyncHandler(async (req, res) => {
-
   const { error } = validatePayment(req.body);
   if (error) {
     return res
@@ -17,51 +16,81 @@ const createBookingPayment = asyncHandler(async (req, res) => {
       .send({ status: false, message: error?.details[0]?.message });
   }
 
-
-  const user = await User.findOne({ _id: req.params.id, isDeleted: false, isSuspend: false });
+  const user = await User.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
 
   if (!user) {
-    return res.status(404).json({ status: false, message: "User record not found" });
+    return res
+      .status(404)
+      .json({ status: false, message: "User record not found" });
   }
 
-  const bookingFind = await Booking.findOne({ _id: req.body.booking_Id,user_Id:req.params.id, isCheckIn: false, isCancel: false, isDeleted: false })
+  const bookingFind = await Booking.findOne({
+    _id: req.body.booking_Id,
+    user_Id: req.params.id,
+    isCheckIn: false,
+    isCancel: false,
+    isDeleted: false,
+  });
 
   if (!bookingFind) {
-    return res.status(404).json({ status: false, message: "Booking record not found" });
+    return res
+      .status(404)
+      .json({ status: false, message: "Booking record not found" });
   }
 
   if (bookingFind?.isSessionExpired) {
-    return res.status(404).json({ status: false, message: "Booking Session expired" });
+    return res
+      .status(404)
+      .json({ status: false, message: "Booking Session expired" });
   }
 
-
-  const paymentFind = await Payment.findOne({ booking_Id: req.body.booking_Id, isCancel: false, isDeleted: false });
+  const paymentFind = await Payment.findOne({
+    booking_Id: req.body.booking_Id,
+    isCancel: false,
+    isDeleted: false,
+  });
   if (paymentFind) {
-    return res.status(400).json({ status: false, message: "Payment for the booking has already been made" });
+    return res
+      .status(400)
+      .json({
+        status: false,
+        message: "Payment for the booking has already been made",
+      });
   }
 
   const paymentCreated = await new Payment({
     booking_Id: req.body.booking_Id,
-    user_Id:bookingFind?.user_Id,
-    store_Id:bookingFind?.store_Id,
-    phone:req.body.phone,
-    amount: bookingFind?.amount
+    user_Id: bookingFind?.user_Id,
+    store_Id: bookingFind?.store_Id,
+    phone: req.body.phone,
+    amount: bookingFind?.amount,
   }).save();
 
-  let booking = await Booking.findByIdAndUpdate(bookingFind?._id, { payment_Id: paymentCreated?._id, paymentDone: true }, { new: true });
+  let booking = await Booking.findByIdAndUpdate(
+    bookingFind?._id,
+    { payment_Id: paymentCreated?._id, paymentDone: true },
+    { new: true }
+  );
 
   if (booking) {
     return res.status(200).json({
       status: true,
       message: "The booking has been confirmed.",
-      booking: booking
-    })
-  }
-  else {
-    return res.status(400).json({ status: false, message: "Something error while creating payment" });
+      booking: booking,
+    });
+  } else {
+    return res
+      .status(400)
+      .json({
+        status: false,
+        message: "Something error while creating payment",
+      });
   }
 });
-
 
 //@desc  User Get All
 //@route  /user
@@ -69,15 +98,18 @@ const createBookingPayment = asyncHandler(async (req, res) => {
 //@acess  private
 
 const getAllStoreBookingPayment = asyncHandler(async (req, res) => {
-  const payments = await Payment.find({store_Id:req.params.id});  
+  const payments = await Payment.find({ store_Id: req.params.id }).populate(
+    "user_Id"
+  );
   if (payments?.length > 0) {
     return res.status(200).json({
       status: true,
-      payments
-    })
-  }
-  else {
-    return res.status(200).json({ status: true, message: "Payment record not found" });
+      payments,
+    });
+  } else {
+    return res
+      .status(200)
+      .json({ status: true, message: "Payment record not found" });
   }
 });
 
@@ -91,11 +123,12 @@ const getOnePaymentDetails = asyncHandler(async (req, res) => {
   if (user) {
     return res.status(200).json({
       status: true,
-      user
-    })
-  }
-  else {
-    return res.status(200).json({ status: true, message: "User record not found" });
+      user,
+    });
+  } else {
+    return res
+      .status(200)
+      .json({ status: true, message: "User record not found" });
   }
 });
 
@@ -105,22 +138,22 @@ const getOnePaymentDetails = asyncHandler(async (req, res) => {
 //@acess  private
 
 const getAllUserBookingPayment = asyncHandler(async (req, res) => {
-  const payments = await Payment.find({user_Id:req.params.id});
+  const payments = await Payment.find({ user_Id: req.params.id });
   if (payments?.length > 0) {
     return res.status(200).json({
       status: true,
-      payments
-    })
-  }
-  else {
-    return res.status(404).json({ status: false, message: "Payment record not found" });
+      payments,
+    });
+  } else {
+    return res
+      .status(404)
+      .json({ status: false, message: "Payment record not found" });
   }
 });
 
-
 export {
-  
   getAllUserBookingPayment,
   getAllStoreBookingPayment,
-  getOnePaymentDetails, createBookingPayment
-}
+  getOnePaymentDetails,
+  createBookingPayment,
+};

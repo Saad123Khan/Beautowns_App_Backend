@@ -4,7 +4,8 @@ import {
   getAllStore,
   getOneStore,
   changeStoreStatus,
-  updateStore
+  updateStore,
+  getStoreStaffServices
 } from "#controllers/store.controller";
 
 import validateObjectId from "#middlewares/validateObjectId";
@@ -36,6 +37,7 @@ storeRoute
 
 
 storeRoute.route("/:id").get(validateObjectId, getOneStore);
+storeRoute.route("/getStaffandServices/:id").get(validateObjectId, getStoreStaffServices);
 
 
 storeRoute.route("/slots/:id").get(validateObjectId, getStoreAvailableSlots);

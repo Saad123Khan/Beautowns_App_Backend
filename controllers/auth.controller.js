@@ -14,10 +14,9 @@ import { email } from "#utils/email";
 import { User, validateUser } from "#models/user_model";
 import { Store } from "#models/store_model";
 import { Wallet } from "#models/wallet_model";
-import { Contact,validateContact } from "#models/contact_model";
+import { Contact, validateContact } from "#models/contact_model";
 import { contactEmail } from "#utils/email";
 import { firebaseNotification } from "#utils/firebaseNotification";
-
 
 const validate = (req) => {
   const schema = Joi.object({
@@ -56,9 +55,9 @@ const createUser = asyncHandler(async (req, res) => {
     return res
       .status(400)
       .send({ status: false, message: "Email already exists." });
-  } else {  
-   await new User(
-      _.pick(req.body, ["role", "name","gender", "email", "password"])
+  } else {
+    await new User(
+      _.pick(req.body, ["role", "name", "gender", "email", "password"])
     ).save();
   }
 
@@ -100,7 +99,7 @@ const createUser = asyncHandler(async (req, res) => {
 //   }
 
 //   let user = await User.findOne({ email: req.body.email, role: req.body.role });
-  
+
 //   if (!user)
 //     return res
 //       .status(404)
@@ -130,7 +129,7 @@ const createUser = asyncHandler(async (req, res) => {
 //       email: req.body.email,
 //       otp: OTP,
 //     }).save();
-    
+
 //     email(verification?.email, OTP);
 
 //     return res.status(404).json({
@@ -148,7 +147,7 @@ const createUser = asyncHandler(async (req, res) => {
 //     .cookie("x-auth-token", token, {
 //       httpOnly: true,
 //       maxAge: 365 * 24 * 60 * 60 * 1000,
-//     }) 
+//     })
 //     .header("x-auth-token", token)
 //     .header("access-control-expose-headers", "x-auth-token")
 //     .status(200)
@@ -158,8 +157,6 @@ const createUser = asyncHandler(async (req, res) => {
 //       user: updatedUser,
 //     });
 // });
-
-
 
 const loginUser = asyncHandler(async (req, res) => {
   const { error } = validate(req.body);
@@ -180,7 +177,6 @@ const loginUser = asyncHandler(async (req, res) => {
     req.body.password,
     user?.password
   );
-
 
   if (!validPassword)
     return res
@@ -213,20 +209,22 @@ const loginUser = asyncHandler(async (req, res) => {
     salon_owner_Id: user?._id,
     isDeleted: false,
     isSuspend: false,
-  });
+  }).populate("category_Id");
 
   let updatedUser = await User.findOne({ email: req.body.email }).select(
-    "role email name phone gender isVerified"
+    "role email name phone image gender isVerified"
   );
 
-  let wallet = await Wallet.findOne({user_Id:updatedUser?._id})
+  let wallet = await Wallet.findOne({ user_Id: updatedUser?._id });
 
-    if(!wallet)
-    {
-      wallet = await new Wallet({user_Id:updatedUser?._id,role:updatedUser?.role}).save();
-    }
-    
-    let {balance} = wallet ;
+  if (!wallet) {
+    wallet = await new Wallet({
+      user_Id: updatedUser?._id,
+      role: updatedUser?.role,
+    }).save();
+  }
+
+  let { balance } = wallet;
   const token = updatedUser.generateAuthToken();
 
   return res
@@ -241,11 +239,10 @@ const loginUser = asyncHandler(async (req, res) => {
       status: true,
       message: `Login successfully`,
       user: updatedUser,
-      wallet:{balance},
-      store:isStoreExist
+      wallet: { balance },
+      store: isStoreExist,
     });
 });
-
 
 //@desc  User forget password
 //@route  /auth/forget
@@ -353,30 +350,29 @@ const otpVerify = asyncHandler(async (req, res) => {
   if (otpFind?.otp === req.body.otp) {
     await UserVerification.deleteMany({ email: req.body.email });
 
-    
     const user = await User.findOneAndUpdate(
       { email: emailValid?.email },
       { $set: { isVerified: true } },
       { new: true }
     ).select("role email name phone isVerified");
 
-    let wallet = await Wallet.findOne({user_Id:user?._id})
+    let wallet = await Wallet.findOne({ user_Id: user?._id });
 
-    if(!wallet)
-    {
-      wallet = await new Wallet({user_Id:user?._id,role:user?.role}).save();
+    if (!wallet) {
+      wallet = await new Wallet({
+        user_Id: user?._id,
+        role: user?.role,
+      }).save();
     }
     const token = user.generateAuthToken();
-    let {balance} = wallet ;
-    
-    if(!emailValid?.isVerified)
-    {
- 
+    let { balance } = wallet;
+
+    if (!emailValid?.isVerified) {
       const notification = {
         title: "Welcome to Beautowns",
-        body: `Beautowns offers a curated selection of salons and beauty experts, all at your fingertips. Whether you're in search of a haircut, a spa day, a fresh manicure, or any other beauty treatment, we've got you covered. Our user-friendly app allows you to effortlessly explore the services, prices, and availability of your preferred salons, ensuring you find the perfect fit for your beauty needs.`
-      }
-  
+        body: `Beautowns offers a curated selection of salons and beauty experts, all at your fingertips. Whether you're in search of a haircut, a spa day, a fresh manicure, or any other beauty treatment, we've got you covered. Our user-friendly app allows you to effortlessly explore the services, prices, and availability of your preferred salons, ensuring you find the perfect fit for your beauty needs.`,
+      };
+
       await firebaseNotification(
         notification,
         [user],
@@ -384,10 +380,9 @@ const otpVerify = asyncHandler(async (req, res) => {
         "Specific-User",
         "system",
         "users"
-      )
-     
+      );
     }
-    
+
     return res
       .cookie("x-auth-token", token, {
         httpOnly: true,
@@ -400,7 +395,7 @@ const otpVerify = asyncHandler(async (req, res) => {
         status: true,
         message: "Verified successfully",
         user: user,
-        wallet:{balance}
+        wallet: { balance },
       });
   } else {
     return res.status(404).send({ status: false, message: "Otp was wrong!" });
@@ -417,15 +412,13 @@ const logout = asyncHandler(async (req, res) => {
   res.cookie("x-auth-token", null).send("Successfully logout");
 });
 
-
-
 /**
  @desc     Authenticate User Registered
  @route    POST /api/auth/register
  @access   Public
  */
 
- const salonContact = asyncHandler(async (req, res) => {
+const salonContact = asyncHandler(async (req, res) => {
   const { error } = validateContact(req.body);
   if (error) {
     return res
@@ -435,7 +428,7 @@ const logout = asyncHandler(async (req, res) => {
 
   const contact = await new Contact(req.body).save();
 
-  contactEmail("mohammadsaadkhan69@gmail.com",contact);
+  contactEmail("mohammadsaadkhan69@gmail.com", contact);
 
   return res.status(200).json({
     status: true,
