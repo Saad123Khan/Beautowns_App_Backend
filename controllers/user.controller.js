@@ -2,9 +2,19 @@ import asyncHandler from "#middlewares/asyncHandler";
 import { User } from "#models/user_model";
 import { LIVEPATH } from "#constant/constant";
 import Notification from "#models/notificationModel";
-
 import { Service } from "#models/services_model";
 import { Store } from "#models/store_model";
+import Joi from "joi";
+
+function validateUpdateUser(user) {
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    gender: Joi.string().valid("male", "female", "other"),
+    image: Joi.string(),
+  });
+
+  return schema.validate(user);
+}
 
 //@desc  User Get All
 //@route  /user
@@ -69,16 +79,16 @@ const updateUser = asyncHandler(async (req, res) => {
 
     const image = req?.file?.filename;
     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : user?.image;
+
     const updaingUser = await User.findByIdAndUpdate(user?._id, req.body, {
       new: true,
-      select: "role email image name phone isVerified",
-    });
+    }).select("role email image name phone isVerified");
+
     if (updaingUser) {
       return res.status(200).send({
         status: true,
         message: `Sucessfully updated ${user?.role}`,
         user,
-        red:req.body
       });
     } else {
       return res.status(400).json({
@@ -107,12 +117,16 @@ const updateUserProfileToken = asyncHandler(async (req, res) => {
       ? req.body.not_token
       : userFind?.not_token;
 
-  const user = await User.findByIdAndUpdate(id, { not_token: req.body.not_token }, { new: true }).populate("favourite.stores favourite.services");
+  const user = await User.findByIdAndUpdate(
+    id,
+    { not_token: req.body.not_token },
+    { new: true }
+  ).populate("favourite.stores favourite.services");
   await User.populate(user, {
-    path: 'favourite.services',
+    path: "favourite.services",
     populate: {
-      path: 'store_Id',
-      model: 'Store',
+      path: "store_Id",
+      model: "Store",
     },
   });
 
@@ -186,7 +200,6 @@ const userNotificationSeen = asyncHandler(async (req, res) => {
   }
 });
 
-
 //@desc  Add Favourite
 //@route  /user/favourite-added/:id
 //@request Body Request
@@ -196,53 +209,79 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { type, store_Id, service_Id } = req.body;
 
-  const user = await User.findOne({ _id: id, isDeleted: false, role: 'user' });
+  const user = await User.findOne({ _id: id, isDeleted: false, role: "user" });
 
   if (!user) {
-    return res.status(200).json({ status: false, message: 'User not exists!' });
+    return res.status(200).json({ status: false, message: "User not exists!" });
   }
 
   let updateFields;
 
-  if (type === 'store') {
-    const salonFind = await Store.findOne({ _id: store_Id, isDeleted: false,isSuspend:false});
+  if (type === "store") {
+    const salonFind = await Store.findOne({
+      _id: store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    });
 
     if (!salonFind) {
-      return res.status(200).json({ status: false, message: 'Invalid Store Id' });
+      return res
+        .status(200)
+        .json({ status: false, message: "Invalid Store Id" });
     }
-    
-    updateFields = { $addToSet: { 'favourite.stores': store_Id } };
-  } else if (type === 'service') {
-   
-   
-    const serviceFind = await Service.findOne({ _id: service_Id, isDeleted: false,isSuspend:false});
+
+    updateFields = { $addToSet: { "favourite.stores": store_Id } };
+  } else if (type === "service") {
+    const serviceFind = await Service.findOne({
+      _id: service_Id,
+      isDeleted: false,
+      isSuspend: false,
+    });
 
     if (!serviceFind) {
-      return res.status(200).json({ status: false, message: 'Invalid Service Id' });
+      return res
+        .status(200)
+        .json({ status: false, message: "Invalid Service Id" });
     }
 
-    updateFields = { $addToSet: { 'favourite.services': service_Id } };
+    updateFields = { $addToSet: { "favourite.services": service_Id } };
   } else {
-    return res.status(400).json({ status: false, message: 'Invalid type!' });
+    return res.status(400).json({ status: false, message: "Invalid type!" });
   }
 
-  const userUpdate = await User.findByIdAndUpdate(user?._id, updateFields,{new:true}).select(
-    "role email name phone gender isVerified favourite"
-  ).populate("favourite.stores favourite.services");
+  const userUpdate = await User.findByIdAndUpdate(user?._id, updateFields, {
+    new: true,
+  })
+    .select("role email name phone gender isVerified favourite")
+    .populate("favourite.stores favourite.services");
   await User.populate(userUpdate, {
-    path: 'favourite.services',
+    path: "favourite.services",
     populate: {
-      path: 'store_Id',
-      model: 'Store',
+      path: "store_Id",
+      model: "Store",
     },
   });
 
   if (userUpdate) {
-    return res.status(200).json({ status: true, message: 'Favourite Added Successfully',user:userUpdate });
+    return res.status(200).json({
+      status: true,
+      message: "Favourite Added Successfully",
+      user: userUpdate,
+    });
   } else {
-    return res.status(400).json({ status: false, message: 'Something went wrong while adding favourites' });
+    return res.status(400).json({
+      status: false,
+      message: "Something went wrong while adding favourites",
+    });
   }
 });
 
-
-export {addFavouriteSalonServices,getOneUser,getAllUser,updateUserProfileToken,getUserNotification,userNotificationSeen}
+export {
+  addFavouriteSalonServices,
+  getOneUser,
+  getAllUser,
+  updateUserProfileToken,
+  getUserNotification,
+  userNotificationSeen,
+  updateUser,
+};

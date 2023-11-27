@@ -78,7 +78,6 @@ const sendPushNotification = asyncHandler(async (req, res) => {
         req.body.to
       )
   
-  
       await new AdminNotification({
         type: req.body.type,
         target: req.body.target,
@@ -102,9 +101,7 @@ const sendPushNotification = asyncHandler(async (req, res) => {
 
   
 const getAdminNotificationHistory = asyncHandler(async (req, res) => {
-
   const notifications = await AdminNotification.find({}).sort({ createdAt: -1 })
-
   if (notifications?.length > 0) {
     return res.status(200).json({ status: true, notifications });
   }
