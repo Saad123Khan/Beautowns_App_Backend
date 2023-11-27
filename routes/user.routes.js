@@ -1,14 +1,7 @@
 import express from "express";
 import validateObjectId from "#middlewares/validateObjectId";
-import { multerUpload } from "#utils/multer";
-import {
-  getAllUser,
-  getOneUser,
-  updateUserProfileToken,
-  getUserNotification,
-  userNotificationSeen,
-  updateUser,
-} from "#controllers/user.controller";
+
+import {addFavouriteSalonServices, getAllUser,getOneUser ,updateUserProfileToken,getUserNotification,userNotificationSeen} from "#controllers/user.controller";
 import authMiddleware from "#middlewares/auth.middleware";
 
 const userRoute = express.Router();
@@ -27,7 +20,14 @@ userRoute.put(
 
 //Get User Notification
 
-userRoute.get("/notification/:id", [authMiddleware], getUserNotification);
+userRoute.get("/notification/:id",[authMiddleware],getUserNotification);
+
+
+
+//Add Favourites Salon and Services
+
+userRoute.post("/favourite-add/:id",[authMiddleware],addFavouriteSalonServices);
+
 
 //Seen User Notification
 
