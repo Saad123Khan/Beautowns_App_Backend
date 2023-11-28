@@ -117,16 +117,16 @@ const createBooking = asyncHandler(async (req, res) => {
     "YYYY-MM-DD hh:mma"
   );
 
-  if (bookingDateTime.isBefore(salonOpenTime)) {
-    return res.status(400).send({
-      status: false,
-      message: `Sorry, the salon is closed at ${
-        req.body.time
-      } on ${bookingDate}. Salon opens at ${salonTiming.from} and closes at ${
-        salonTiming.to
-      } on ${moment(bookingDate).format("dddd")}.`,
-    });
-  }
+//   if (bookingDateTime.isBefore(salonOpenTime)) {
+//     return res.status(400).send({
+//       status: false,
+//       message: `Sorry, the salon is closed at ${
+//         req.body.time
+//       } on ${bookingDate}. Salon opens at ${salonTiming.from} and closes at ${
+//         salonTiming.to
+//       } on ${moment(bookingDate).format("dddd")}.`,
+//     });
+//   }
 
   let services = await Service.find({
     _id: { $in: req.body.service_Ids },
