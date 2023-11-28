@@ -13,7 +13,7 @@ import blogRoute from "#routes/blog.routes";
 import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
 import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 import paymentRoute from "#routes/payment.routes";
-import notificationRoute from "#routes/notification.routes";
+import staffPayrollRoutes from "#routes/staffPayroll.routes";
 
 
 const routes = (app) => {
@@ -32,7 +32,7 @@ const routes = (app) => {
   //Store
   app.use("/api/store", storeRoute);
   app.use("/api/blog", blogRoute);
-  app.use("/api/notification", notificationRoute);
+  app.use("/api/staffpayroll", staffPayrollRoutes);
 
   //Service
   app.use("/api/service", serviceRoute);

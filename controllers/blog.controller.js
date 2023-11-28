@@ -9,8 +9,8 @@ function validateUpdateBlogs(store) {
     title: Joi.string().required(),
     author: Joi.string().required(),
     description: Joi.string().required(),
-    image: Joi.string().required(),
-    author_image: Joi.string().required(),
+    image: Joi.string(),
+    author_image: Joi.string(),
     isSuspend: Joi.boolean(),
     isDeleted: Joi.boolean(),
   });
@@ -85,6 +85,13 @@ const getAllBlogs = asyncHandler(async (req, res) => {
 });
 
 const updateBlog = asyncHandler(async (req, res) => {
+  const { error } = validateUpdateBlogs(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .send({ status: false, message: error?.details[0]?.message });
+  }
+
   const isStoreExist = await Store.findOne({
     store_Id: req.body.store_Id,
     isDeleted: false,
@@ -110,13 +117,6 @@ const updateBlog = asyncHandler(async (req, res) => {
     req.body.author_image = author_image
       ? `${LIVEPATH}/uploads/${author_image}`
       : isBlogExist?.author_image;
-
-    const { error } = validateUpdateBlogs(req.body);
-    if (error) {
-      return res
-        .status(400)
-        .send({ status: false, message: error?.details[0]?.message });
-    }
 
     const updateBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
       new: true,

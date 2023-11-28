@@ -279,7 +279,7 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSessionExpired: false,
-  });
+  }).populate('service_Ids');
   if (storebooking?.length > 0) {
     return res.status(200).send({ status: true, booking: storebooking });
   } else {

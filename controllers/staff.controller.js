@@ -187,6 +187,15 @@ const getOneStaff = asyncHandler(async (req, res) => {
 });
 
 const delete_staff = asyncHandler(async (req, res) => {
+  const isStaffExist = await Staffs.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+  if (!isStaffExist) {
+    return res.status(400).send({ status: false, message: "Staff not exist" });
+  }
+
   const delete_cat = await Staffs.findOneAndUpdate(
     { _id: req.params.id },
     { $set: { isDeleted: true } }
@@ -203,4 +212,10 @@ const delete_staff = asyncHandler(async (req, res) => {
   }
 });
 
-export { createSalonStaff, getAllStoreStaffs, getOneStaff, updateStaff,delete_staff };
+export {
+  createSalonStaff,
+  getAllStoreStaffs,
+  getOneStaff,
+  updateStaff,
+  delete_staff,
+};

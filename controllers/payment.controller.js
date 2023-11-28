@@ -54,12 +54,10 @@ const createBookingPayment = asyncHandler(async (req, res) => {
     isDeleted: false,
   });
   if (paymentFind) {
-    return res
-      .status(400)
-      .json({
-        status: false,
-        message: "Payment for the booking has already been made",
-      });
+    return res.status(400).json({
+      status: false,
+      message: "Payment for the booking has already been made",
+    });
   }
 
   const paymentCreated = await new Payment({
@@ -83,12 +81,10 @@ const createBookingPayment = asyncHandler(async (req, res) => {
       booking: booking,
     });
   } else {
-    return res
-      .status(400)
-      .json({
-        status: false,
-        message: "Something error while creating payment",
-      });
+    return res.status(400).json({
+      status: false,
+      message: "Something error while creating payment",
+    });
   }
 });
 
@@ -98,9 +94,10 @@ const createBookingPayment = asyncHandler(async (req, res) => {
 //@acess  private
 
 const getAllStoreBookingPayment = asyncHandler(async (req, res) => {
-  const payments = await Payment.find({ store_Id: req.params.id }).populate(
-    "user_Id"
-  );
+  const payments = await Payment.find({ store_Id: req.params.id }).populate({
+    path: "user_Id",
+    select: "name",
+  });
   if (payments?.length > 0) {
     return res.status(200).json({
       status: true,
