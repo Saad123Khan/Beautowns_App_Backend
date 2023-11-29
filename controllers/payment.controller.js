@@ -94,10 +94,19 @@ const createBookingPayment = asyncHandler(async (req, res) => {
 //@acess  private
 
 const getAllStoreBookingPayment = asyncHandler(async (req, res) => {
-  const payments = await Payment.find({ store_Id: req.params.id }).populate({
-    path: "user_Id",
-    select: "name",
-  });
+  const payments = await Payment.find({ store_Id: req.params.id })
+    .populate({
+      path: "user_Id store_Id",
+      select: "name",
+    })
+    .populate({
+      path: "booking_Id",
+      select: "time end",
+      populate: {
+        path: "service_Ids",
+        select: "name",
+      },
+    });
   if (payments?.length > 0) {
     return res.status(200).json({
       status: true,

@@ -66,7 +66,7 @@ const getStaffPayroll = asyncHandler(async (req, res) => {
     staff_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  });
+  }).populate({path:"staff_Id",select:"name title"});;
   if (staffPayroll?.length > 0) {
     return res.status(200).send({ status: true, staffPayroll });
   } else {
