@@ -287,6 +287,36 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
   }
 });
 
+
+const getStaffBooking = asyncHandler(async (req, res) => {
+  const idStaffExist = await User.findOne({
+    _id: req.params.id,
+    isSuspend: false,
+    isDeleted: false,
+  });
+  if (!idStaffExist) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Staff does not exists" });
+  }
+  const staffbooking = await Booking.find({
+    salon_staff_Id: req.params.id,
+    isDeleted: false,
+    isSessionExpired: false,
+  }).populate('service_Ids').populate({path:"user_Id",select:"name gender"});
+
+  if (staffbooking?.length > 0) {
+    return res.status(200).send({ status: true, booking: staffbooking });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Booking record does not exists",
+      booking: [],
+      idStaffExist:idStaffExist
+    });
+  }
+});
+
 //@desc  ooking Coupon Added
 //@route  /booking/coupon-added/:id
 //@request POST Request
@@ -663,4 +693,5 @@ export {
   cancelledBooking,
   couponCodeBookingAdded,
   deleteBooking,
+  getStaffBooking
 };
