@@ -23,6 +23,8 @@ const createBlog = asyncHandler(async (req, res) => {
   req.body.image = image && `${LIVEPATH}/uploads/${image}`;
   req.body.author_image = author_image && `${LIVEPATH}/uploads/${author_image}`;
 
+
+  
   const { error } = validateBlogs(req.body);
   if (error) {
     return res
