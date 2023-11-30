@@ -4,6 +4,7 @@ import {
   validateStoreCategories,
 } from "#models/store_categories_model";
 import { Store } from "#models/store_model";
+import { Service } from "#models/services_model";
 import { PATH, LIVEPATH } from "#constant/constant";
 
 const createStoreCategory = asyncHandler(async (req, res) => {
@@ -76,10 +77,10 @@ const getOneCategory = asyncHandler(async (req, res) => {
 });
 
 const delete_catgory = asyncHandler(async (req, res) => {
-  const isCategoryExists = await createStoreCategory.findOne({
+  const isCategoryExists = await StoreCategories.findOne({
     _id: req.params.id,
-    isDeleted: false,
     isSuspend: false,
+    isDeleted: false,
   });
 
   if (!isCategoryExists) {
@@ -88,15 +89,32 @@ const delete_catgory = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store Category does not exists" });
   }
 
+  const findServices = await Service?.find({
+    service_category_Id: isCategoryExists?._id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
   const delete_cat = await StoreCategories.findOneAndUpdate(
-    { _id: req.params.id },
-    { $set: { isDeleted: true } }
+    { _id: req.params.id }
+    // { $set: { isDeleted: true } }
   );
 
   if (delete_cat) {
-    return res
-      .status(200)
-      .send({ status: true, message: "Category Deleted Successfully!" });
+    if (findServices?.length > 0) {
+      await Service.updateMany(
+        {
+          _id: { $in: findServices.map((service) => service._id) },
+        },
+        {
+          $set: { isDeleted: true },
+        }
+      );
+    }
+    return res.status(200).send({
+      status: true,
+      message: "Category Deleted Successfully!",
+    });
   } else {
     return res
       .status(404)

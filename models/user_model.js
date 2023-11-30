@@ -4,58 +4,69 @@ import Joi from "joi";
 import { getEnv } from "#utils/env";
 import bcrypt from "bcryptjs";
 
-const UserSchema = new mongoose.Schema({
-  role: {
-    type: String,
-    enum: ['user', 'admin', 'store', 'staff'],
-    default: 'user'
-  },
-  favourite: {
+const UserSchema = new mongoose.Schema(
+  {
+    role: {
+      type: String,
+      enum: ["user", "admin", "store", "staff"],
+      default: "user",
+    },
+    favourite: {
+      stores: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Store",
+        },
+      ],
 
-    stores: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-    }],
-
-    services: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Service",
-    }]
-
-  }
-  ,
-  name: {
-    type: String,
+      services: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Service",
+        },
+      ],
+    },
+    name: {
+      type: String,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+    email: {
+      type: String,
+    },
+    password: {
+      type: String,
+    },
+    not_token: {
+      type: String,
+    },
+    image: {
+      type: String,
+    },
+    referralCode: {
+      type: String,
+    },
+    referralCode: {
+      type: String,
+    },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isSuspend: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
-  gender: {
-    type: String,
-    enum: ["male", "female", "other"],
-  },
-  email: {
-    type: String,
-  },
-  password: {
-    type: String,
-  },
-  not_token: {
-    type: String
-  },
-  image: {
-    type: String
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
-  isSuspend: {
-    type: Boolean,
-    default: false,
-  },
-  isDeleted: {
-    type: Boolean,
-    default: false,
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 UserSchema.pre("save", async function (next) {
   if (!this.isModified()) return next();

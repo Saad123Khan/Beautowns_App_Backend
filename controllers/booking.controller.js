@@ -17,11 +17,11 @@ import { firebaseNotification } from "#utils/firebaseNotification";
 function validateBooking(service) {
   const schema = Joi.object({
     user_Id: Joi.when("booking_type", {
-      is: Joi.string().valid("manual"),
+      is: Joi.string().valid("manual").not().exist(),
       then: Joi.string().optional(),
       otherwise: Joi.string().required(),
     }),
-    booking_type: Joi.string().valid("auto", "manual").required(),
+    booking_type: Joi.string().valid("manual").optional(),
     store_Id: Joi.string().required(),
     service_Ids: Joi.array().items(Joi.string()).min(1).required(),
     time: Joi.string()
@@ -32,7 +32,7 @@ function validateBooking(service) {
       .pattern(/^\d{4}-\d{2}-\d{2}$/)
       .message("Invalid date format. Please use this format YYYY-MM-DD")
       .required(),
-    staff_Id: Joi.string().optional(),
+      staff_Id: Joi.string().optional(),
     couponCode: Joi.string(),
   });
 
@@ -55,9 +55,6 @@ const createBooking = asyncHandler(async (req, res) => {
   const currentDate = moment();
   const bookingDate = moment(req.body.date);
 
-  console.log(req.body.date, "bookingDate");
-
-  console.log(currentDate, "currentDate");
 
   // if (currentDate.isAfter(bookingDate)) {
   //     return res
@@ -234,7 +231,6 @@ const createBooking = asyncHandler(async (req, res) => {
       user_Id: req.body.user_Id,
       store_Id: req.body.store_Id,
       service_Ids: req.body.service_Ids,
-      booking_type: req.body.booking_type,
       time: req.body.time,
       date: formattedDate,
       end: endTime,
@@ -279,7 +275,7 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSessionExpired: false,
-  }).populate('service_Ids');
+  }).populate('service_Ids').populate({path:"user_Id",select:"name gender"});
   if (storebooking?.length > 0) {
     return res.status(200).send({ status: true, booking: storebooking });
   } else {
@@ -287,6 +283,36 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
       status: false,
       message: "Booking record does not exists",
       booking: [],
+    });
+  }
+});
+
+
+const getStaffBooking = asyncHandler(async (req, res) => {
+  const idStaffExist = await User.findOne({
+    _id: req.params.id,
+    isSuspend: false,
+    isDeleted: false,
+  });
+  if (!idStaffExist) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Staff does not exists" });
+  }
+  const staffbooking = await Booking.find({
+    salon_staff_Id: req.params.id,
+    isDeleted: false,
+    isSessionExpired: false,
+  }).populate('service_Ids').populate({path:"user_Id",select:"name gender"});
+
+  if (staffbooking?.length > 0) {
+    return res.status(200).send({ status: true, booking: staffbooking });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Booking record does not exists",
+      booking: [],
+      idStaffExist:idStaffExist
     });
   }
 });
@@ -667,4 +693,5 @@ export {
   cancelledBooking,
   couponCodeBookingAdded,
   deleteBooking,
+  getStaffBooking
 };
