@@ -20,7 +20,7 @@ const notificationSchema = new mongoose.Schema({
     },
     to: {
         type: String,
-        enum : ['users' , 'admin'],  
+        enum : ['users',"staffs" , 'admin'],  
         default:"users"
     },
     type: {

@@ -177,7 +177,7 @@ const createBooking = asyncHandler(async (req, res) => {
     });
   }
 
-  const startTime = moment("10:00am", "h:mma");
+  const startTime = moment(req.body.time, "h:mma");
   const time = startTime.clone().add(req.body.duration, "minutes");
   const endTime = time.format("h:mma");
   const formattedDate = moment(req.body.date, "YYYY-MM-DD").format(
