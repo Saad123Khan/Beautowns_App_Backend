@@ -34,6 +34,12 @@ const staffPayrollSchema = new mongoose.Schema(
     paymentDate: {
       type: Date,
     },
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -57,6 +63,8 @@ function validateStaffPayroll(payroll) {
     deductions: Joi.number().default(0),
     netSalary: Joi.number().required(),
     paymentDate: Joi.date().required(),
+    startDate: Joi.date().required(),
+    endDate: Joi.date().required(),
     isDeleted: Joi.boolean(),
     isSuspend: Joi.boolean(),
   });

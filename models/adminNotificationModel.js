@@ -1,31 +1,48 @@
 import mongoose from "mongoose";
 
-const adminNotificationSchema = new mongoose.Schema({
-    target:{
-      type : String,
-      enum : ['Users', 'Salons','Staffs','Specific-User','Specific-Staff','Specific-Salon']
+const adminNotificationSchema = new mongoose.Schema(
+  {
+    target: {
+      type: String,
+      enum: [
+        "Users",
+        "Salons",
+        "Staffs",
+        "Specific-User",
+        "Specific-Staff",
+        "Specific-Salon",
+      ],
     },
-    userIds: [{
+    userIds: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    }],
+        ref: "User",
+      },
+    ],
     type: {
-        type: String,
+      type: String,
+    },
+    from: {
+      type: String,
     },
     notification: {
-        title: {
-            type: String
-        },
-        body: {
-            type: String
-        },
-        image:{
-            type:String,
-        }
+      title: {
+        type: String,
+      },
+      body: {
+        type: String,
+      },
+      image: {
+        type: String,
+      },
     },
-    
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
-const AdminNotification = mongoose.model("AdminNotification", adminNotificationSchema);
+const AdminNotification = mongoose.model(
+  "AdminNotification",
+  adminNotificationSchema
+);
 
 export default AdminNotification;
