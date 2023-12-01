@@ -523,14 +523,44 @@ const deleteBooking = asyncHandler(async (req, res) => {
 
 const bookingConfirm = asyncHandler(async (req, res) => {
   console.log(req.body);
+let bookingFind , user ;
 
-  const bookingFind = await Booking.findOne({
+  if(req.body.type === "manual")
+  {
+    bookingFind = await Booking.findOne({
+      _id: req.body.booking_Id,
+      isCheckIn: false,
+      isCancel: false,
+      isDeleted: false,
+    }).populate("store_Id");  
+  }
+  else{
+  const user = await User.findOne({
+    _id: req.body.user_Id,
+    role: "user",
+    isSuspend: false,
+    isDeleted: false,
+    isVerified: true,
+  });
+
+  if (!user) {
+    return res
+      .status(404)
+      .send({ status: false, message: "User does not exists" });
+  }
+  
+   bookingFind = await Booking.findOne({
     _id: req.body.booking_Id,
     user_Id: req.body.user_Id,
     isCheckIn: false,
     isCancel: false,
     isDeleted: false,
   }).populate("store_Id");
+ 
+}
+
+
+
 
   console.log(bookingFind,"bookingFind")
 
@@ -595,14 +625,18 @@ const bookingConfirm = asyncHandler(async (req, res) => {
     body: `Your appointment at ${bookingFind?.store_Id?.name} on ${booking?.date} has been successfully booked. We look forward to serving you!`,
   };
 
-  await firebaseNotification(
-    notification,
-    [user],
-    "news",
-    "Specific-User",
-    "system",
-    "users"
-  );
+  if(req.body.type !== "manual")
+  {
+    await firebaseNotification(
+      notification,
+      [user],
+      "news",
+      "Specific-User",
+      "system",
+      "users"
+    );
+  }
+
 
   return res
     .status(200)
