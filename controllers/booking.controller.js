@@ -562,8 +562,6 @@ let bookingFind , user ;
 
 
 
-  console.log(bookingFind,"bookingFind")
-
   if (!bookingFind) {
     return res
       .status(404)
@@ -581,22 +579,6 @@ let bookingFind , user ;
       .status(200)
       .json({ status: false, message: "Booking already Confirmed" });
   }
-
-  const user = await User.findOne({
-    _id: req.body.user_Id,
-    role: "user",
-    isSuspend: false,
-    isDeleted: false,
-    isVerified: true,
-  });
-
-  if (!user) {
-    return res
-      .status(404)
-      .send({ status: false, message: "User does not exists" });
-  }
-
-
 
   // const paymentFind = await Payment.findOne({
   //     payment_Id: req.body.payment_Id,
