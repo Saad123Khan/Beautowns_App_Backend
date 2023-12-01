@@ -2,7 +2,7 @@ import AdminNotification from "#models/adminNotificationModel";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { User } from "#models/user_model";
 import Notification from "#models/notificationModel";
-import {Staffs} from "#models/staff_model";
+import { Staffs } from "#models/staff_model";
 import { Store } from "#models/store_model";
 import asyncHandler from "#middlewares/asyncHandler";
 import { LIVEPATH } from "#constant/constant";
@@ -68,7 +68,7 @@ const pushStoreNotification = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Invalid target type" });
   }
 
-  console.log(users,"users")
+  console.log(users, "users");
 
   if (users?.length > 0) {
     await firebaseNotification(
@@ -79,8 +79,6 @@ const pushStoreNotification = asyncHandler(async (req, res) => {
       req.body.from,
       req.body.to
     );
-
-    
 
     await new AdminNotification({
       type: req.body.type,
@@ -134,15 +132,15 @@ const getStoreNotification = asyncHandler(async (req, res) => {
 });
 
 const StoreNotificationSeen = asyncHandler(async (req, res) => {
-
-
   const user = await User.findOne({
     _id: req.params.id,
     isDeleted: false,
     role: "store",
   });
   if (!user) {
-    return res.status(200).json({ status: false, message: "User not exists!" });
+    return res
+      .status(200)
+      .json({ status: false, message: "Record not exists!" });
   }
 
   const notifications = await Notification.updateMany(

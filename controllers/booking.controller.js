@@ -524,19 +524,6 @@ const deleteBooking = asyncHandler(async (req, res) => {
 const bookingConfirm = asyncHandler(async (req, res) => {
   console.log(req.body);
 
-  const user = await User.findOne({
-    _id: req.body.user_Id,
-    role: "user",
-    isSuspend: false,
-    isDeleted: false,
-    isVerified: true,
-  });
-
-  if (!user) {
-    return res
-      .status(404)
-      .send({ status: false, message: "User does not exists" });
-  }
   const bookingFind = await Booking.findOne({
     _id: req.body.booking_Id,
     user_Id: req.body.user_Id,
@@ -544,6 +531,8 @@ const bookingConfirm = asyncHandler(async (req, res) => {
     isCancel: false,
     isDeleted: false,
   }).populate("store_Id");
+
+  console.log(bookingFind,"bookingFind")
 
   if (!bookingFind) {
     return res
@@ -562,6 +551,22 @@ const bookingConfirm = asyncHandler(async (req, res) => {
       .status(200)
       .json({ status: false, message: "Booking already Confirmed" });
   }
+
+  const user = await User.findOne({
+    _id: req.body.user_Id,
+    role: "user",
+    isSuspend: false,
+    isDeleted: false,
+    isVerified: true,
+  });
+
+  if (!user) {
+    return res
+      .status(404)
+      .send({ status: false, message: "User does not exists" });
+  }
+
+
 
   // const paymentFind = await Payment.findOne({
   //     payment_Id: req.body.payment_Id,

@@ -6,6 +6,8 @@ import {
   changeStoreStatus,
   updateStore,
   getStoreStaffServices,
+  getStoreAnalytics,
+  getStoreGraphsData,
 } from "#controllers/store.controller";
 import {
   pushStoreNotification,
@@ -54,8 +56,18 @@ storeRoute
   .post(validateObjectId, changeStoreStatus);
 
 storeRoute
+  .route("/analytics/graph_info/:id")
+  .get(validateObjectId, getStoreGraphsData);
+storeRoute
+  .route("/analytics/store_info/:id")
+  .get(validateObjectId, getStoreAnalytics);
+
+storeRoute
   .route("/notification/send/:id")
-  .post([validateObjectId,multerUpload.single("image")], pushStoreNotification);
+  .post(
+    [validateObjectId, multerUpload.single("image")],
+    pushStoreNotification
+  );
 storeRoute
   .route("/notification/:id")
   .get(validateObjectId, getStoreNotification);
