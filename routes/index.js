@@ -14,6 +14,7 @@ import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
 import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 import paymentRoute from "#routes/payment.routes";
 import staffPayrollRoutes from "#routes/staffPayroll.routes";
+import adminAnalyticsRoute from "#routes/Admin/admin.analytics.routes";
 
 
 const routes = (app) => {
@@ -66,6 +67,12 @@ app.use("/api/admin/notification", adminNotificationRoute);
 
 // Payment
 app.use("/api/payment", paymentRoute);
+
+
+// Analytics
+app.use("/api/admin/analytics", adminAnalyticsRoute);
+
+
 
   
 

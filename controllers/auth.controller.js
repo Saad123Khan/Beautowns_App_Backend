@@ -337,9 +337,13 @@ const otpVerify = asyncHandler(async (req, res) => {
       .status(400)
       .send({ status: false, message: error?.details[0]?.message });
   }
+
+
   const emailValid = await User.findOne({ email: req.body.email }).select(
     "role email name phone isVerified"
   );
+
+  
   if (!emailValid) {
     return res
       .status(404)

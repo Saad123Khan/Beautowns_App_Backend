@@ -21,7 +21,8 @@ function validateBooking(service) {
       then: Joi.string().optional(),
       otherwise: Joi.string().required(),
     }),
-    booking_type: Joi.string().valid("manual").optional(),
+    booking_type: Joi.string().valid("manual","auto").required(),
+    
     store_Id: Joi.string().required(),
     service_Ids: Joi.array().items(Joi.string()).min(1).required(),
     time: Joi.string()
@@ -203,6 +204,7 @@ const createBooking = asyncHandler(async (req, res) => {
         end: endTime,
         duration: req.body.duration,
         amount: totalValue,
+        booking_type:req.body.booking_type
       });
 
       if (req.body.staff_Id) {
@@ -236,6 +238,8 @@ const createBooking = asyncHandler(async (req, res) => {
       end: endTime,
       duration: req.body.duration,
       amount: totalValue,
+      booking_type:req.body.booking_type
+    
     });
 
     if (req.body.staff_Id) {
@@ -405,6 +409,8 @@ const getUserBooking = asyncHandler(async (req, res) => {
     isDeleted: false,
     isSessionExpired: false,
   }).populate("service_Ids store_Id");
+
+  
   if (booking?.length > 0) {
     return res.status(200).send({ status: true, booking: booking });
   } else {

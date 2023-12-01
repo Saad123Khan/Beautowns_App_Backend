@@ -34,6 +34,10 @@ const BookingSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    booking_type: {
+        type: String,
+        enum: ["manual", "auto"], 
+    },
     vat: {
         type: Number
     },
@@ -89,6 +93,7 @@ function validateBooking(booking) {
         vat: Joi.number(),
         amount: Joi.number(),
 
+        booking_type: Joi.string().valid("manual", "auto").required(),
         discount: Joi.number(),
 
         
