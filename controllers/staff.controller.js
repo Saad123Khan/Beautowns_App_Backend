@@ -161,7 +161,8 @@ const getAllStoreStaffs = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  });
+  }).populate("salon_staff_Id");
+
   if (Staff?.length > 0) {
     return res.status(200).send({ status: true, Staff });
   } else {
