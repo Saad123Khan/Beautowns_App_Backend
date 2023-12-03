@@ -2,9 +2,9 @@ import express from "express";
 import {
   createBlog,
   getAllBlogs,
-  getSingleBlog,
   deleteBlog,
   updateBlog,
+  getOneBlog
 } from "#controllers/blog.controller";
 import { multerUpload } from "#utils/multer";
 import validateObjectId from "#middlewares/validateObjectId";
@@ -38,7 +38,7 @@ blogRoute.route("/:id").put(
   updateBlog
 );
 blogRoute.route("/store/:id").get(validateObjectId, getAllBlogs);
-blogRoute.route("/specific/:id").get(validateObjectId, getSingleBlog);
+blogRoute.route("/:id").get(validateObjectId, getOneBlog);
 blogRoute.route("/:id").delete(validateObjectId, deleteBlog);
 
 export default blogRoute;

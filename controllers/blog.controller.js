@@ -67,11 +67,11 @@ const createBlog = asyncHandler(async (req, res) => {
   if (blog) {
     return res
       .status(201)
-      .send({ status: true, message: "Sucessfully created Blog", blog });
+      .send({ status: true, message: "Sucessfully created blog", blog });
   } else {
     return res.status(400).send({
       status: false,
-      message: "Something Error while creating Blog",
+      message: "Something Error while creating blog",
     });
   }
 });
@@ -172,7 +172,7 @@ const updateBlog = asyncHandler(async (req, res) => {
   }
 });
 
-const getSingleBlog = asyncHandler(async (req, res) => {
+const getOneBlog = asyncHandler(async (req, res) => {
   const blog = await Blog.findOne({
     slug: req.params.id,
     isDeleted: false,
@@ -217,4 +217,4 @@ const deleteBlog = asyncHandler(async (req, res) => {
   }
 });
 
-export { createBlog, getAllBlogs, getSingleBlog, deleteBlog, updateBlog };
+export { createBlog, getAllBlogs, getOneBlog, deleteBlog, updateBlog };

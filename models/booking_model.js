@@ -29,10 +29,10 @@ const BookingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Payment",
     },
-    customer_Name: {
+    name: {
       type: String,
     },
-    customer_Phone: {
+    phone: {
       type: String,
     },
     date: {

@@ -122,6 +122,7 @@ const updateUserProfileToken = asyncHandler(async (req, res) => {
     { not_token: req.body.not_token },
     { new: true }
   ).populate("favourite.stores favourite.services");
+  
   await User.populate(user, {
     path: "favourite.services",
     populate: {
