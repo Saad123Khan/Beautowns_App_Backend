@@ -280,7 +280,7 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
 });
 
 const getUserReferral = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  const user = await User.findOne({ _id: req.params.id,role:"user", isDeleted: false })
   if (!user) {
     return res.status(200).json({ status: false, message: "User not exists!" });
   }
