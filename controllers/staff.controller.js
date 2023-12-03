@@ -193,6 +193,7 @@ const delete_staff = asyncHandler(async (req, res) => {
     isDeleted: false,
     isSuspend: false,
   });
+
   if (!isStaffExist) {
     return res.status(400).send({ status: false, message: "Staff not exist" });
   }
@@ -213,6 +214,32 @@ const delete_staff = asyncHandler(async (req, res) => {
   }
 });
 
+const changeStaffStatus = asyncHandler(async (req, res) => {
+  const isStaffExist = await Staffs.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("salon_staff_Id");
+
+  if (!isStaffExist) {
+    return res.status(400).send({ status: false, message: "Staff not exist" });
+  }
+
+  const change_status = await User.findOneAndUpdate(
+    { _id: isStaffExist?.salon_staff_Id?._id },
+    { $set: { isDeleted: !isStaffExist?.salon_staff_Id?.isDeleted } }
+  );
+
+  if (change_status) {
+    return res
+      .status(200)
+      .send({ status: true, message: "Changed staff status successfully!" });
+  } else {
+    return res
+      .status(404)
+      .send({ status: false, message: "Staff does not exists" });
+  }
+});
 
 const staffNotificationSeen = asyncHandler(async (req, res) => {
   const user = await User.findOne({
@@ -239,9 +266,7 @@ const staffNotificationSeen = asyncHandler(async (req, res) => {
   }
 });
 
-
 const getStaffNotification = asyncHandler(async (req, res) => {
-
   // const isStaffExist = await Staffs
 
   const user = await Staffs.findOne({
@@ -282,5 +307,6 @@ export {
   updateStaff,
   delete_staff,
   staffNotificationSeen,
-  getStaffNotification
+  getStaffNotification,
+  changeStaffStatus,
 };

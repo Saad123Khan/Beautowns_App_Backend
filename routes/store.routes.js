@@ -8,12 +8,10 @@ import {
   getStoreStaffServices,
   getStoreAnalytics,
   getStoreGraphsData,
-} from "#controllers/store.controller";
-import {
-  pushStoreNotification,
+  sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
-} from "#controllers/storeNotification.controller";
+} from "#controllers/store.controller";
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from "#utils/multer";
 import { getStoreAvailableSlots } from "#controllers/slots.controller";
@@ -66,13 +64,13 @@ storeRoute
   .route("/notification/send/:id")
   .post(
     [validateObjectId, multerUpload.single("image")],
-    pushStoreNotification
+    sendStoreNotification
   );
 storeRoute
   .route("/notification/:id")
   .get(validateObjectId, getStoreNotification);
 storeRoute
-  .route("/notification/seen/:id")
-  .post(validateObjectId, StoreNotificationSeen);
+  .route("/notification-seen/:id")
+  .get(validateObjectId, StoreNotificationSeen);
 
 export default storeRoute;
