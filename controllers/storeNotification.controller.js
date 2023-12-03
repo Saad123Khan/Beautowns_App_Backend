@@ -43,25 +43,42 @@ const pushStoreNotification = asyncHandler(async (req, res) => {
   let users;
   if (req.body.target === "Users") {
     users = await User.find({ isDeleted: false, role: "user" });
-  } else if (req.body.target === "Specific-User") {
+  } 
+  
+  else if (req.body.target === "Specific-User") {
     users = await User.find({
       _id: { $in: req.body.userIds },
       role: "user",
       isDeleted: false,
     });
-  } else if (req.body.target === "Staffs") {
-    users = await Staffs.find({
+  } 
+  
+  else if (req.body.target === "Staffs") {
+    
+   let usersData = await Staffs.find({
       // isDeleted: false,
       // // role: "staff",
-      store_Id: req.body.store_Id,
-    });
-  } else if (req.body.target === "Specific-Staff") {
-    users = await Staffs.find({
-      _id: { $in: req.body.userIds },
-      // role: "staff",
       store_Id: req.params.id,
+    });
+   let data=  usersData?.map((item)=>item.salon_staff_Id)
+    users = await User.find({
+      _id: { $in: data},
+      role: "staff",
+      // store_Id: req.params.id,
       isDeleted: false,
     });
+
+
+  } else if (req.body.target === "Specific-Staff") {
+
+    users = await User.find({
+      _id: { $in: req.body.userIds},
+      role: "staff",
+      // store_Id: req.params.id,
+      isDeleted: false,
+    });
+
+
   } else {
     return res
       .status(400)

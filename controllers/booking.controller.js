@@ -14,6 +14,9 @@ import { validateBookingCoupon } from "#controllers/coupon.controller";
 import { Coupon } from "#models/coupons_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
 
+import { Payment } from "#models/payment_model";
+
+
 function validateBooking(service) {
   const schema = Joi.object({
     user_Id: Joi.when("booking_type", {
@@ -21,12 +24,12 @@ function validateBooking(service) {
       then: Joi.string().optional(),
       otherwise: Joi.string().required(),
     }),
-    customer_Name: Joi.when("booking_type", {
+    name: Joi.when("booking_type", {
       is: Joi.string().valid("manual").not().exist(),
       then: Joi.string().required(),
       otherwise: Joi.forbidden(),
     }),
-    customer_Phone: Joi.when("booking_type", {
+    phone: Joi.when("booking_type", {
       is: Joi.string().valid("manual").not().exist(),
       then: Joi.string().required(),
       otherwise: Joi.forbidden(),
@@ -70,20 +73,40 @@ const createBooking = asyncHandler(async (req, res) => {
   //         .status(400)
   //         .send({ status: false, message: "The date of booking should be in the future" });
   // }
+  
+  let user ;
   if (req.body.booking_type === "auto") {
-    const user = await User.findOne({
+    user = await User.findOne({
       _id: req.body.user_Id,
       role: "user",
       isSuspend: false,
       isDeleted: false,
       isVerified: true,
+    }); 
+  }
+  else if (req.body.booking_type === "manual") {
+    const user = await User.findOne({
+      _id: req.body.user_Id,
+      phone:req.body.phone,
+      role: "user",
+      isSuspend: false,
+      isDeleted: false
     });
 
-    if (!user) {
-      return res
-        .status(404)
-        .send({ status: false, message: "User does not exists" });
-    }
+if(!user)
+{
+
+let password = generateRandomCode(req.body.name)
+user = await new User({name : req.body.name,email : req.body.email , phone : req.body.phone,password}).save();
+}
+
+   }
+
+  
+  if (!user) {
+    return res
+      .status(404)
+      .send({ status: false, message: "User does not exists" });
   }
 
   const store = await Store.findOne({
@@ -204,7 +227,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
       let booking = await new Booking({
         coupons_Id: coupon?._id,
-        user_Id: req.body.user_Id,
+        user_Id: user?._id,
         store_Id: req.body.store_Id,
         service_Ids: req.body.service_Ids,
         time: req.body.time,
@@ -238,14 +261,12 @@ const createBooking = asyncHandler(async (req, res) => {
     }
   } else {
     let booking = await new Booking({
-      user_Id: req.body.user_Id,
+      user_Id: user?._id,
       store_Id: req.body.store_Id,
       service_Ids: req.body.service_Ids,
       time: req.body.time,
       date: formattedDate,
       end: endTime,
-      customer_Name: req.body.customer_Name,
-      customer_Phone: req.body.customer_Phone,
       duration: req.body.duration,
       amount: totalValue,
       booking_type: req.body.booking_type,
@@ -304,7 +325,7 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
 
 const getStaffBooking = asyncHandler(async (req, res) => {
   const idStaffExist = await Staffs.findOne({
-    salon_staff_Id: req.params.id,
+    _id: req.params.id,
     isSuspend: false,
     isDeleted: false,
   });
@@ -643,13 +664,36 @@ const bookingConfirm = asyncHandler(async (req, res) => {
 //@acess  private
 
 const bookingCheckIn = asyncHandler(async (req, res) => {
-  const bookingFind = await Booking.findOne({
+  let bookingFind ;
+if(req.body.staff_Id)
+{
+  bookingFind = await Booking.findOne({
     _id: req.body.booking_Id,
     store_Id: req.body.store_Id,
-    isCheckIn: false,
+    salon_staff_Id: req.body.staff_Id,
     isCancel: false,
     isDeleted: false,
   }).populate("store_Id user_Id");
+
+}
+else if(req.body.salon_owner_Id)
+{
+  
+  bookingFind = await Booking.findOne({
+    _id: req.body.booking_Id,
+    store_Id: req.body.store_Id,
+    isCancel: false,
+    isDeleted: false,
+  }).populate("store_Id user_Id");
+
+  if( req.body.salon_owner_Id !== bookingFind?.store_Id?.salon_owner_Id?.toString())
+{
+  return res
+  .status(404)
+  .json({ status: false, message: "Booking record not found!" });
+}
+
+}
 
   if (!bookingFind) {
     return res
@@ -663,23 +707,35 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
       .json({ status: false, message: "Booking already CheckIn" });
   }
 
-  // const paymentFind = await Payment.findOne({
-  //     payment_Id: req.body.payment_Id,
-  // });
+  if (bookingFind?.booking_type === "auto") {
+    if (!bookingFind?.payment_Id) {
+      return res
+        .status(404)
+        .json({
+          status: false,
+          message: "Please kindly proceed the payment for this booking!",
+        });
+    }
 
-  // if (!paymentFind) {
-  //     return res
-  //         .status(404)
-  //         .json({ status: false, message: "Payment record not found!" });
-  // }
 
-  // if (paymentFind?.booking_Id === bookingFind?._id) {
+    const paymentFind = await Payment.findOne({
+      _id: bookingFind?.payment_Id,
+    });
+
+    if (!paymentFind) {
+      return res
+        .status(404)
+
+        .json({ status: false, message: "Booking Payment record not found!" });
+    }
+
+
+  }
 
   const booking = await Booking.findOneAndUpdate(
     { _id: req.body.booking_Id },
 
     {
-      // payment_Id: req.body.payment_Id,
       isCheckIn: true,
     },
     { new: true }
@@ -701,16 +757,6 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json({ status: true, message: "Booking is check-in", booking });
-
-  // }
-  // else {
-  //     return res
-  //         .status(404)
-  //         .json({
-  //             status: false,
-  //             message: "Please kindly proceed the payment for this booking!",
-  //         });
-  // }
 });
 
 export {

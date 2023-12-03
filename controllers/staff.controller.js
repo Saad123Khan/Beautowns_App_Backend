@@ -6,6 +6,7 @@ import _ from "lodash";
 import bcrypt from "bcryptjs";
 import { PATH, LIVEPATH } from "#constant/constant";
 import Joi from "joi";
+import Notification from "#models/notificationModel";
 
 function validateUpdatedStaff(service) {
   const schema = Joi.object({
@@ -212,10 +213,74 @@ const delete_staff = asyncHandler(async (req, res) => {
   }
 });
 
+
+const staffNotificationSeen = asyncHandler(async (req, res) => {
+  const user = await User.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    role: "staff",
+  });
+  if (!user) {
+    return res
+      .status(200)
+      .json({ status: false, message: "Staff not exists!" });
+  }
+
+  const notifications = await Notification.updateMany(
+    { userId: req.params.id, isSeen: false },
+    { isSeen: true }
+  );
+  if (notifications) {
+    return res
+      .status(200)
+      .json({ status: true, message: "Notification seen sucessfully" });
+  } else {
+    return res.status(404).json({ status: false, message: "Nothing to seen" });
+  }
+});
+
+
+const getStaffNotification = asyncHandler(async (req, res) => {
+
+  // const isStaffExist = await Staffs
+
+  const user = await Staffs.findOne({
+    salon_staff_Id: req.params.id,
+    isDeleted: false,
+    // role: "staff",
+  });
+
+  if (!user) {
+    return res
+      .status(200)
+      .json({ status: false, message: "Staff not exists!" });
+  }
+
+  const notifications = await Notification.find({ userId: req.params.id }).sort(
+    { createdAt: -1 }
+  );
+
+  const unSeenNotifications = await Notification.find({
+    userId: req.params.id,
+    isSeen: false,
+  }).countDocuments();
+
+  if (notifications?.length > 0) {
+    return res
+      .status(200)
+      .json({ status: true, notifications, unSeenNotifications });
+  } else {
+    return res
+      .status(200)
+      .json({ status: true, notifications: [], unSeenNotifications: 0 });
+  }
+});
 export {
   createSalonStaff,
   getAllStoreStaffs,
   getOneStaff,
   updateStaff,
   delete_staff,
+  staffNotificationSeen,
+  getStaffNotification
 };

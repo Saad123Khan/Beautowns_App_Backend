@@ -48,6 +48,7 @@ const createBookingPayment = asyncHandler(async (req, res) => {
       .json({ status: false, message: "Booking Session expired" });
   }
 
+  
   const paymentFind = await Payment.findOne({
     booking_Id: req.body.booking_Id,
     isCancel: false,
@@ -99,14 +100,19 @@ const getAllStoreBookingPayment = asyncHandler(async (req, res) => {
       path: "user_Id store_Id",
       select: "name",
     })
-    .populate({
-      path: "booking_Id",
-      select: "time end service_Ids",
-      populate: {
-        path: "service_Ids",
-        select: "name",
-      },
-    });
+
+
+    // .populate({
+    //   path: "booking_Id",
+    //   select: "time end service_Ids",
+    //   populate: {
+    //     path: "service_Ids",
+    //     select: "name",
+    //   },
+    // });
+
+
+
   if (payments?.length > 0) {
     return res.status(200).json({
       status: true,

@@ -15,12 +15,12 @@ const notificationSchema = new mongoose.Schema({
     }, 
     from: {
         type: String,
-        enum : ['system' , 'admin'],  
+        enum : ['system' , 'admin','store'],  
       default:"system"
     },
     to: {
         type: String,
-        enum : ['users',"staffs" , 'admin'],  
+        enum : ['users',"staffs",'admin'],  
         default:"users"
     },
     type: {

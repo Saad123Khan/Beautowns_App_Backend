@@ -23,6 +23,7 @@ const validate = (req) => {
   const schema = Joi.object({
     role: Joi.string().valid("user", "admin", "store", "staff").required(),
     email: Joi.string().required().email(),
+    phone: Joi.string(),
     password: Joi.string().min(8).max(255).required(),
   });
 
@@ -274,7 +275,7 @@ const loginUser = asyncHandler(async (req, res) => {
       user: updatedUser,
       wallet: { balance },
       store: isStoreExist,
-      staff_store_Id: staffDetails?.store_Id,
+      staff_store_Id: staffDetails,
     });
 });
 
