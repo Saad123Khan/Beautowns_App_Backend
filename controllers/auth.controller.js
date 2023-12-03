@@ -64,9 +64,7 @@ const createUser = asyncHandler(async (req, res) => {
    let newUser = await new User(
       _.pick(req.body, ["role", "name", "gender", "email", "password"])
     ).save();
-  
-  
-  
+
     if (req.query.referralCode && req.query.referralCode !== "") {
       const referralFind = await User.findOne({ referralCode: req.query.referralCode })
       if (referralFind) {
