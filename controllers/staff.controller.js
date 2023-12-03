@@ -225,15 +225,15 @@ const changeStaffStatus = asyncHandler(async (req, res) => {
     return res.status(400).send({ status: false, message: "Staff not exist" });
   }
 
-  const delete_cat = await User.findOne(
-    { _id: isStaffExist.salon_staff_Id?._id },
-    // { $set: { isDeleted: true } }
+  const change_status = await User.findOneAndUpdate(
+    { _id: isStaffExist?.salon_staff_Id?._id },
+    { $set: { isDeleted: !isStaffExist?.salon_staff_Id?.isDeleted } }
   );
 
-  if (isStaffExist) {
+  if (change_status) {
     return res
       .status(200)
-      .send({ status: true,delete_cat, message: "Staff Deleted Successfully!" });
+      .send({ status: true, message: "Changed staff status successfully!" });
   } else {
     return res
       .status(404)
@@ -308,5 +308,5 @@ export {
   delete_staff,
   staffNotificationSeen,
   getStaffNotification,
-  changeStaffStatus
+  changeStaffStatus,
 };

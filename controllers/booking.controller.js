@@ -9,13 +9,13 @@ import Joi from "joi";
 import { Service } from "#models/services_model";
 import { getAvailableSlots } from "#controllers/slots.controller";
 import moment from "moment";
-import { generateRandomCode } from "#utils/generateRandomCode";
 import { Booking } from "#models/booking_model";
 import { validateBookingCoupon } from "#controllers/coupon.controller";
 import { Coupon } from "#models/coupons_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
-
 import { Payment } from "#models/payment_model";
+import { generateRandomCode } from "#utils/generateRandomCode";
+
 
 function validateBooking(service) {
   const schema = Joi.object({
@@ -85,9 +85,10 @@ const createBooking = asyncHandler(async (req, res) => {
       isSuspend: false,
       isDeleted: false,
       isVerified: true,
-    });
-  } else if (req.body.booking_type === "manual") {
-    const user = await User.findOne({
+    }); 
+  }
+  else if (req.body.booking_type === "manual") {
+   user = await User.findOne({
       _id: req.body.user_Id,
       phone: req.body.phone,
       role: "user",
@@ -247,7 +248,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
       await booking.save();
       if (booking) {
-        return res.status(200).send({
+        return res.status(201).send({
           status: true,
           message: "Booking created successfully",
           booking,
@@ -282,7 +283,7 @@ const createBooking = asyncHandler(async (req, res) => {
     await booking.save();
 
     if (booking) {
-      return res.status(200).send({
+      return res.status(201).send({
         status: true,
         message: "Booking created successfully",
         booking,
@@ -313,7 +314,7 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     isSessionExpired: false,
   })
     .populate("service_Ids")
-    .populate({ path: "user_Id", select: "name gender email" })
+    .populate({ path: "user_Id", select: "name gender email phone" })
     .populate("store_Id salon_staff_Id");
   if (storebooking?.length > 0) {
     return res.status(200).send({ status: true, booking: storebooking });
@@ -343,7 +344,7 @@ const getStaffBooking = asyncHandler(async (req, res) => {
     isSessionExpired: false,
   })
     .populate("service_Ids")
-    .populate({ path: "user_Id", select: "name gender" });
+    .populate({ path: "user_Id", select: "name gender phone" });
 
   if (staffbooking?.length > 0) {
     return res.status(200).send({ status: true, booking: staffbooking });
