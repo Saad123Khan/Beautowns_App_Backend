@@ -1,6 +1,8 @@
 import AdminNotification from "#models/adminNotificationModel";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { User } from "#models/user_model";
+import Notification from "#models/notificationModel";
+import { Staffs } from "#models/staff_model";
 import asyncHandler from "#middlewares/asyncHandler";
 import { LIVEPATH } from "#constant/constant";
 
@@ -10,7 +12,6 @@ import { LIVEPATH } from "#constant/constant";
 @access   Private
 */
 const pushStaffNotification = asyncHandler(async (req, res) => {
-  console.log(rew?.body);
   const image = req?.file?.filename;
   req.body.image = image ? `${LIVEPATH}/upload/${image}` : false;
   let notification = req.body.image
@@ -85,10 +86,13 @@ const pushStaffNotification = asyncHandler(async (req, res) => {
 });
 
 const getStaffNotification = asyncHandler(async (req, res) => {
-  const user = await User.findOne({
-    _id: req.params.id,
+
+  // const isStaffExist = await Staffs
+
+  const user = await Staffs.findOne({
+    salon_staff_Id: req.params.id,
     isDeleted: false,
-    role: "staff",
+    // role: "staff",
   });
   if (!user) {
     return res
@@ -99,6 +103,7 @@ const getStaffNotification = asyncHandler(async (req, res) => {
   const notifications = await Notification.find({ userId: req.params.id }).sort(
     { createdAt: -1 }
   );
+
   const unSeenNotifications = await Notification.find({
     userId: req.params.id,
     isSeen: false,

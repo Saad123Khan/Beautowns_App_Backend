@@ -13,6 +13,7 @@ import asyncHandler from "#middlewares/asyncHandler";
 import { email } from "#utils/email";
 import { User, validateUser } from "#models/user_model";
 import { Store } from "#models/store_model";
+import { Staffs } from "#models/staff_model";
 import { Wallet } from "#models/wallet_model";
 import { Contact, validateContact } from "#models/contact_model";
 import { contactEmail } from "#utils/email";
@@ -43,12 +44,24 @@ const validateForget = (req) => {
  */
 
 const createUser = asyncHandler(async (req, res) => {
+  // const referralCode = req.query.referralCode;
+  // console.log(referralCode,":referralCode")
   const { error } = validateUser(req.body);
   if (error) {
     return res
       .status(400)
       .send({ status: false, message: error?.details[0]?.message });
   }
+  
+  const generateReferralCode = (username) => {
+    // You can customize the format and length of the referral code
+    const randomNumber = Math.floor(Math.random() * 1000);
+    const formattedUsername = username.toLowerCase().replace(/\s/g, ''); // Convert to lowercase and remove spaces
+    return `${formattedUsername}${randomNumber}`;
+  };
+
+  let referralCode = generateReferralCode(req.body.name);
+console.log(referralCode,"referralCode")
 
   let user = await User.findOne({ email: req.body.email });
   if (user) {
@@ -81,6 +94,9 @@ const createUser = asyncHandler(async (req, res) => {
     status: true,
     message: "We have sent you an OTP via email for verification.!",
   });
+
+
+  
 });
 
 /**
@@ -211,26 +227,37 @@ const loginUser = asyncHandler(async (req, res) => {
     isSuspend: false,
   }).populate("category_Id");
 
-  let updatedUser = await User.findOne({ email: req.body.email }).select(
-    "role email name phone gender isVerified favourite"
-  ).populate("favourite.stores favourite.services");
+  let staffDetails;
+
+  if (user?.role === "staff") {
+    staffDetails = await Staffs?.findOne({
+      salon_staff_Id: user?._id,
+      isDeleted: false,
+    });
+  }
+
+  let updatedUser = await User.findOne({ email: req.body.email })
+    .select("role email name phone gender isVerified favourite")
+    .populate("favourite.stores favourite.services");
 
   await User.populate(updatedUser, {
-    path: 'favourite.services',
+    path: "favourite.services",
     populate: {
-      path: 'store_Id',
-      model: 'Store',
+      path: "store_Id",
+      model: "Store",
     },
   });
 
-  let wallet = await Wallet.findOne({user_Id:updatedUser?._id})
+  let wallet = await Wallet.findOne({ user_Id: updatedUser?._id });
 
-    if(!wallet)
-    {
-      wallet = await new Wallet({user_Id:updatedUser?._id,role:updatedUser?.role}).save();
-    }
-    
-    let {balance} = wallet ;
+  if (!wallet) {
+    wallet = await new Wallet({
+      user_Id: updatedUser?._id,
+      role: updatedUser?.role,
+    }).save();
+  }
+
+  let { balance } = wallet;
   const token = updatedUser.generateAuthToken();
 
   return res
@@ -247,6 +274,7 @@ const loginUser = asyncHandler(async (req, res) => {
       user: updatedUser,
       wallet: { balance },
       store: isStoreExist,
+      staff_store_Id: staffDetails?.store_Id,
     });
 });
 
@@ -338,12 +366,10 @@ const otpVerify = asyncHandler(async (req, res) => {
       .send({ status: false, message: error?.details[0]?.message });
   }
 
-
   const emailValid = await User.findOne({ email: req.body.email }).select(
     "role email name phone isVerified"
   );
 
-  
   if (!emailValid) {
     return res
       .status(404)
@@ -364,17 +390,19 @@ const otpVerify = asyncHandler(async (req, res) => {
       { email: emailValid?.email },
       { $set: { isVerified: true } },
       { new: true }
-    ).select("role email name phone isVerified favourite").populate("favourite.stores favourite.services");
+    )
+      .select("role email name phone isVerified favourite")
+      .populate("favourite.stores favourite.services");
 
     await User.populate(user, {
-      path: 'favourite.services',
+      path: "favourite.services",
       populate: {
-        path: 'store_Id',
-        model: 'Store',
+        path: "store_Id",
+        model: "Store",
       },
     });
 
-    let wallet = await Wallet.findOne({user_Id:user?._id})
+    let wallet = await Wallet.findOne({ user_Id: user?._id });
 
     if (!wallet) {
       wallet = await new Wallet({

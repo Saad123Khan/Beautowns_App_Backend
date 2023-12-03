@@ -18,13 +18,19 @@ function validateUpdateBlogs(store) {
 }
 
 const createBlog = asyncHandler(async (req, res) => {
-  const image = req?.files?.image?.[0]?.filename;
-  const author_image = req?.files?.author_image?.[0]?.filename;
+  let image = req?.files?.image?.[0]?.filename;
+  let author_image = req?.files?.author_image?.[0]?.filename;
   req.body.image = image && `${LIVEPATH}/uploads/${image}`;
   req.body.author_image = author_image && `${LIVEPATH}/uploads/${author_image}`;
 
+  if (req.uploadError) {
+    res
+      .status(400)
+      .send({ status: false,  });
 
-  
+    throw new Error(req.uploadError);
+  }
+
   const { error } = validateBlogs(req.body);
   if (error) {
     return res
@@ -43,6 +49,19 @@ const createBlog = asyncHandler(async (req, res) => {
       .status(404)
       .send({ status: false, message: "Store record not exists" });
   }
+
+  function slugify(string) {
+    return string
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\-]+/g, "")
+      .replace(/\-\-+/g, "-")
+      .replace(/^-+/, "")
+      .replace(/-+$/, "");
+  }
+  req.body.slug = slugify(req.body.title);
 
   const blog = await new Blog(req.body).save();
   if (blog) {
@@ -87,6 +106,13 @@ const getAllBlogs = asyncHandler(async (req, res) => {
 });
 
 const updateBlog = asyncHandler(async (req, res) => {
+  const image = req?.files?.image?.[0]?.filename;
+  const author_image = req?.files?.author_image?.[0]?.filename;
+  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : isBlogExist?.image;
+  req.body.author_image = author_image
+    ? `${LIVEPATH}/uploads/${author_image}`
+    : isBlogExist?.author_image;
+
   const { error } = validateUpdateBlogs(req.body);
   if (error) {
     return res
@@ -111,15 +137,18 @@ const updateBlog = asyncHandler(async (req, res) => {
     isSuspend: false,
   });
   if (isBlogExist) {
-    const image = req?.files?.image?.[0]?.filename;
-    const author_image = req?.files?.author_image?.[0]?.filename;
-    req.body.image = image
-      ? `${LIVEPATH}/uploads/${image}`
-      : isBlogExist?.image;
-    req.body.author_image = author_image
-      ? `${LIVEPATH}/uploads/${author_image}`
-      : isBlogExist?.author_image;
-
+    function slugify(string) {
+      return string
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w\-]+/g, "")
+        .replace(/\-\-+/g, "-")
+        .replace(/^-+/, "")
+        .replace(/-+$/, "");
+    }
+    req.body.slug = slugify(req.body.title);
     const updateBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
@@ -145,7 +174,7 @@ const updateBlog = asyncHandler(async (req, res) => {
 
 const getSingleBlog = asyncHandler(async (req, res) => {
   const blog = await Blog.findOne({
-    _id: req.params.id,
+    slug: req.params.id,
     isDeleted: false,
     isSuspend: false,
   });

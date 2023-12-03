@@ -18,7 +18,6 @@ const UserSchema = new mongoose.Schema(
           ref: "Store",
         },
       ],
-
       services: [
         {
           type: mongoose.Schema.Types.ObjectId,
@@ -47,11 +46,8 @@ const UserSchema = new mongoose.Schema(
     },
     referralCode: {
       type: String,
+      unique: true,
     },
-    referralCode: {
-      type: String,
-    },
-    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     isVerified: {
       type: Boolean,
       default: false,

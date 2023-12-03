@@ -53,7 +53,7 @@ const pushStoreNotification = asyncHandler(async (req, res) => {
     users = await Staffs.find({
       // isDeleted: false,
       // // role: "staff",
-      // store_Id: req.params.id,
+      store_Id: req.body.store_Id,
     });
   } else if (req.body.target === "Specific-Staff") {
     users = await Staffs.find({

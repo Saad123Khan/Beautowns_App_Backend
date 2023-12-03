@@ -101,7 +101,7 @@ const getAllStoreBookingPayment = asyncHandler(async (req, res) => {
     })
     .populate({
       path: "booking_Id",
-      select: "time end",
+      select: "time end service_Ids",
       populate: {
         path: "service_Ids",
         select: "name",

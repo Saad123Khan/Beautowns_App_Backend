@@ -21,8 +21,17 @@ function validateBooking(service) {
       then: Joi.string().optional(),
       otherwise: Joi.string().required(),
     }),
-    booking_type: Joi.string().valid("manual","auto").required(),
-    
+    customer_Name: Joi.when("booking_type", {
+      is: Joi.string().valid("manual").not().exist(),
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    customer_Phone: Joi.when("booking_type", {
+      is: Joi.string().valid("manual").not().exist(),
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    booking_type: Joi.string().valid("manual", "auto").required(),
     store_Id: Joi.string().required(),
     service_Ids: Joi.array().items(Joi.string()).min(1).required(),
     time: Joi.string()
@@ -33,7 +42,7 @@ function validateBooking(service) {
       .pattern(/^\d{4}-\d{2}-\d{2}$/)
       .message("Invalid date format. Please use this format YYYY-MM-DD")
       .required(),
-      staff_Id: Joi.string().optional(),
+    staff_Id: Joi.string().optional(),
     couponCode: Joi.string(),
   });
 
@@ -55,7 +64,6 @@ const createBooking = asyncHandler(async (req, res) => {
 
   const currentDate = moment();
   const bookingDate = moment(req.body.date);
-
 
   // if (currentDate.isAfter(bookingDate)) {
   //     return res
@@ -115,16 +123,16 @@ const createBooking = asyncHandler(async (req, res) => {
     "YYYY-MM-DD hh:mma"
   );
 
-//   if (bookingDateTime.isBefore(salonOpenTime)) {
-//     return res.status(400).send({
-//       status: false,
-//       message: `Sorry, the salon is closed at ${
-//         req.body.time
-//       } on ${bookingDate}. Salon opens at ${salonTiming.from} and closes at ${
-//         salonTiming.to
-//       } on ${moment(bookingDate).format("dddd")}.`,
-//     });
-//   }
+  //   if (bookingDateTime.isBefore(salonOpenTime)) {
+  //     return res.status(400).send({
+  //       status: false,
+  //       message: `Sorry, the salon is closed at ${
+  //         req.body.time
+  //       } on ${bookingDate}. Salon opens at ${salonTiming.from} and closes at ${
+  //         salonTiming.to
+  //       } on ${moment(bookingDate).format("dddd")}.`,
+  //     });
+  //   }
 
   let services = await Service.find({
     _id: { $in: req.body.service_Ids },
@@ -204,7 +212,7 @@ const createBooking = asyncHandler(async (req, res) => {
         end: endTime,
         duration: req.body.duration,
         amount: totalValue,
-        booking_type:req.body.booking_type
+        booking_type: req.body.booking_type,
       });
 
       if (req.body.staff_Id) {
@@ -236,10 +244,11 @@ const createBooking = asyncHandler(async (req, res) => {
       time: req.body.time,
       date: formattedDate,
       end: endTime,
+      customer_Name: req.body.customer_Name,
+      customer_Phone: req.body.customer_Phone,
       duration: req.body.duration,
       amount: totalValue,
-      booking_type:req.body.booking_type
-    
+      booking_type: req.body.booking_type,
     });
 
     if (req.body.staff_Id) {
@@ -262,7 +271,6 @@ const createBooking = asyncHandler(async (req, res) => {
   }
 });
 
-
 const getAllStoreBooking = asyncHandler(async (req, res) => {
   const store = await Store.findOne({
     _id: req.params.id,
@@ -279,7 +287,10 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSessionExpired: false,
-  }).populate('service_Ids').populate({path:"user_Id",select:"name gender"});
+  })
+    .populate("service_Ids")
+    .populate({ path: "user_Id", select: "name gender email" })
+    .populate("store_Id salon_staff_Id");
   if (storebooking?.length > 0) {
     return res.status(200).send({ status: true, booking: storebooking });
   } else {
@@ -291,10 +302,9 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
   }
 });
 
-
 const getStaffBooking = asyncHandler(async (req, res) => {
-  const idStaffExist = await User.findOne({
-    _id: req.params.id,
+  const idStaffExist = await Staffs.findOne({
+    salon_staff_Id: req.params.id,
     isSuspend: false,
     isDeleted: false,
   });
@@ -307,7 +317,9 @@ const getStaffBooking = asyncHandler(async (req, res) => {
     salon_staff_Id: req.params.id,
     isDeleted: false,
     isSessionExpired: false,
-  }).populate('service_Ids').populate({path:"user_Id",select:"name gender"});
+  })
+    .populate("service_Ids")
+    .populate({ path: "user_Id", select: "name gender" });
 
   if (staffbooking?.length > 0) {
     return res.status(200).send({ status: true, booking: staffbooking });
@@ -316,7 +328,6 @@ const getStaffBooking = asyncHandler(async (req, res) => {
       status: false,
       message: "Booking record does not exists",
       booking: [],
-      idStaffExist:idStaffExist
     });
   }
 });
@@ -410,7 +421,6 @@ const getUserBooking = asyncHandler(async (req, res) => {
     isSessionExpired: false,
   }).populate("service_Ids store_Id");
 
-  
   if (booking?.length > 0) {
     return res.status(200).send({ status: true, booking: booking });
   } else {
@@ -523,44 +533,38 @@ const deleteBooking = asyncHandler(async (req, res) => {
 
 const bookingConfirm = asyncHandler(async (req, res) => {
   console.log(req.body);
-let bookingFind , user ;
+  let bookingFind, user;
 
-  if(req.body.type === "manual")
-  {
+  if (req.body.type === "manual") {
     bookingFind = await Booking.findOne({
       _id: req.body.booking_Id,
       isCheckIn: false,
       isCancel: false,
       isDeleted: false,
-    }).populate("store_Id");  
+    }).populate("store_Id");
+  } else {
+    const user = await User.findOne({
+      _id: req.body.user_Id,
+      role: "user",
+      isSuspend: false,
+      isDeleted: false,
+      isVerified: true,
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .send({ status: false, message: "User does not exists" });
+    }
+
+    bookingFind = await Booking.findOne({
+      _id: req.body.booking_Id,
+      user_Id: req.body.user_Id,
+      isCheckIn: false,
+      isCancel: false,
+      isDeleted: false,
+    }).populate("store_Id");
   }
-  else{
-  const user = await User.findOne({
-    _id: req.body.user_Id,
-    role: "user",
-    isSuspend: false,
-    isDeleted: false,
-    isVerified: true,
-  });
-
-  if (!user) {
-    return res
-      .status(404)
-      .send({ status: false, message: "User does not exists" });
-  }
-  
-   bookingFind = await Booking.findOne({
-    _id: req.body.booking_Id,
-    user_Id: req.body.user_Id,
-    isCheckIn: false,
-    isCancel: false,
-    isDeleted: false,
-  }).populate("store_Id");
- 
-}
-
-
-
 
   if (!bookingFind) {
     return res
@@ -607,8 +611,7 @@ let bookingFind , user ;
     body: `Your appointment at ${bookingFind?.store_Id?.name} on ${booking?.date} has been successfully booked. We look forward to serving you!`,
   };
 
-  if(req.body.type !== "manual")
-  {
+  if (req.body.type !== "manual") {
     await firebaseNotification(
       notification,
       [user],
@@ -618,7 +621,6 @@ let bookingFind , user ;
       "users"
     );
   }
-
 
   return res
     .status(200)
@@ -720,5 +722,5 @@ export {
   cancelledBooking,
   couponCodeBookingAdded,
   deleteBooking,
-  getStaffBooking
+  getStaffBooking,
 };
