@@ -5,6 +5,7 @@ import Notification from "#models/notificationModel";
 import { Service } from "#models/services_model";
 import { Store } from "#models/store_model";
 import Joi from "joi";
+import { Referral } from "#models/referral_modal";
 
 function validateUpdateUser(user) {
   const schema = Joi.object({
@@ -277,7 +278,28 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
   }
 });
 
+const getUserReferral = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  if (!user) {
+    return res.status(200).json({ status: false, message: "User not exists!" });
+  }
+  
+  const referralFind = await Referral.find({ from_referral_userId: user?._id}).populate("from_referral_userId to_referral_userId");
+  
+  const totalAmountReward = referralFind?.reduce((acc,obj)=>acc+=obj.rewarded_amount,0)
+  
+  referralFind?.length === 0
+    ? res
+      .status(200)
+      .send({ status: false, message: "Referral does not exist", referral: [] })
+    : res.status(200).send({ status: true, referral: referralFind,totalReferral:totalAmountReward });
+
+})
+
+
+
 export {
+  getUserReferral,
   addFavouriteSalonServices,
   getOneUser,
   getAllUser,

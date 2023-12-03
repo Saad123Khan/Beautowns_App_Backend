@@ -18,6 +18,7 @@ import { Wallet } from "#models/wallet_model";
 import { Contact, validateContact } from "#models/contact_model";
 import { contactEmail } from "#utils/email";
 import { firebaseNotification } from "#utils/firebaseNotification";
+import { Referral } from "#models/referral_modal";
 
 const validate = (req) => {
   const schema = Joi.object({

@@ -9,6 +9,7 @@ import {
   updateUserProfileToken,
   getUserNotification,
   userNotificationSeen,
+  getUserReferral
 } from "#controllers/user.controller";
 import authMiddleware from "#middlewares/auth.middleware";
 
@@ -16,6 +17,10 @@ const userRoute = express.Router();
 
 //Get One User
 userRoute.get("/:id", [validateObjectId, authMiddleware], getOneUser);
+
+
+//Get Referral User
+userRoute.get("/referral/:id", [validateObjectId, authMiddleware], getUserReferral);
 
 //Get All User
 userRoute.get("/", [authMiddleware], getAllUser);

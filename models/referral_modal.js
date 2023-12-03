@@ -24,7 +24,7 @@ const ReferralSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["sign-up"],
+      enum: ["sign-up","customer"],
       default: "sign-up",
     },
 
