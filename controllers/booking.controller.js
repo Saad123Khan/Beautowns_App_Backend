@@ -9,6 +9,7 @@ import Joi from "joi";
 import { Service } from "#models/services_model";
 import { getAvailableSlots } from "#controllers/slots.controller";
 import moment from "moment";
+import { generateRandomCode } from "#utils/generateRandomCode";
 import { Booking } from "#models/booking_model";
 import { validateBookingCoupon } from "#controllers/coupon.controller";
 import { Coupon } from "#models/coupons_model";
@@ -46,6 +47,9 @@ function validateBooking(service) {
       .required(),
     staff_Id: Joi.string().optional(),
     couponCode: Joi.string(),
+    email: Joi.string()
+      .optional()
+      .email({ tlds: { allow: false } }),
   });
 
   return schema.validate(service);
@@ -243,7 +247,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
       await booking.save();
       if (booking) {
-        return res.status(201).send({
+        return res.status(200).send({
           status: true,
           message: "Booking created successfully",
           booking,
@@ -278,7 +282,7 @@ const createBooking = asyncHandler(async (req, res) => {
     await booking.save();
 
     if (booking) {
-      return res.status(201).send({
+      return res.status(200).send({
         status: true,
         message: "Booking created successfully",
         booking,

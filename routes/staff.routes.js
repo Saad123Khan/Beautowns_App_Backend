@@ -6,7 +6,8 @@ import {
   getOneStaff,
   delete_staff,
   getStaffNotification,
-  staffNotificationSeen
+  staffNotificationSeen,
+  changeStaffStatus,
 } from "#controllers/staff.controller";
 
 import validateObjectId from "#middlewares/validateObjectId";
@@ -15,6 +16,7 @@ import { multerUpload } from "#utils/multer";
 const staffRoute = express.Router();
 
 staffRoute.route("/").post(multerUpload.single("image"), createSalonStaff);
+staffRoute.route("/change-status/:id").get(validateObjectId, changeStaffStatus);
 
 staffRoute
   .route("/update/:id")
@@ -25,7 +27,9 @@ staffRoute.route("/:id").get(validateObjectId, getOneStaff);
 
 staffRoute.route("/:id").delete(validateObjectId, delete_staff);
 
-staffRoute.route("/notification/:id").get(validateObjectId, getStaffNotification);
+staffRoute
+  .route("/notification/:id")
+  .get(validateObjectId, getStaffNotification);
 
 staffRoute.route("/").post(multerUpload.single("image"), createSalonStaff);
 

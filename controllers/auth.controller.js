@@ -275,7 +275,7 @@ const loginUser = asyncHandler(async (req, res) => {
       user: updatedUser,
       wallet: { balance },
       store: isStoreExist,
-      staff_store_Id: staffDetails,
+      staffDetail: staffDetails,
     });
 });
 
