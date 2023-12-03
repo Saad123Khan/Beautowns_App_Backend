@@ -46,24 +46,14 @@ const validateForget = (req) => {
  */
 
 const createUser = asyncHandler(async (req, res) => {
-  // const referralCode = req.query.referralCode;
-  // console.log(referralCode,":referralCode")
   const { error } = validateUser(req.body);
   if (error) {
     return res
       .status(400)
       .send({ status: false, message: error?.details[0]?.message });
   }
-  
-  const generateReferralCode = (username) => {
-    // You can customize the format and length of the referral code
-    const randomNumber = Math.floor(Math.random() * 1000);
-    const formattedUsername = username.toLowerCase().replace(/\s/g, ''); // Convert to lowercase and remove spaces
-    return `${formattedUsername}${randomNumber}`;
-  };
 
-  let referralCode = generateReferralCode(req.body.name);
-console.log(referralCode,"referralCode")
+
 
   let user = await User.findOne({ email: req.body.email });
   if (user) {
@@ -71,9 +61,20 @@ console.log(referralCode,"referralCode")
       .status(400)
       .send({ status: false, message: "Email already exists." });
   } else {
-    await new User(
+   let newUser = await new User(
       _.pick(req.body, ["role", "name", "gender", "email", "password"])
     ).save();
+  
+  
+  
+    if (req.query.referralCode && req.query.referralCode !== "") {
+      const referralFind = await User.findOne({ referralCode: req.query.referralCode })
+      if (referralFind) {
+       console.log("CALL",req.query.referralCode)
+        await new Referral({ from_referral_userId: referralFind?._id, to_referral_userId: newUser?._id}).save();
+      }
+    }
+  
   }
 
   await UserVerification.deleteMany({ email: req.body.email });

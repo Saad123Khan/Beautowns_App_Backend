@@ -6,6 +6,7 @@ import { Service } from "#models/services_model";
 import { Store } from "#models/store_model";
 import Joi from "joi";
 import { Referral } from "#models/referral_modal";
+import { generateRandomCode } from "#utils/generateRandomCode";
 
 function validateUpdateUser(user) {
   const schema = Joi.object({
@@ -297,8 +298,30 @@ const getUserReferral = asyncHandler(async (req, res) => {
 })
 
 
+const userReferralLinkGenerated = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  if (!user) {
+    return res.status(404).json({ status: false, message: "User not exists!" });
+  }
+  
+  console.log(user)
+  if (user?.referralCode) {
+    return res.status(200).json({ status: true, message: "ReferralLink already generated", user });
+  }
+
+  const userReferralId = await generateRandomCode(user?.name)
+
+  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  if (userUpdate) {
+    return res.status(200).json({ status: true, message: "Your referral link has been generated", user: userUpdate });
+  }
+  else {
+    return res.status(404).json({ status: false, message: "Something error while generating referralLink" });
+  }
+})
 
 export {
+  userReferralLinkGenerated,
   getUserReferral,
   addFavouriteSalonServices,
   getOneUser,

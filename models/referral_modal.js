@@ -16,7 +16,6 @@ const ReferralSchema = new mongoose.Schema(
     },
     referralCode: {
       type: String,
-      unique: true,
     },
     rewarded_level: {
       type: Number,

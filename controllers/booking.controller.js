@@ -15,7 +15,8 @@ import { Coupon } from "#models/coupons_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { Payment } from "#models/payment_model";
 import { generateRandomCode } from "#utils/generateRandomCode";
-
+import { Wallet } from "#models/wallet_model";
+import { Referral } from "#models/referral_modal";
 
 function validateBooking(service) {
   const schema = Joi.object({
@@ -568,14 +569,14 @@ const bookingConfirm = asyncHandler(async (req, res) => {
       isDeleted: false,
     }).populate("store_Id");
   } else {
-    const user = await User.findOne({
+     user = await User.findOne({
       _id: req.body.user_Id,
       role: "user",
       isSuspend: false,
       isDeleted: false,
       isVerified: true,
     });
-
+console.log("USER",user);
     if (!user) {
       return res
         .status(404)
@@ -621,6 +622,53 @@ const bookingConfirm = asyncHandler(async (req, res) => {
 
   // if (paymentFind?.booking_Id === bookingFind?._id) {
 
+
+  if(user)
+  {
+    const referralFind = await Referral.findOne({
+      to_referral_userId: user?._id,
+    });
+  
+    
+  console.log(user,"useruseruser")
+  
+  
+  console.log(referralFind,"referralFindreferralFindreferralFind")
+  
+    if (referralFind?.status !== "customer") {
+     
+  console.log(user)
+  
+  console.log(referralFind)   
+      let reward = 100;
+        const refer = await Referral.findOneAndUpdate(
+          { to_referral_userId: user?._id },
+          {
+            status: "customer",
+            referral_level: 2,
+            rewarded_amount: reward,
+          },
+          { new: true }
+        );
+  
+        // Update refer Wallet
+        await Wallet.findOneAndUpdate(
+          { userId: refer?.from_referral_userId },
+          {
+            $inc: { balance: reward},
+          }
+        );
+  
+    
+    }
+  
+  
+  
+  }
+  
+
+
+
   const booking = await Booking.findOneAndUpdate(
     { _id: req.body.booking_Id },
 
@@ -636,7 +684,7 @@ const bookingConfirm = asyncHandler(async (req, res) => {
     body: `Your appointment at ${bookingFind?.store_Id?.name} on ${booking?.date} has been successfully booked. We look forward to serving you!`,
   };
 
-  if (req.body.type !== "manual") {
+  if (req.body.type !== "manual" && user?.email) {
     await firebaseNotification(
       notification,
       [user],
