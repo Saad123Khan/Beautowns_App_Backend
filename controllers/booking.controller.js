@@ -403,7 +403,7 @@ const getStaffBooking = asyncHandler(async (req, res) => {
     isDeleted: false,
     isSessionExpired: false,
   })
-    .populate("service_Ids")
+    .populate("service_Ids salon_staff_Id store_Id")
     .populate({ path: "user_Id", select: "name gender phone" });
 
   if (staffbooking?.length > 0) {
