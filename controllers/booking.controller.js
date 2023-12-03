@@ -221,7 +221,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
       await booking.save();
       if (booking) {
-        return res.status(200).send({
+        return res.status(201).send({
           status: true,
           message: "Booking created successfully",
           booking,
@@ -258,7 +258,7 @@ const createBooking = asyncHandler(async (req, res) => {
     await booking.save();
 
     if (booking) {
-      return res.status(200).send({
+      return res.status(201).send({
         status: true,
         message: "Booking created successfully",
         booking,
