@@ -13,8 +13,8 @@ import { Booking } from "#models/booking_model";
 import { validateBookingCoupon } from "#controllers/coupon.controller";
 import { Coupon } from "#models/coupons_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
-
 import { Payment } from "#models/payment_model";
+import { generateRandomCode } from "#utils/generateRandomCode";
 
 
 function validateBooking(service) {
