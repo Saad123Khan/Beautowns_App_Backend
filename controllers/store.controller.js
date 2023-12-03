@@ -864,7 +864,7 @@ const getStoreReferral = asyncHandler(async (req, res) => {
 
 
 const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  const user = await User.findOne({ _id: req.params.id,role:"store", isDeleted: false })
   if (!user) {
     return res.status(404).json({ status: false, message: "Store owner not exists!" });
   }
