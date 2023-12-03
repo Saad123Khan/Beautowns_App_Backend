@@ -29,7 +29,6 @@ staffRoute.route("/notification/:id").get(validateObjectId, getStaffNotification
 
 staffRoute.route("/").post(multerUpload.single("image"), createSalonStaff);
 
-
 staffRoute.get("/notification-seen/:id", staffNotificationSeen);
 
 export default staffRoute;
