@@ -89,13 +89,27 @@ const createBooking = asyncHandler(async (req, res) => {
     }); 
   }
   else if (req.body.booking_type === "manual") {
-   user = await User.findOne({
+   if(req.body.email !== "")
+   {
+     user = await User.findOne({
+       _id: req.body.user_Id,
+       phone: req.body.phone,
+      email:req.body.email,
+       role: "user",
+       isSuspend: false,
+       isDeleted: false,
+     });
+   }
+   else{
+    user = await User.findOne({
       _id: req.body.user_Id,
       phone: req.body.phone,
       role: "user",
       isSuspend: false,
       isDeleted: false,
     });
+   
+   }
 
     if (!user) {
       let password = generateRandomCode(req.body.name);
@@ -230,19 +244,42 @@ const createBooking = asyncHandler(async (req, res) => {
       );
       totalValue = totalValue - discountAmount;
 
-      let booking = await new Booking({
-        coupons_Id: coupon?._id,
-        user_Id: user?._id,
-        store_Id: req.body.store_Id,
-        service_Ids: req.body.service_Ids,
-        time: req.body.time,
-        date: formattedDate,
-        end: endTime,
-        duration: req.body.duration,
-        amount: totalValue,
-        booking_type: req.body.booking_type,
-      });
 
+      let booking ;
+      if(req.body.booking_type === "manual")
+      {
+         booking = await new Booking({
+          coupons_Id: coupon?._id,
+          user_Id: user?._id,
+          store_Id: req.body.store_Id,
+          service_Ids: req.body.service_Ids,
+          time: req.body.time,
+          date: formattedDate,
+          end: endTime,
+          duration: req.body.duration,
+          amount: totalValue,
+          booking_type: req.body.booking_type,
+          paymentDone:true
+      
+        });
+         
+     
+      }else{
+         booking = await new Booking({
+          coupons_Id: coupon?._id,
+          user_Id: user?._id,
+          store_Id: req.body.store_Id,
+          service_Ids: req.body.service_Ids,
+          time: req.body.time,
+          date: formattedDate,
+          end: endTime,
+          duration: req.body.duration,
+          amount: totalValue,
+          booking_type: req.body.booking_type,
+        });
+  
+      }
+      
       if (req.body.staff_Id) {
         booking.salon_staff_Id = req.body.staff_Id;
       }
@@ -265,7 +302,11 @@ const createBooking = asyncHandler(async (req, res) => {
         .send({ status: false, message: "Invalid coupon code" });
     }
   } else {
-    let booking = await new Booking({
+    let booking ;
+    if(req.body.booking_type === "manual")
+    {
+     
+     booking = await new Booking({
       user_Id: user?._id,
       store_Id: req.body.store_Id,
       service_Ids: req.body.service_Ids,
@@ -275,7 +316,25 @@ const createBooking = asyncHandler(async (req, res) => {
       duration: req.body.duration,
       amount: totalValue,
       booking_type: req.body.booking_type,
-    });
+      paymentDone:true
+      
+    }); 
+    }
+    else{
+     
+      booking = await new Booking({
+        user_Id: user?._id,
+        store_Id: req.body.store_Id,
+        service_Ids: req.body.service_Ids,
+        time: req.body.time,
+        date: formattedDate,
+        end: endTime,
+        duration: req.body.duration,
+        amount: totalValue,
+        booking_type: req.body.booking_type
+      }); 
+        
+    }
 
     if (req.body.staff_Id) {
       booking.salon_staff_Id = req.body.staff_Id;
@@ -610,15 +669,15 @@ console.log("USER",user);
       .json({ status: false, message: "Booking already Confirmed" });
   }
 
-  // const paymentFind = await Payment.findOne({
-  //     payment_Id: req.body.payment_Id,
-  // });
+  const paymentFind = await Payment.findOne({
+      payment_Id: req.body.payment_Id,
+  });
 
-  // if (!paymentFind) {
-  //     return res
-  //         .status(404)
-  //         .json({ status: false, message: "Payment record not found!" });
-  // }
+  if (!paymentFind) {
+      return res
+          .status(404)
+          .json({ status: false, message: "Payment record not found!" });
+  }
 
   // if (paymentFind?.booking_Id === bookingFind?._id) {
 

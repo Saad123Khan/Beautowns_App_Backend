@@ -11,6 +11,8 @@ import {
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
+  storeReferralLinkGenerated,
+  getStoreReferral
 } from "#controllers/store.controller";
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from "#utils/multer";
@@ -22,6 +24,16 @@ storeRoute
   .route("/")
   .post(multerUpload.single("image"), createStore)
   .get(getAllStore);
+
+
+//Create referral 
+storeRoute.post("/referral/:id",storeReferralLinkGenerated);
+
+
+//Get Referral Store
+storeRoute.get("/referral/:id", [validateObjectId], getStoreReferral);
+
+
 
 storeRoute.route("/update/:id").put(
   validateObjectId,

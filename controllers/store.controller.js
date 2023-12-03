@@ -11,6 +11,10 @@ import _ from "lodash";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
 import Joi from "joi";
+
+import { Referral } from "#models/referral_modal";
+import { generateRandomCode } from "#utils/generateRandomCode";
+
 import {
   StoreCategories
 } from "#models/store_categories_model";
@@ -840,9 +844,50 @@ const StoreNotificationSeen = asyncHandler(async (req, res) => {
 });
 
 
+const getStoreReferral = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.params.id,role:"store", isDeleted: false })
+  if (!user) {
+    return res.status(200).json({ status: false, message: "Store owner not exists!" });
+  }
+  
+  const referralFind = await Referral.find({ from_referral_userId: user?._id}).populate("from_referral_userId to_referral_userId");
+  
+  const totalAmountReward = referralFind?.reduce((acc,obj)=>acc+=obj.rewarded_amount,0)
+  
+  referralFind?.length === 0
+    ? res
+      .status(200)
+      .send({ status: false, message: "Referral does not exist", referral: [] })
+    : res.status(200).send({ status: true, referral: referralFind,totalReferral:totalAmountReward });
 
+})
+
+
+const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  if (!user) {
+    return res.status(404).json({ status: false, message: "Store owner not exists!" });
+  }
+  
+  console.log(user)
+  if (user?.referralCode) {
+    return res.status(200).json({ status: true, message: "ReferralLink already generated", store:user });
+  }
+
+  const userReferralId = await generateRandomCode(user?.name)
+
+  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  if (userUpdate) {
+    return res.status(200).json({ status: true, message: "Your referral link has been generated", store: userUpdate });
+  }
+  else {
+    return res.status(404).json({ status: false, message: "Something error while generating referralLink" });
+  }
+})
 
 export {
+  getStoreReferral,
+  storeReferralLinkGenerated,
   createStore,
   getAllStore,
   getOneStore,

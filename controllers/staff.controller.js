@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { PATH, LIVEPATH } from "#constant/constant";
 import Joi from "joi";
 import Notification from "#models/notificationModel";
+import { Referral } from "#models/referral_modal";
+import { generateRandomCode } from "#utils/generateRandomCode";
 
 function validateUpdatedStaff(service) {
   const schema = Joi.object({
@@ -157,18 +159,17 @@ const getAllStoreStaffs = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store record not exists" });
   }
 
-  const Staff = await Staffs.find({
+  const staff = await Staffs.find({
     store_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  }).populate("salon_staff_Id");
-
-  if (Staff?.length > 0) {
-    return res.status(200).send({ status: true, Staff });
+  }).populate("salon_staff_Id","name isDeleted");
+  if (staff?.length > 0) {
+    return res.status(200).send({ status: true, staff });
   } else {
     return res
       .status(404)
-      .send({ status: false, message: "Staff does not exists", Staff: [] });
+      .send({ status: false, message: "Staff does not exists", staff: [] });
   }
 });
 
@@ -301,7 +302,53 @@ const getStaffNotification = asyncHandler(async (req, res) => {
       .json({ status: true, notifications: [], unSeenNotifications: 0 });
   }
 });
+
+
+
+const getStaffReferral = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.params.id,role:"staff", isDeleted: false })
+  if (!user) {
+    return res.status(200).json({ status: false, message: "Staff not exists!" });
+  }
+  
+  const referralFind = await Referral.find({ from_referral_userId: user?._id}).populate("from_referral_userId to_referral_userId");
+  
+  const totalAmountReward = referralFind?.reduce((acc,obj)=>acc+=obj.rewarded_amount,0)
+  
+  referralFind?.length === 0
+    ? res
+      .status(200)
+      .send({ status: false, message: "Referral does not exist", referral: [] })
+    : res.status(200).send({ status: true, referral: referralFind,totalReferral:totalAmountReward });
+
+})
+
+
+const staffReferralLinkGenerated = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  if (!user) {
+    return res.status(404).json({ status: false, message: "Staff owner not exists!" });
+  }
+  
+  console.log(user)
+  if (user?.referralCode) {
+    return res.status(200).json({ status: true, message: "ReferralLink already generated", staff : user });
+  }
+
+  const userReferralId = await generateRandomCode(user?.name)
+
+  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  if (userUpdate) {
+    return res.status(200).json({ status: true, message: "Your referral link has been generated", staff: userUpdate });
+  }
+  else {
+    return res.status(404).json({ status: false, message: "Something error while generating referralLink" });
+  }
+})
+
 export {
+  staffReferralLinkGenerated,
+  getStaffReferral,
   createSalonStaff,
   getAllStoreStaffs,
   getOneStaff,

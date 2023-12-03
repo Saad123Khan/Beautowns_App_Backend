@@ -8,12 +8,19 @@ import {
   getStaffNotification,
   staffNotificationSeen,
   changeStaffStatus,
+  getStaffReferral,
+  staffReferralLinkGenerated
 } from "#controllers/staff.controller";
 
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from "#utils/multer";
 
 const staffRoute = express.Router();
+
+
+staffRoute.post("/referral/:id",staffReferralLinkGenerated);
+
+staffRoute.get("/referral/:id", [validateObjectId], getStaffReferral);
 
 staffRoute.route("/").post(multerUpload.single("image"), createSalonStaff);
 staffRoute.route("/change-status/:id").get(validateObjectId, changeStaffStatus);
