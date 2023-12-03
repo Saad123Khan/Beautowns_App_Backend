@@ -85,7 +85,7 @@ const createBooking = asyncHandler(async (req, res) => {
     }); 
   }
   else if (req.body.booking_type === "manual") {
-    const user = await User.findOne({
+   user = await User.findOne({
       _id: req.body.user_Id,
       phone:req.body.phone,
       role: "user",
