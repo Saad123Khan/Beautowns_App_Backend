@@ -9,6 +9,8 @@ import {
   updateUserProfileToken,
   getUserNotification,
   userNotificationSeen,
+  getUserReferral,
+  userReferralLinkGenerated
 } from "#controllers/user.controller";
 import authMiddleware from "#middlewares/auth.middleware";
 
@@ -16,6 +18,15 @@ const userRoute = express.Router();
 
 //Get One User
 userRoute.get("/:id", [validateObjectId, authMiddleware], getOneUser);
+
+
+
+//Create referral 
+userRoute.post("/referral/:id",[authMiddleware],userReferralLinkGenerated);
+
+
+//Get Referral User
+userRoute.get("/referral/:id", [validateObjectId, authMiddleware], getUserReferral);
 
 //Get All User
 userRoute.get("/", [authMiddleware], getAllUser);

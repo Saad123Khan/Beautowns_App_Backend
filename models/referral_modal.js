@@ -16,7 +16,6 @@ const ReferralSchema = new mongoose.Schema(
     },
     referralCode: {
       type: String,
-      unique: true,
     },
     rewarded_level: {
       type: Number,
@@ -24,7 +23,7 @@ const ReferralSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["sign-up"],
+      enum: ["sign-up","customer"],
       default: "sign-up",
     },
 
