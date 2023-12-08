@@ -86,30 +86,26 @@ const createBooking = asyncHandler(async (req, res) => {
       isSuspend: false,
       isDeleted: false,
       isVerified: true,
-    }); 
-  }
-  else if (req.body.booking_type === "manual") {
-   if(req.body.email !== "")
-   {
-     user = await User.findOne({
-       _id: req.body.user_Id,
-       phone: req.body.phone,
-      email:req.body.email,
-       role: "user",
-       isSuspend: false,
-       isDeleted: false,
-     });
-   }
-   else{
-    user = await User.findOne({
-      _id: req.body.user_Id,
-      phone: req.body.phone,
-      role: "user",
-      isSuspend: false,
-      isDeleted: false,
     });
-   
-   }
+  } else if (req.body.booking_type === "manual") {
+    if (req.body.email !== "") {
+      user = await User.findOne({
+        _id: req.body.user_Id,
+        phone: req.body.phone,
+        email: req.body.email,
+        role: "user",
+        isSuspend: false,
+        isDeleted: false,
+      });
+    } else {
+      user = await User.findOne({
+        _id: req.body.user_Id,
+        phone: req.body.phone,
+        role: "user",
+        isSuspend: false,
+        isDeleted: false,
+      });
+    }
 
     if (!user) {
       let password = generateRandomCode(req.body.name);
@@ -244,11 +240,9 @@ const createBooking = asyncHandler(async (req, res) => {
       );
       totalValue = totalValue - discountAmount;
 
-
-      let booking ;
-      if(req.body.booking_type === "manual")
-      {
-         booking = await new Booking({
+      let booking;
+      if (req.body.booking_type === "manual") {
+        booking = await new Booking({
           coupons_Id: coupon?._id,
           user_Id: user?._id,
           store_Id: req.body.store_Id,
@@ -259,13 +253,10 @@ const createBooking = asyncHandler(async (req, res) => {
           duration: req.body.duration,
           amount: totalValue,
           booking_type: req.body.booking_type,
-          paymentDone:true
-      
+          paymentDone: true,
         });
-         
-     
-      }else{
-         booking = await new Booking({
+      } else {
+        booking = await new Booking({
           coupons_Id: coupon?._id,
           user_Id: user?._id,
           store_Id: req.body.store_Id,
@@ -277,9 +268,8 @@ const createBooking = asyncHandler(async (req, res) => {
           amount: totalValue,
           booking_type: req.body.booking_type,
         });
-  
       }
-      
+
       if (req.body.staff_Id) {
         booking.salon_staff_Id = req.body.staff_Id;
       }
@@ -302,26 +292,8 @@ const createBooking = asyncHandler(async (req, res) => {
         .send({ status: false, message: "Invalid coupon code" });
     }
   } else {
-    let booking ;
-    if(req.body.booking_type === "manual")
-    {
-     
-     booking = await new Booking({
-      user_Id: user?._id,
-      store_Id: req.body.store_Id,
-      service_Ids: req.body.service_Ids,
-      time: req.body.time,
-      date: formattedDate,
-      end: endTime,
-      duration: req.body.duration,
-      amount: totalValue,
-      booking_type: req.body.booking_type,
-      paymentDone:true
-      
-    }); 
-    }
-    else{
-     
+    let booking;
+    if (req.body.booking_type === "manual") {
       booking = await new Booking({
         user_Id: user?._id,
         store_Id: req.body.store_Id,
@@ -331,9 +303,21 @@ const createBooking = asyncHandler(async (req, res) => {
         end: endTime,
         duration: req.body.duration,
         amount: totalValue,
-        booking_type: req.body.booking_type
-      }); 
-        
+        booking_type: req.body.booking_type,
+        paymentDone: true,
+      });
+    } else {
+      booking = await new Booking({
+        user_Id: user?._id,
+        store_Id: req.body.store_Id,
+        service_Ids: req.body.service_Ids,
+        time: req.body.time,
+        date: formattedDate,
+        end: endTime,
+        duration: req.body.duration,
+        amount: totalValue,
+        booking_type: req.body.booking_type,
+      });
     }
 
     if (req.body.staff_Id) {
@@ -343,6 +327,48 @@ const createBooking = asyncHandler(async (req, res) => {
     await booking.save();
 
     if (booking) {
+      const userNotification = {
+        title: "Appointment Booked Successfully",
+        body: `You've successfully Booked your appointment at ${booking?.store_Id?.name}. Our team is ready to make your experience exceptional. Enjoy your time with us!`,
+      };
+
+      await firebaseNotification(
+        userNotification,
+        [booking?.user_Id],
+        "news",
+        "Specific-User",
+        "system",
+        "users"
+      );
+
+      const staffNotification = {
+        title: "Appointment Booked Successfully",
+        body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${formattedDate}. Be Ready surve your best service!`,
+      };
+
+      await firebaseNotification(
+        staffNotification,
+        [booking?.salon_staff_Id],
+        "news",
+        "Specific-Staff",
+        "system",
+        "staff"
+      );
+
+      const salonNotification = {
+        title: "Appointment Booked Successfully",
+        body: `${booking?.user_Id?.name} have booked appointment with you at Your salon on ${booking?.time} ${formattedDate}. Be Ready surve your best service!`,
+      };
+
+      await firebaseNotification(
+        salonNotification,
+        [booking?.store_Id],
+        "news",
+        "Salons",
+        "system",
+        "staff"
+      );
+
       return res.status(201).send({
         status: true,
         message: "Booking created successfully",
@@ -628,14 +654,14 @@ const bookingConfirm = asyncHandler(async (req, res) => {
       isDeleted: false,
     }).populate("store_Id");
   } else {
-     user = await User.findOne({
+    user = await User.findOne({
       _id: req.body.user_Id,
       role: "user",
       isSuspend: false,
       isDeleted: false,
       isVerified: true,
     });
-console.log("USER",user);
+    console.log("USER", user);
     if (!user) {
       return res
         .status(404)
@@ -670,63 +696,50 @@ console.log("USER",user);
   }
 
   const paymentFind = await Payment.findOne({
-      payment_Id: req.body.payment_Id,
+    payment_Id: req.body.payment_Id,
   });
 
   if (!paymentFind) {
-      return res
-          .status(404)
-          .json({ status: false, message: "Payment record not found!" });
+    return res
+      .status(404)
+      .json({ status: false, message: "Payment record not found!" });
   }
 
   // if (paymentFind?.booking_Id === bookingFind?._id) {
 
-
-  if(user)
-  {
+  if (user) {
     const referralFind = await Referral.findOne({
       to_referral_userId: user?._id,
     });
-  
-    
-  console.log(user,"useruseruser")
-  
-  
-  console.log(referralFind,"referralFindreferralFindreferralFind")
-  
+
+    console.log(user, "useruseruser");
+
+    console.log(referralFind, "referralFindreferralFindreferralFind");
+
     if (referralFind?.status !== "customer") {
-     
-  console.log(user)
-  
-  console.log(referralFind)   
+      console.log(user);
+
+      console.log(referralFind);
       let reward = 100;
-        const refer = await Referral.findOneAndUpdate(
-          { to_referral_userId: user?._id },
-          {
-            status: "customer",
-            referral_level: 2,
-            rewarded_amount: reward,
-          },
-          { new: true }
-        );
-  
-        // Update refer Wallet
-        await Wallet.findOneAndUpdate(
-          { userId: refer?.from_referral_userId },
-          {
-            $inc: { balance: reward},
-          }
-        );
-  
-    
+      const refer = await Referral.findOneAndUpdate(
+        { to_referral_userId: user?._id },
+        {
+          status: "customer",
+          referral_level: 2,
+          rewarded_amount: reward,
+        },
+        { new: true }
+      );
+
+      // Update refer Wallet
+      await Wallet.findOneAndUpdate(
+        { userId: refer?.from_referral_userId },
+        {
+          $inc: { balance: reward },
+        }
+      );
     }
-  
-  
-  
   }
-  
-
-
 
   const booking = await Booking.findOneAndUpdate(
     { _id: req.body.booking_Id },
@@ -856,6 +869,7 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
     "system",
     "users"
   );
+
   return res
     .status(200)
     .json({ status: true, message: "Booking is check-in", booking });
