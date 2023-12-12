@@ -15,9 +15,7 @@ import Joi from "joi";
 import { Referral } from "#models/referral_modal";
 import { generateRandomCode } from "#utils/generateRandomCode";
 
-import {
-  StoreCategories
-} from "#models/store_categories_model";
+import { StoreCategories } from "#models/store_categories_model";
 
 function validateUpdateStores(store) {
   const schema = Joi.object({
@@ -381,9 +379,8 @@ const getStoreStaffServices = asyncHandler(async (req, res) => {
   }
 });
 
-
 const getStoreAnalytics = asyncHandler(async (req, res) => {
-  console.log(req.params.id,"req.params.id")
+  console.log(req.params.id, "req.params.id");
   const allBookings = await Booking.find({ store_Id: req.params.id });
   let totalAppointments = 0;
   let completedAppointments = 0;
@@ -397,98 +394,101 @@ const getStoreAnalytics = asyncHandler(async (req, res) => {
   let totalCheckIns = 0;
   let paymentCompletedNotCheckInAppointments = 0;
   let totalWithStaffAppointments = 0;
-   let returningClients = 0;
-   let newClients = 0;
+  let returningClients = 0;
+  let newClients = 0;
 
-   let totalPendingSales = 0;
+  let totalPendingSales = 0;
 
-   let totalPendingDiscount = 0;
+  let totalPendingDiscount = 0;
 
-   
-   
-   const uniqueUserIds = new Set();
-   const returningClientUserIds = new Set();
+  const uniqueUserIds = new Set();
+  const returningClientUserIds = new Set();
 
   allBookings?.forEach((booking) => {
     console.log(booking);
     if (!booking.isSessionExpired && booking.paymentDone) {
       totalAppointments++;
-    
-    
-   
-if(booking.user_Id)
-{
-  uniqueUserIds.add(booking.user_Id);
-    // Check for returning clients
-    if (uniqueUserIds.has(booking.user_Id)) {
-      returningClients++;
-      returningClientUserIds.add(booking.user_Id);
-    } else {
-      newClients++;
-    }
- }
 
-    if (booking.isCancel) {
-      cancelledAppointments++;
-    }
+      if (booking.user_Id) {
+        uniqueUserIds.add(booking.user_Id);
+        // Check for returning clients
+        if (uniqueUserIds.has(booking.user_Id)) {
+          returningClients++;
+          returningClientUserIds.add(booking.user_Id);
+        } else {
+          newClients++;
+        }
+      }
 
-    if (booking.paymentDone && booking.isCheckIn) {
-      completedAppointments++;
-      totalSales += booking.amount;
+      if (booking.isCancel) {
+        cancelledAppointments++;
+      }
 
-      if (booking.coupons_Id) {
-        totalDiscount += booking.discount;
+      if (booking.paymentDone && booking.isCheckIn) {
+        completedAppointments++;
+        totalSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalDiscount += booking.discount;
+        }
+      }
+
+      if (booking.paymentDone && !booking.isCheckIn) {
+        paymentCompletedNotCheckInAppointments++;
+        notCompletedAppointments++;
+        totalPendingSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalPendingDiscount += booking.discount;
+        }
+      }
+
+      if (booking.isCheckIn) {
+        totalCheckIns++;
+      }
+      if (booking.booking_type === "auto") {
+        onlineAppointments++;
+      }
+      if (booking.salon_staff_Id) {
+        totalWithStaffAppointments++;
+      }
+
+      if (booking.booking_type === "manual") {
+        onSiteAppointments++;
+      }
+
+      if (booking.rating) {
+        totalRating += booking.rating;
       }
     }
+  });
 
-    if (booking.paymentDone && !booking.isCheckIn) {
-      paymentCompletedNotCheckInAppointments++;
-      notCompletedAppointments++;
-      totalPendingSales += booking.amount;
-
-      if (booking.coupons_Id) {
-        totalPendingDiscount += booking.discount;
-      }
-    }
-
-    if (booking.isCheckIn) {
-      totalCheckIns++;
-    }
-    if (booking.booking_type === "auto") {
-      onlineAppointments++;
-    }
-    if (booking.salon_staff_Id) {
-      totalWithStaffAppointments++;
-    }
-
-    if (booking.booking_type === "manual") {
-      onSiteAppointments++;
-    }
-
-    if (booking.rating) {
-      totalRating += booking.rating;
-    }
-  }
-}
-  );
-
-  
   const averageSale =
     totalAppointments - cancelledAppointments > 0
       ? totalSales / (totalAppointments - cancelledAppointments)
       : 0;
 
   const averageRating =
-    totalAppointments > 0 ? (totalRating > 0 ? totalRating / totalAppointments : 0) : 0;
+    totalAppointments > 0
+      ? totalRating > 0
+        ? totalRating / totalAppointments
+        : 0
+      : 0;
 
   const percentageCompletedAppointments =
-    totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (completedAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageNotCompletedAppointments =
-    totalAppointments > 0 ? (notCompletedAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (notCompletedAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageCancelledAppointments =
-    totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (cancelledAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageOnlineAppointments =
     totalAppointments > 0 ? (onlineAppointments / totalAppointments) * 100 : 0;
@@ -506,11 +506,10 @@ if(booking.user_Id)
       ? (returningClientUserIds.size / uniqueUserIds.size) * 100
       : 0;
 
-
-const percentageReturningClients =
-  uniqueUserIds.size > 0
-    ? (returningClientUserIds.size / uniqueUserIds.size) * 100
-    : 0;
+  const percentageReturningClients =
+    uniqueUserIds.size > 0
+      ? (returningClientUserIds.size / uniqueUserIds.size) * 100
+      : 0;
 
   const analyticsData = {
     totalAppointments,
@@ -537,25 +536,30 @@ const percentageReturningClients =
     clientRetention,
     returningClients,
     newClients,
-    percentageReturningClients
+    percentageReturningClients,
   };
 
   return res.status(200).json(analyticsData);
 });
 
 const getStoreGraphsData = asyncHandler(async (req, res) => {
-  const requestedYear = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+  const requestedYear = req.query.year
+    ? parseInt(req.query.year)
+    : new Date().getFullYear();
 
-  const allCategories = await StoreCategories.find({ store_Id: req.params.id,isDeleted:false });
+  const allCategories = await StoreCategories.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+  });
   const allStaffs = await Staffs.find({ store_Id: req.params.id });
-  const allServices = await Service.find({ store_Id: req.params.id});
+  const allServices = await Service.find({ store_Id: req.params.id });
 
-  const servicesNames = allServices.map(staff => staff.name);
-  const staffsNames = allStaffs.map(staff => staff.name);
-  const categoryNames = allCategories.map(category => category.name);
+  const servicesNames = allServices.map((staff) => staff.name);
+  const staffsNames = allStaffs.map((staff) => staff.name);
+  const categoryNames = allCategories.map((category) => category.name);
   const allBookings = await Booking.find({ store_Id: req.params.id }).populate({
-    path: 'service_Ids',
-    populate: { path: 'service_category_Id' }
+    path: "service_Ids",
+    populate: { path: "service_category_Id" },
   });
 
   const currentDate = new Date();
@@ -571,18 +575,17 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
   const staffBookingPercentage = {};
   const serviceCounts = {};
   const servicePercentage = {};
-  let totalBookings = 0; 
+  let totalBookings = 0;
 
-
-  categoryNames.forEach(categoryName => {
+  categoryNames.forEach((categoryName) => {
     categoryCounts[categoryName] = 0;
   });
 
-  staffsNames.forEach(staffName => {
+  staffsNames.forEach((staffName) => {
     staffBookingCounts[staffName] = 0;
   });
 
-  servicesNames.forEach(serviceName => {
+  servicesNames.forEach((serviceName) => {
     serviceCounts[serviceName] = 0;
   });
 
@@ -590,7 +593,7 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
     const bookingDate = new Date(booking.createdAt);
 
     if (booking.paymentDone && booking.isCheckIn) {
-      totalBookings++; 
+      totalBookings++;
       // Monthly Earnings
       if (bookingDate.getFullYear() === requestedYear) {
         const monthDifference = currentDate.getMonth() - bookingDate.getMonth();
@@ -617,54 +620,52 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
       });
 
       // Staff Booking Counts
-      const staffFind = await Staffs.findById(booking.salon_staff_Id.toString())
+      const staffFind = await Staffs.findById(
+        booking.salon_staff_Id.toString()
+      );
       const staffName = staffFind?.name;
       if (!staffBookingCounts[staffName]) {
         staffBookingCounts[staffName] = 0;
       }
       staffBookingCounts[staffName]++;
 
-booking.service_Ids.forEach((service) => {
-  const serviceName = service.name; 
-console.log(serviceName)
-  if (serviceCounts.hasOwnProperty(serviceName)) {
-    serviceCounts[serviceName]++;
-  }
-});
-
+      booking.service_Ids.forEach((service) => {
+        const serviceName = service.name;
+        console.log(serviceName);
+        if (serviceCounts.hasOwnProperty(serviceName)) {
+          serviceCounts[serviceName]++;
+        }
+      });
     }
   }
-if (totalBookings > 0) {
-  Object.keys(categoryCounts).forEach(categoryName => {
-    const count = categoryCounts[categoryName];
-    categoryCountsPercentage[categoryName] = (count / totalBookings) * 100;
-  });
+  if (totalBookings > 0) {
+    Object.keys(categoryCounts).forEach((categoryName) => {
+      const count = categoryCounts[categoryName];
+      categoryCountsPercentage[categoryName] = (count / totalBookings) * 100;
+    });
 
-  Object.keys(staffBookingCounts).forEach(staffName => {
-    const count = staffBookingCounts[staffName];
-    staffBookingPercentage[staffName] = (count / totalBookings) * 100;
-  });
+    Object.keys(staffBookingCounts).forEach((staffName) => {
+      const count = staffBookingCounts[staffName];
+      staffBookingPercentage[staffName] = (count / totalBookings) * 100;
+    });
 
-  Object.keys(serviceCounts).forEach(serviceName => {
-    const count = serviceCounts[serviceName];
-    servicePercentage[serviceName] = (count / totalBookings) * 100;
-  });
-} 
-else {
-  Object.keys(categoryCounts).forEach(categoryName => {
-    categoryCountsPercentage[categoryName] = 0;
-  });
+    Object.keys(serviceCounts).forEach((serviceName) => {
+      const count = serviceCounts[serviceName];
+      servicePercentage[serviceName] = (count / totalBookings) * 100;
+    });
+  } else {
+    Object.keys(categoryCounts).forEach((categoryName) => {
+      categoryCountsPercentage[categoryName] = 0;
+    });
 
-  Object.keys(staffBookingCounts).forEach(staffName => {
-    staffBookingPercentage[staffName] = 0;
-  });
+    Object.keys(staffBookingCounts).forEach((staffName) => {
+      staffBookingPercentage[staffName] = 0;
+    });
 
-  Object.keys(serviceCounts).forEach(serviceName => {
-    servicePercentage[serviceName] = 0;
-  });
-}
-
-
+    Object.keys(serviceCounts).forEach((serviceName) => {
+      servicePercentage[serviceName] = 0;
+    });
+  }
 
   const analyticsData = {
     monthlyEarnings,
@@ -680,8 +681,6 @@ else {
 
   return res.status(200).json(analyticsData);
 });
-
-
 
 const sendStoreNotification = asyncHandler(async (req, res) => {
   const store = await Store.findOne({
@@ -713,42 +712,32 @@ const sendStoreNotification = asyncHandler(async (req, res) => {
   let users;
   if (req.body.target === "Users") {
     users = await User.find({ isDeleted: false, role: "user" });
-  } 
-  
-  else if (req.body.target === "Specific-User") {
+  } else if (req.body.target === "Specific-User") {
     users = await User.find({
       _id: { $in: req.body.userIds },
       role: "user",
       isDeleted: false,
     });
-  } 
-  
-  else if (req.body.target === "Staffs") {
-    
-   let usersData = await Staffs.find({
+  } else if (req.body.target === "Staffs") {
+    let usersData = await Staffs.find({
       // isDeleted: false,
       // // role: "staff",
       store_Id: req.params.id,
     });
-   let data=  usersData?.map((item)=>item.salon_staff_Id)
+    let data = usersData?.map((item) => item.salon_staff_Id);
     users = await User.find({
-      _id: { $in: data},
+      _id: { $in: data },
       role: "staff",
       // store_Id: req.params.id,
       isDeleted: false,
     });
-
-
   } else if (req.body.target === "Specific-Staff") {
-
     users = await User.find({
-      _id: { $in: req.body.userIds},
+      _id: { $in: req.body.userIds },
       role: "staff",
       // store_Id: req.params.id,
       isDeleted: false,
     });
-
-
   } else {
     return res
       .status(400)
@@ -843,47 +832,81 @@ const StoreNotificationSeen = asyncHandler(async (req, res) => {
   }
 });
 
-
 const getStoreReferral = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id,role:"store", isDeleted: false })
+  const user = await User.findOne({
+    _id: req.params.id,
+    role: "store",
+    isDeleted: false,
+  });
   if (!user) {
-    return res.status(200).json({ status: false, message: "Store owner not exists!" });
-  }
-  
-  const referralFind = await Referral.find({ from_referral_userId: user?._id}).populate("from_referral_userId to_referral_userId");
-  
-  const totalAmountReward = referralFind?.reduce((acc,obj)=>acc+=obj.rewarded_amount,0)
-  
-  referralFind?.length === 0
-    ? res
+    return res
       .status(200)
-      .send({ status: false, message: "Referral does not exist", referral: [] })
-    : res.status(200).send({ status: true, referral: referralFind,totalReferral:totalAmountReward });
+      .json({ status: false, message: "Store owner not exists!" });
+  }
 
-})
+  const referralFind = await Referral.find({
+    from_referral_userId: user?._id,
+  }).populate("from_referral_userId to_referral_userId");
 
+  const totalAmountReward = referralFind?.reduce(
+    (acc, obj) => (acc += obj.rewarded_amount),
+    0
+  );
+
+  referralFind?.length === 0
+    ? res.status(200).send({
+        status: false,
+        message: "Referral does not exist",
+        referral: [],
+      })
+    : res.status(200).send({
+        status: true,
+        referral: referralFind,
+        totalReferral: totalAmountReward,
+      });
+});
 
 const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id,role:"store", isDeleted: false })
+  const user = await User.findOne({
+    _id: req.params.id,
+    role: "store",
+    isDeleted: false,
+  });
   if (!user) {
-    return res.status(404).json({ status: false, message: "Store owner not exists!" });
+    return res
+      .status(404)
+      .json({ status: false, message: "Store owner not exists!" });
   }
-  
-  console.log(user)
+
+  console.log(user);
   if (user?.referralCode) {
-    return res.status(200).json({ status: true, message: "ReferralLink already generated", store:user });
+    return res.status(200).json({
+      status: true,
+      message: "ReferralLink already generated",
+      store: user,
+    });
   }
 
-  const userReferralId = await generateRandomCode(user?.name)
+  const userReferralId = await generateRandomCode(user?.name);
 
-  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  const userUpdate = await User.findOneAndUpdate(
+    { _id: req.params.id, isDeleted: false },
+    { referralCode: userReferralId },
+    { new: true }
+  );
   if (userUpdate) {
-    return res.status(200).json({ status: true, message: "Your referral link has been generated", store: userUpdate });
+    return res.status(200).json({
+      status: true,
+      message: "Your referral link has been generated",
+      store: userUpdate,
+    });
+  } else {
+    return res.status(404).json({
+      status: false,
+      message: "Something error while generating referralLink",
+    });
   }
-  else {
-    return res.status(404).json({ status: false, message: "Something error while generating referralLink" });
-  }
-})
+});
 
 export {
   getStoreReferral,
@@ -898,5 +921,5 @@ export {
   getStoreGraphsData,
   sendStoreNotification,
   getStoreNotification,
-  StoreNotificationSeen
+  StoreNotificationSeen,
 };

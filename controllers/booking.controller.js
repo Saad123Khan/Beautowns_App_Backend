@@ -388,6 +388,7 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     isSuspend: false,
     isDeleted: false,
   });
+
   if (!store) {
     return res
       .status(404)
@@ -875,6 +876,38 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
     .json({ status: true, message: "Booking is check-in", booking });
 });
 
+const bookingsByCoupon = asyncHandler(async (req, res) => {
+  const store = await Store.findOne({
+    _id: req.params.id,
+    isSuspend: false,
+    isDeleted: false,
+  });
+
+  if (!store) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Store does not exists" });
+  }
+
+  const couponBookings = await Booking.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSessionExpired: false,
+  })
+    .populate("service_Ids salon_staff_Id store_Id")
+    .populate({ path: "user_Id", select: "name gender phone" });
+
+  if (couponBookings?.length > 0) {
+    return res.status(200).send({ status: true, booking: couponBookings });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Booking record does not exists",
+      booking: [],
+    });
+  }
+});
+
 export {
   bookingConfirm,
   bookingCheckIn,
@@ -885,4 +918,5 @@ export {
   couponCodeBookingAdded,
   deleteBooking,
   getStaffBooking,
+  bookingsByCoupon
 };
