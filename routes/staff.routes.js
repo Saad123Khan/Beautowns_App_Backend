@@ -9,6 +9,8 @@ import {
   staffNotificationSeen,
   changeStaffStatus,
   getStaffReferral,
+  getStaffGraph,
+  getStaffAnalytics,
   staffReferralLinkGenerated
 } from "#controllers/staff.controller";
 
@@ -31,7 +33,8 @@ staffRoute
 staffRoute.route("/store/:id").get(validateObjectId, getAllStoreStaffs);
 
 staffRoute.route("/:id").get(validateObjectId, getOneStaff);
-
+staffRoute.route("/analytics/:id").get(validateObjectId, getStaffAnalytics);
+staffRoute.route("/graph/:id").get(validateObjectId, getStaffGraph);
 staffRoute.route("/:id").delete(validateObjectId, delete_staff);
 
 staffRoute

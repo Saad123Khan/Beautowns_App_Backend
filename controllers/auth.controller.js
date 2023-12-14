@@ -53,26 +53,28 @@ const createUser = asyncHandler(async (req, res) => {
       .send({ status: false, message: error?.details[0]?.message });
   }
 
-
-
   let user = await User.findOne({ email: req.body.email });
   if (user) {
     return res
       .status(400)
       .send({ status: false, message: "Email already exists." });
   } else {
-   let newUser = await new User(
+    let newUser = await new User(
       _.pick(req.body, ["role", "name", "gender", "email", "password"])
     ).save();
 
     if (req.query.referralCode && req.query.referralCode !== "") {
-      const referralFind = await User.findOne({ referralCode: req.query.referralCode })
+      const referralFind = await User.findOne({
+        referralCode: req.query.referralCode,
+      });
       if (referralFind) {
-       console.log("CALL",req.query.referralCode)
-        await new Referral({ from_referral_userId: referralFind?._id, to_referral_userId: newUser?._id}).save();
+        console.log("CALL", req.query.referralCode);
+        await new Referral({
+          from_referral_userId: referralFind?._id,
+          to_referral_userId: newUser?._id,
+        }).save();
       }
     }
-  
   }
 
   await UserVerification.deleteMany({ email: req.body.email });
@@ -95,9 +97,6 @@ const createUser = asyncHandler(async (req, res) => {
     status: true,
     message: "We have sent you an OTP via email for verification.!",
   });
-
-
-  
 });
 
 /**
@@ -238,7 +237,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   let updatedUser = await User.findOne({ email: req.body.email })
-    .select("role email name phone gender isVerified favourite")
+    .select("-password")
     .populate("favourite.stores favourite.services");
 
   await User.populate(updatedUser, {

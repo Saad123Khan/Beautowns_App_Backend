@@ -4,6 +4,7 @@ import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import _ from "lodash";
 import bcrypt from "bcryptjs";
+import { Booking } from "#models/booking_model";
 import { PATH, LIVEPATH } from "#constant/constant";
 import Joi from "joi";
 import Notification from "#models/notificationModel";
@@ -163,7 +164,7 @@ const getAllStoreStaffs = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  }).populate("salon_staff_Id","name isDeleted");
+  }).populate("salon_staff_Id", "name isDeleted");
   if (staff?.length > 0) {
     return res.status(200).send({ status: true, staff });
   } else {
@@ -303,48 +304,305 @@ const getStaffNotification = asyncHandler(async (req, res) => {
   }
 });
 
-
-
 const getStaffReferral = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id,role:"staff", isDeleted: false })
+  const user = await User.findOne({
+    _id: req.params.id,
+    role: "staff",
+    isDeleted: false,
+  });
   if (!user) {
-    return res.status(200).json({ status: false, message: "Staff not exists!" });
-  }
-  
-  const referralFind = await Referral.find({ from_referral_userId: user?._id}).populate("from_referral_userId to_referral_userId");
-  
-  const totalAmountReward = referralFind?.reduce((acc,obj)=>acc+=obj.rewarded_amount,0)
-  
-  referralFind?.length === 0
-    ? res
+    return res
       .status(200)
-      .send({ status: false, message: "Referral does not exist", referral: [] })
-    : res.status(200).send({ status: true, referral: referralFind,totalReferral:totalAmountReward });
+      .json({ status: false, message: "Staff not exists!" });
+  }
 
-})
+  const referralFind = await Referral.find({
+    from_referral_userId: user?._id,
+  }).populate("from_referral_userId to_referral_userId");
 
+  const totalAmountReward = referralFind?.reduce(
+    (acc, obj) => (acc += obj.rewarded_amount),
+    0
+  );
+
+  referralFind?.length === 0
+    ? res.status(200).send({
+        status: false,
+        message: "Referral does not exist",
+        referral: [],
+      })
+    : res.status(200).send({
+        status: true,
+        referral: referralFind,
+        totalReferral: totalAmountReward,
+      });
+});
 
 const staffReferralLinkGenerated = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false });
   if (!user) {
-    return res.status(404).json({ status: false, message: "Staff owner not exists!" });
+    return res
+      .status(404)
+      .json({ status: false, message: "Staff owner not exists!" });
   }
-  
-  console.log(user)
+
+  console.log(user);
   if (user?.referralCode) {
-    return res.status(200).json({ status: true, message: "ReferralLink already generated", staff : user });
+    return res.status(200).json({
+      status: true,
+      message: "ReferralLink already generated",
+      staff: user,
+    });
   }
 
-  const userReferralId = await generateRandomCode(user?.name)
+  const userReferralId = await generateRandomCode(user?.name);
 
-  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  const userUpdate = await User.findOneAndUpdate(
+    { _id: req.params.id, isDeleted: false },
+    { referralCode: userReferralId },
+    { new: true }
+  );
   if (userUpdate) {
-    return res.status(200).json({ status: true, message: "Your referral link has been generated", staff: userUpdate });
+    return res.status(200).json({
+      status: true,
+      message: "Your referral link has been generated",
+      staff: userUpdate,
+    });
+  } else {
+    return res.status(404).json({
+      status: false,
+      message: "Something error while generating referralLink",
+    });
   }
-  else {
-    return res.status(404).json({ status: false, message: "Something error while generating referralLink" });
+});
+
+const getStaffAnalytics = asyncHandler(async (req, res) => {
+  const allBookings = await Booking.find({ salon_staff_Id: req.params.id });
+  let totalAppointments = 0;
+  let completedAppointments = 0;
+  let notCompletedAppointments = 0;
+  let cancelledAppointments = 0;
+  let onlineAppointments = 0;
+  let onSiteAppointments = 0;
+  let totalSales = 0;
+  let totalDiscount = 0;
+  let totalRating = 0;
+  let totalCheckIns = 0;
+  let paymentCompletedNotCheckInAppointments = 0;
+  let totalWithStaffAppointments = 0;
+  let returningClients = 0;
+  let newClients = 0;
+
+  let totalPendingSales = 0;
+
+  let totalPendingDiscount = 0;
+
+  const uniqueUserIds = new Set();
+  const returningClientUserIds = new Set();
+
+  allBookings?.forEach((booking) => {
+    console.log(booking);
+    if (!booking.isSessionExpired && booking.paymentDone) {
+      totalAppointments++;
+
+      if (booking.user_Id) {
+        uniqueUserIds.add(booking.user_Id);
+        // Check for returning clients
+        if (uniqueUserIds.has(booking.user_Id)) {
+          returningClients++;
+          returningClientUserIds.add(booking.user_Id);
+        } else {
+          newClients++;
+        }
+      }
+
+      if (booking.isCancel) {
+        cancelledAppointments++;
+      }
+
+      if (booking.paymentDone && booking.isCheckIn) {
+        completedAppointments++;
+        totalSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalDiscount += booking.discount;
+        }
+      }
+
+      if (booking.paymentDone && !booking.isCheckIn) {
+        paymentCompletedNotCheckInAppointments++;
+        notCompletedAppointments++;
+        totalPendingSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalPendingDiscount += booking.discount;
+        }
+      }
+
+      if (booking.isCheckIn) {
+        totalCheckIns++;
+      }
+      if (booking.booking_type === "auto") {
+        onlineAppointments++;
+      }
+      if (booking.salon_staff_Id) {
+        totalWithStaffAppointments++;
+      }
+
+      if (booking.booking_type === "manual") {
+        onSiteAppointments++;
+      }
+
+      if (booking.rating) {
+        totalRating += booking.rating;
+      }
+    }
+  });
+
+  const averageSale =
+    totalAppointments - cancelledAppointments > 0
+      ? totalSales / (totalAppointments - cancelledAppointments)
+      : 0;
+
+  const averageRating =
+    totalAppointments > 0
+      ? totalRating > 0
+        ? totalRating / totalAppointments
+        : 0
+      : 0;
+
+  const percentageCompletedAppointments =
+    totalAppointments > 0
+      ? (completedAppointments / totalAppointments) * 100
+      : 0;
+
+  const percentageNotCompletedAppointments =
+    totalAppointments > 0
+      ? (notCompletedAppointments / totalAppointments) * 100
+      : 0;
+
+  const percentageCancelledAppointments =
+    totalAppointments > 0
+      ? (cancelledAppointments / totalAppointments) * 100
+      : 0;
+
+  const percentageOnlineAppointments =
+    totalAppointments > 0 ? (onlineAppointments / totalAppointments) * 100 : 0;
+
+  const percentageOnSiteAppointments =
+    totalAppointments > 0 ? (onSiteAppointments / totalAppointments) * 100 : 0;
+
+  const percentagePaymentCompletedNotCheckInAppointments =
+    totalAppointments > 0
+      ? (paymentCompletedNotCheckInAppointments / totalAppointments) * 100
+      : 0;
+
+  const clientRetention =
+    uniqueUserIds.size > 0
+      ? (returningClientUserIds.size / uniqueUserIds.size) * 100
+      : 0;
+
+  const percentageReturningClients =
+    uniqueUserIds.size > 0
+      ? (returningClientUserIds.size / uniqueUserIds.size) * 100
+      : 0;
+
+  const analyticsData = {
+    totalAppointments,
+    completedAppointments,
+    percentageCompletedAppointments,
+    paymentCompletedNotCheckInAppointments,
+    percentagePaymentCompletedNotCheckInAppointments,
+    notCompletedAppointments,
+    percentageNotCompletedAppointments,
+    cancelledAppointments,
+    percentageCancelledAppointments,
+    totalWithStaffAppointments,
+    onlineAppointments,
+    percentageOnlineAppointments,
+    onSiteAppointments,
+    percentageOnSiteAppointments,
+    totalSales,
+    totalPendingDiscount,
+    totalPendingSales,
+    averageSale,
+    averageRating,
+    totalDiscount,
+    totalCheckIns,
+    clientRetention,
+    returningClients,
+    newClients,
+    percentageReturningClients,
+  };
+
+  return res.status(200).json(analyticsData);
+});
+
+const getStaffGraph = asyncHandler(async (req, res) => {
+  const requestedYear = req.query.year
+    ? parseInt(req.query.year)
+    : new Date().getFullYear();
+
+  const allBookings = await Booking.find({
+    salon_staff_Id: req.params.id,
+  }).populate({
+    path: "service_Ids",
+    populate: { path: "service_category_Id" },
+  });
+
+  const currentDate = new Date();
+  const twelveMonthsAgo = new Date();
+  twelveMonthsAgo.setMonth(currentDate.getMonth() - 11);
+
+  const monthlyEarnings = Array(12).fill(0);
+  const yearlyEarnings = {};
+  const categoryCounts = {};
+  const categoryCountsPercentage = {};
+  const monthlyBookingCounts = Array(12).fill(0);
+  const staffBookingCounts = {};
+  const staffBookingPercentage = {};
+  const serviceCounts = {};
+  const servicePercentage = {};
+  let totalBookings = 0;
+
+  for (const booking of allBookings) {
+    const bookingDate = new Date(booking.createdAt);
+
+    if (booking.paymentDone && booking.isCheckIn) {
+      totalBookings++;
+      // Monthly Earnings
+      if (bookingDate.getFullYear() === requestedYear) {
+        const monthDifference = currentDate.getMonth() - bookingDate.getMonth();
+        const monthIndex = 11 - monthDifference;
+
+        if (monthIndex >= 0 && monthIndex < 12) {
+          monthlyEarnings[monthIndex] += booking.amount;
+          monthlyBookingCounts[monthIndex]++;
+        }
+      }
+
+      // Yearly Earnings
+      if (!yearlyEarnings[bookingDate.getFullYear()]) {
+        yearlyEarnings[bookingDate.getFullYear()] = 0;
+      }
+      yearlyEarnings[bookingDate.getFullYear()] += booking.amount;
+    }
   }
-})
+
+  const analyticsData = {
+    monthlyEarnings,
+    monthlyBookingCounts,
+    yearlyEarnings,
+    categoryCounts,
+    staffBookingCounts,
+    serviceCounts,
+    servicePercentage,
+    categoryCountsPercentage,
+    staffBookingPercentage,
+  };
+
+  return res.status(200).json(analyticsData);
+});
 
 export {
   staffReferralLinkGenerated,
@@ -357,4 +615,6 @@ export {
   staffNotificationSeen,
   getStaffNotification,
   changeStaffStatus,
+  getStaffAnalytics,
+  getStaffGraph,
 };
