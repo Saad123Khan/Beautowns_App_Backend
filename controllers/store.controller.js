@@ -1,9 +1,13 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { Store, validateStores } from "#models/store_model";
 import AdminNotification from "#models/adminNotificationModel";
+import { Blog } from "#models/blogs_model";
+import { Coupon } from "#models/coupons_model";
+import { Payment } from "#models/payment_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { PATH, LIVEPATH } from "#constant/constant";
 import { Service } from "#models/services_model";
+// import { Referral } from "#models/referral_modal";
 import { Staffs } from "#models/staff_model";
 import Notification from "#models/notificationModel";
 import { Booking } from "#models/booking_model";
@@ -380,7 +384,6 @@ const getStoreStaffServices = asyncHandler(async (req, res) => {
 });
 
 const getStoreAnalytics = asyncHandler(async (req, res) => {
-  console.log(req.params.id, "req.params.id");
   const allBookings = await Booking.find({ store_Id: req.params.id });
   let totalAppointments = 0;
   let completedAppointments = 0;
@@ -908,6 +911,144 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
   }
 });
 
+const completeStoreInfo = asyncHandler(async (req, res) => {
+  let staffs = [];
+  let storeInfo = "";
+  let bookings = [];
+  let blogs = [];
+  let services = [];
+  let coupons = [];
+  let referrals = [];
+  let categories = [];
+  let notifications = [];
+  let transactions = [];
+  let analyticsData = "";
+  let graphs = "";
+
+  const store = await Store.findOne({
+    _id: req.params.id,
+    isSuspend: false,
+    isDeleted: false,
+  }).populate({ path: "salon_owner_Id", select: "_id" });
+
+  if (!store) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Store record not exists" });
+  } else if (store) {
+    storeInfo = store;
+  }
+
+  const getAllStaffs = await Staffs.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("salon_staff_Id", "name isDeleted");
+
+  if (getAllStaffs?.length > 0) {
+    staffs = getAllStaffs;
+  }
+
+  const storebooking = await Booking.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSessionExpired: false,
+  })
+    .populate("service_Ids")
+    .populate({ path: "user_Id", select: "name gender email phone" })
+    .populate("store_Id salon_staff_Id");
+  if (storebooking?.length > 0) {
+    bookings = storebooking;
+  }
+
+  const storeBlogs = await Blog.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
+  if (storeBlogs?.length > 0) {
+    blogs = storeBlogs;
+  }
+
+  const StoreService = await Service.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+  if (StoreService?.length > 0) {
+    services = StoreService;
+  }
+
+  const storeCoupons = await Coupon.find({ isDeleted: false });
+  if (coupons?.length > 0) {
+    coupons = storeCoupons;
+  }
+
+  const user = await User.findOne({
+    _id: store?.salon_owner_Id._id,
+    role: "store",
+    isDeleted: false,
+  });
+
+  const referralFind = await Referral.find({
+    from_referral_userId: user?._id,
+  }).populate("from_referral_userId to_referral_userId");
+
+  const totalAmountReward = referralFind?.reduce(
+    (acc, obj) => (acc += obj.rewarded_amount),
+    0
+  );
+  if (referralFind.length > 0) {
+    referrals = referralFind;
+  }
+
+  const storeNotifications = await Notification.find({
+    userId: store?.salon_owner_Id._id,
+  }).sort({ createdAt: -1 });
+
+  if (storeNotifications?.length > 0) {
+    notifications = storeNotifications;
+  }
+
+  const storeCategories = await StoreCategories.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+  });
+  if (storeCategories?.length > 0) {
+    categories = storeCategories;
+  }
+
+  const storeTransactions = await Payment.find({
+    store_Id: req.params.id,
+  }).populate({
+    path: "user_Id store_Id",
+    select: "name",
+  });
+
+  if (storeTransactions?.length > 0) {
+    transactions = storeTransactions;
+  }
+
+  const storeData = {
+    staffs,
+    storeInfo,
+    bookings,
+    blogs,
+    services,
+    coupons,
+    referrals,
+    totalAmountReward,
+    categories,
+    transactions,
+    notifications,
+    graphs,
+    analyticsData,
+  };
+
+  return res.status(200).json(storeData);
+});
+
 export {
   getStoreReferral,
   storeReferralLinkGenerated,
@@ -922,4 +1063,5 @@ export {
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
+  completeStoreInfo,
 };
