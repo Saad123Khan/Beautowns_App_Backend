@@ -975,7 +975,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  });
+  }).populate("service_category_Id");
   if (StoreService?.length > 0) {
     services = StoreService;
   }

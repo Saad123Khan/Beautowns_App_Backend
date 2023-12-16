@@ -604,6 +604,71 @@ const getStaffGraph = asyncHandler(async (req, res) => {
   return res.status(200).json(analyticsData);
 });
 
+const completeStaffData = asyncHandler(async (req, res) => {
+  let bookings;
+  let referral;
+  let notifications;
+  let staffInfo;
+  let analytics;
+  let graph;
+
+  const isStaffExist = await Staffs.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("salon_staff_Id");
+
+  if (!isStaffExist) {
+    return res.status(400).send({ status: false, message: "Staff not exist" });
+  } else {
+    staffInfo = isStaffExist;
+  }
+
+  const staffbooking = await Booking.find({
+    salon_staff_Id: req.params.id,
+    isDeleted: false,
+    isSessionExpired: false,
+  })
+    .populate("service_Ids salon_staff_Id store_Id")
+    .populate({ path: "user_Id", select: "name gender phone" });
+
+  if (staffbooking?.length > 0) {
+    bookings = staffbooking;
+  }
+
+  const staffNotifications = await Notification.find({
+    userId: isStaffExist?.salon_staff_Id._id,
+  }).sort({ createdAt: -1 });
+
+  if (staffNotifications?.length > 0) {
+    notifications = staffNotifications;
+  }
+
+  const referralFind = await Referral.find({
+    from_referral_userId: isStaffExist?.salon_staff_Id._id,
+  }).populate("from_referral_userId to_referral_userId");
+  if (referralFind) {
+    referral = referralFind;
+  }
+
+  const totalAmountReward = referralFind?.reduce(
+    (acc, obj) => (acc += obj.rewarded_amount),
+    0
+  );
+
+  const staffData={
+    bookings,
+    referral,
+    notifications,
+    totalAmountReward,
+    staffInfo,
+    analytics,
+    graph
+  }
+
+  return res.status(200).json(staffData);
+});
+
 export {
   staffReferralLinkGenerated,
   getStaffReferral,
@@ -617,4 +682,5 @@ export {
   changeStaffStatus,
   getStaffAnalytics,
   getStaffGraph,
+  completeStaffData
 };

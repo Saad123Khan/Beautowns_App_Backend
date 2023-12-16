@@ -127,7 +127,7 @@ const getAllStoreServices = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  });
+  }).populate("service_category_Id");
   if (service?.length > 0) {
     return res.status(200).send({ status: true, service });
   } else {
