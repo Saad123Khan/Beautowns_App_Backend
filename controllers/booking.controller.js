@@ -418,10 +418,6 @@ if(req.body.booking_type === "manual")
     body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${formattedDate}. Be Ready surve your best service!`,
   };
 
-      if (booking?.salon_staff_Id) {
-        const staffSalonFind = await User.findById(
-          booking?.salon_staff_Id?.salon_staff_Id
-        );
 
   if(booking?.salon_staff_Id)
   {
@@ -476,7 +472,7 @@ if(req.body.booking_type === "manual")
         .send({ status: false, message: "Error while creating booking" });
     }
   }}
-});
+);
 
 const getAllStoreBooking = asyncHandler(async (req, res) => {
   const store = await Store.findOne({
