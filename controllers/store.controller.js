@@ -541,7 +541,8 @@ const getStoreAnalytics = asyncHandler(async (req, res) => {
     newClients,
     percentageReturningClients,
   };
-  if (req.query.to === "manual") {
+
+  if (req?.query?.to === "manual") {
     return analyticsData;
   } else {
     return res.status(200).json(analyticsData);
@@ -685,7 +686,12 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
     staffBookingPercentage,
   };
 
-  return res.status(200).json(analyticsData);
+  if (req.query.to === "manual") {
+    return analyticsData;
+  } else {
+    return res.status(200).json(analyticsData);
+  }
+
 });
 
 const sendStoreNotification = asyncHandler(async (req, res) => {
@@ -925,7 +931,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   let categories = [];
   let notifications = [];
   let transactions = [];
-  let analyticsData = "";
+  let analytics = "";
   let graphs = "";
 
   const store = await Store.findOne({
@@ -942,8 +948,16 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     storeInfo = store;
   }
 
-  const datas = await getStoreAnalytics(req, res);
-  console.log(datas, "datas");
+  const storeAnalytics = await getStoreAnalytics(req, res);
+  if (storeAnalytics) {
+    analytics = storeAnalytics;
+  }
+
+  const storeGraphs = await getStoreGraphsData(req, res);
+  if (storeGraphs) {
+    graphs = storeGraphs;
+  }
+
   const getAllStaffs = await Staffs.find({
     store_Id: req.params.id,
     isDeleted: false,
@@ -1048,7 +1062,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     transactions,
     notifications,
     graphs,
-    analyticsData,
+    analytics,
   };
 
   return res.status(200).json(storeData);
