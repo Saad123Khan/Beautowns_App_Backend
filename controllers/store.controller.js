@@ -4,6 +4,8 @@ import AdminNotification from "#models/adminNotificationModel";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { PATH, LIVEPATH } from "#constant/constant";
 import { Service } from "#models/services_model";
+import { Coupon } from "#models/coupons_model";
+import { Blog } from "#models/blogs_model";
 import { Staffs } from "#models/staff_model";
 import Notification from "#models/notificationModel";
 import { Booking } from "#models/booking_model";
@@ -11,10 +13,9 @@ import _ from "lodash";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
 import Joi from "joi";
-
+import { Payment } from "#models/payment_model";
 import { Referral } from "#models/referral_modal";
 import { generateRandomCode } from "#utils/generateRandomCode";
-
 import { StoreCategories } from "#models/store_categories_model";
 
 function validateUpdateStores(store) {
@@ -997,7 +998,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   }
 
   const storeCoupons = await Coupon.find({ isDeleted: false });
-  if (coupons?.length > 0) {
+  if (storeCoupons?.length > 0) {
     coupons = storeCoupons;
   }
 

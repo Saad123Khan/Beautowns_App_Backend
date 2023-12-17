@@ -535,7 +535,11 @@ const getStaffAnalytics = asyncHandler(async (req, res) => {
     percentageReturningClients,
   };
 
-  return res.status(200).json(analyticsData);
+  if (req.query.to === "manual") {
+    return analyticsData;
+  } else {
+    return res.status(200).json(analyticsData);
+  }
 });
 
 const getStaffGraph = asyncHandler(async (req, res) => {
@@ -601,7 +605,11 @@ const getStaffGraph = asyncHandler(async (req, res) => {
     staffBookingPercentage,
   };
 
-  return res.status(200).json(analyticsData);
+  if (req.query.to === "manual") {
+    return analyticsData;
+  } else {
+    return res.status(200).json(analyticsData);
+  }
 });
 
 const completeStaffData = asyncHandler(async (req, res) => {
@@ -656,19 +664,18 @@ const completeStaffData = asyncHandler(async (req, res) => {
     0
   );
 
-
   // getStaffGraph({},req.params.id)
   // getStaffAnalytics({},req.params.id)
 
-  const staffData={
+  const staffData = {
     bookings,
     referral,
     notifications,
     totalAmountReward,
     staffInfo,
     analytics,
-    graph
-  }
+    graph,
+  };
 
   return res.status(200).json(staffData);
 });
@@ -686,5 +693,5 @@ export {
   changeStaffStatus,
   getStaffAnalytics,
   getStaffGraph,
-  completeStaffData
+  completeStaffData,
 };
