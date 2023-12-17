@@ -32,11 +32,10 @@ export const firebaseNotification = async (notification, users, type, target, fr
         await sendNotificationEmail(email, notification)
         const response = await rp(options);
         console.log('Notification sent:', response);
-        const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 })
+        const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 }).populate("userId")
         const unSeenNotifications = await Notification.find({ userId: notificationCreated?.userId, isSeen: false }).countDocuments()
-
         sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
-
+        console.log(notifications,"notifications")
       }
       else {
         const notificationCreated = notification.image ? await new Notification({ notification, target, type, userId, image: notification.image, from, to }) :

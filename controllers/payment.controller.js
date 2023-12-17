@@ -101,18 +101,6 @@ const getAllStoreBookingPayment = asyncHandler(async (req, res) => {
       select: "name",
     })
 
-
-    // .populate({
-    //   path: "booking_Id",
-    //   select: "time end service_Ids",
-    //   populate: {
-    //     path: "service_Ids",
-    //     select: "name",
-    //   },
-    // });
-
-
-
   if (payments?.length > 0) {
     return res.status(200).json({
       status: true,

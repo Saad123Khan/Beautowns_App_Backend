@@ -50,7 +50,7 @@ function validateBooking(service) {
     couponCode: Joi.string(),
     email: Joi.string()
       .optional()
-      .email({ tlds: { allow: false }}),
+      .email({ tlds: { allow: false } }),
   });
 
   return schema.validate(service);
@@ -116,7 +116,7 @@ const createBooking = asyncHandler(async (req, res) => {
     }
   }
 
-console.log(user,"USERRRRRR")
+  console.log(user, "USERRRRRR");
 
   if (!user) {
     return res
@@ -255,8 +255,7 @@ console.log(user,"USERRRRRR")
           booking_type: req.body.booking_type,
           paymentDone: true,
         });
-      } 
-      else {
+      } else {
         booking = await new Booking({
           coupons_Id: coupon?._id,
           user_Id: user?._id,
@@ -271,15 +270,9 @@ console.log(user,"USERRRRRR")
         });
       }
 
-
-
-
       if (req.body.staff_Id) {
         booking.salon_staff_Id = req.body.staff_Id;
       }
-
-
-
 
       await booking.save();
  
@@ -298,7 +291,7 @@ await Booking.populate(booking,"store_Id user_Id salon_staff_Id")
           title: "Appointment Booked Successfully",
           body: `You've successfully Booked your appointment at ${booking?.store_Id?.name}. Our team is ready to make your experience exceptional. Enjoy your time with us!`,
         };
-  
+
         await firebaseNotification(
           userNotification,
           [booking?.user_Id],
@@ -307,28 +300,27 @@ await Booking.populate(booking,"store_Id user_Id salon_staff_Id")
           "system",
           "users"
         );
-  
+
         const staffNotification = {
           title: "Appointment Booked Successfully",
           body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${formattedDate}. Be Ready surve your best service!`,
         };
 
-      if(booking?.salon_staff_Id)
-      {
-        const staffSalonFind =  await User.findById(booking?.salon_staff_Id?.salon_staff_Id)
-      
-        await firebaseNotification(
-          staffNotification,
-          [staffSalonFind],
-          "news",
-          "Specific-Staff",
-          "system",
-          "staffs"
-        );
-  
-      }
-  
-       
+        if (booking?.salon_staff_Id) {
+          const staffSalonFind = await User.findById(
+            booking?.salon_staff_Id?.salon_staff_Id
+          );
+
+          await firebaseNotification(
+            staffNotification,
+            [staffSalonFind],
+            "news",
+            "Specific-Staff",
+            "system",
+            "staffs"
+          );
+        }
+
         const salonNotification = {
           title: "Appointment Booked Successfully",
           body: `${booking?.user_Id?.name} have booked appointment with you at Your salon on ${booking?.time} ${formattedDate}. Be Ready surve your best service!`,
@@ -362,15 +354,12 @@ await Booking.populate(booking,"store_Id user_Id salon_staff_Id")
           .status(400)
           .send({ status: false, message: "Error while creating booking" });
       }
-    }
-     else {
+    } else {
       return res
         .status(404)
         .send({ status: false, message: "Invalid coupon code" });
     }
-  } 
-  
-  else {
+  } else {
     let booking;
     if (req.body.booking_type === "manual") {
       booking = await new Booking({
@@ -429,6 +418,10 @@ if(req.body.booking_type === "manual")
     body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${formattedDate}. Be Ready surve your best service!`,
   };
 
+      if (booking?.salon_staff_Id) {
+        const staffSalonFind = await User.findById(
+          booking?.salon_staff_Id?.salon_staff_Id
+        );
 
   if(booking?.salon_staff_Id)
   {
@@ -482,7 +475,7 @@ if(req.body.booking_type === "manual")
         .status(400)
         .send({ status: false, message: "Error while creating booking" });
     }
-  }
+  }}
 });
 
 const getAllStoreBooking = asyncHandler(async (req, res) => {
@@ -1047,15 +1040,12 @@ const bookingsByCoupon = asyncHandler(async (req, res) => {
 
   const couponBookings = await Booking.find({
     store_Id: req.params.id,
-    coupons_Id: { $exists: true},
+    coupons_Id: { $exists: true },
     isDeleted: false,
     isSessionExpired: false,
   })
     .populate("service_Ids salon_staff_Id store_Id")
     .populate({ path: "user_Id", select: "name gender phone" });
-
-
-
 
   if (couponBookings?.length > 0) {
     return res.status(200).send({ status: true, booking: couponBookings });
@@ -1078,5 +1068,5 @@ export {
   couponCodeBookingAdded,
   deleteBooking,
   getStaffBooking,
-  bookingsByCoupon
+  bookingsByCoupon,
 };

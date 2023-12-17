@@ -166,7 +166,7 @@ const updateStore = asyncHandler(async (req, res) => {
   });
 
   if (!isStoreExist) {
-    return res.status(400).send({ status: false, message: "Store not exist" });
+     return res.status(400).send({ status: false, message: "Store not exist" });
   }
 
   const documentUrls = [];

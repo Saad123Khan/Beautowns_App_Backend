@@ -8,6 +8,7 @@ import {
   getStoreStaffServices,
   getStoreAnalytics,
   getStoreGraphsData,
+  completeStoreInfo,
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
@@ -32,6 +33,9 @@ storeRoute.post("/referral/:id",storeReferralLinkGenerated);
 
 //Get Referral Store
 storeRoute.get("/referral/:id", [validateObjectId], getStoreReferral);
+
+
+storeRoute.get("/complete-info/:id", [validateObjectId], completeStoreInfo);
 
 
 
