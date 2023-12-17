@@ -656,6 +656,10 @@ const completeStaffData = asyncHandler(async (req, res) => {
     0
   );
 
+
+  // getStaffGraph({},req.params.id)
+  // getStaffAnalytics({},req.params.id)
+
   const staffData={
     bookings,
     referral,

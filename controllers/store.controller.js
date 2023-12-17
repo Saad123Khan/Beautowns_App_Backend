@@ -541,8 +541,11 @@ const getStoreAnalytics = asyncHandler(async (req, res) => {
     newClients,
     percentageReturningClients,
   };
-
-  return res.status(200).json(analyticsData);
+  if (req.query.to === "manual") {
+    return analyticsData;
+  } else {
+    return res.status(200).json(analyticsData);
+  }
 });
 
 const getStoreGraphsData = asyncHandler(async (req, res) => {
@@ -939,6 +942,8 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     storeInfo = store;
   }
 
+  const datas = await getStoreAnalytics(req, res);
+  console.log(datas, "datas");
   const getAllStaffs = await Staffs.find({
     store_Id: req.params.id,
     isDeleted: false,
