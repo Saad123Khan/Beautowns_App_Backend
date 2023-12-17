@@ -628,7 +628,7 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
 
       // Staff Booking Counts
       const staffFind = await Staffs.findById(
-        booking.salon_staff_Id.toString()
+        booking?.salon_staff_Id?.toString()
       );
       const staffName = staffFind?.name;
       if (!staffBookingCounts[staffName]) {
