@@ -613,12 +613,12 @@ const getStaffGraph = asyncHandler(async (req, res) => {
 });
 
 const completeStaffData = asyncHandler(async (req, res) => {
-  let bookings;
-  let referral;
-  let notifications;
-  let staffInfo;
-  let analytics;
-  let graph;
+  let bookings = [];
+  let referral = [];
+  let notifications = [];
+  let staffInfo = {};
+  let analytics = {};
+  let graphs = {};
 
   const isStaffExist = await Staffs.findOne({
     _id: req.params.id,
@@ -630,6 +630,16 @@ const completeStaffData = asyncHandler(async (req, res) => {
     return res.status(400).send({ status: false, message: "Staff not exist" });
   } else {
     staffInfo = isStaffExist;
+  }
+
+  const staffAna = getStaffAnalytics(req, res);
+  if (staffAna) {
+    analytics = staffAna;
+  }
+
+  const staffGraphs = getStaffGraph(req, res);
+  if (staffAna) {
+    graphs = staffGraphs;
   }
 
   const staffbooking = await Booking.find({
@@ -674,7 +684,7 @@ const completeStaffData = asyncHandler(async (req, res) => {
     totalAmountReward,
     staffInfo,
     analytics,
-    graph,
+    graphs,
   };
 
   return res.status(200).json(staffData);
