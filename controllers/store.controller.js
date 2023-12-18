@@ -5,10 +5,12 @@ import { firebaseNotification } from "#utils/firebaseNotification";
 import { PATH, LIVEPATH } from "#constant/constant";
 import { Service } from "#models/services_model";
 import { Coupon } from "#models/coupons_model";
+import { StoreCoupon } from "#models/store_coupon_model";
 import { Blog } from "#models/blogs_model";
 import { Staffs } from "#models/staff_model";
 import Notification from "#models/notificationModel";
 import { Booking } from "#models/booking_model";
+import { StaffPayroll } from "#models/staff_payroll_model";
 import _ from "lodash";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
@@ -28,14 +30,6 @@ function validateUpdateStores(store) {
     longitude: Joi.number(),
     category_Id: Joi.string(),
     no_of_slots: Joi.number(),
-    // store_timings: Joi.array().items(
-    //   Joi.object({
-    //     day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
-    //     from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-    //     to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-    //     isAvailable: Joi.boolean().required(),
-    //   })
-    // ).min(7).max(7).unique('day', { ignoreUndefined: true }),
 
     details: Joi.string(),
 
@@ -167,7 +161,7 @@ const updateStore = asyncHandler(async (req, res) => {
   });
 
   if (!isStoreExist) {
-     return res.status(400).send({ status: false, message: "Store not exist" });
+    return res.status(400).send({ status: false, message: "Store not exist" });
   }
 
   const documentUrls = [];
@@ -689,7 +683,6 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
   } else {
     return res.status(200).json(analyticsData);
   }
-
 });
 
 const sendStoreNotification = asyncHandler(async (req, res) => {
@@ -930,6 +923,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   let notifications = [];
   let transactions = [];
   let analytics = "";
+  let staffPayroll = [];
   let graphs = "";
 
   const store = await Store.findOne({
@@ -997,9 +991,12 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     services = StoreService;
   }
 
-  const storeCoupons = await Coupon.find({ isDeleted: false });
-  if (storeCoupons?.length > 0) {
-    coupons = storeCoupons;
+  const storeCoupon = await StoreCoupon.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+  });
+  if (storeCoupon?.length > 0) {
+    coupons = storeCoupon;
   }
 
   const user = await User.findOne({
@@ -1047,6 +1044,16 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     transactions = storeTransactions;
   }
 
+  const getStaffPayroll = await StaffPayroll.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate({ path: "staff_Id", select: "name title" });
+
+  if (getStaffPayroll?.length > 0) {
+    staffPayroll = getStaffPayroll;
+  }
+
   const storeData = {
     staffs,
     storeInfo,
@@ -1061,6 +1068,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     notifications,
     graphs,
     analytics,
+    staffPayroll,
   };
 
   return res.status(200).json(storeData);
