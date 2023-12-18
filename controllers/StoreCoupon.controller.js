@@ -1,0 +1,158 @@
+import asyncHandler from "#middlewares/asyncHandler";
+import { User } from "#models/user_model";
+import _ from "lodash";
+import { StoreCoupon, validateCoupon } from "#models/store_coupon_model";
+import mongoose from "mongoose";
+import { Store } from "#models/store_model";
+
+const createStoreCoupon = asyncHandler(async (req, res) => {
+  const { error } = validateCoupon(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .send({ status: false, message: error?.details[0]?.message });
+  }
+
+  const isStoreExist = await Store.findOne({
+    _id: req.body.store_Id,
+    isSuspend: false,
+    isDeleted: false,
+  });
+
+  if (!isStoreExist) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Store record not exists" });
+  }
+
+  if (req.body.target === "specific") {
+    if (req.body.userIds.length > 0) {
+      req.body.userIds.forEach(async (item) => {
+        if (!mongoose.Types.ObjectId.isValid(item)) {
+          return res
+            .status(400)
+            .send({ status: false, message: `Invalid User ID. ${item}` });
+        }
+      });
+    }
+
+    const users = await User.find({ _id: { $in: req.body.userIds } });
+
+    console.log(users);
+    if (users?.length !== req.body.userIds.length) {
+      return res
+        .status(400)
+        .send({ status: false, message: `Some user IDS are invalid` });
+    }
+  }
+  let couponValue = await StoreCoupon.findOne({ value: req.body.value });
+
+  if (couponValue) {
+    return res.status(400).send({
+      status: false,
+      message: "Same coupon value already exists, plz use unique value",
+    });
+  }
+
+  const couponCreated = await new StoreCoupon(req.body).save();
+  if (couponCreated) {
+    return res.status(201).send({
+      status: true,
+      message: "Coupon Created Sucessfully",
+      coupon: couponCreated,
+    });
+  } else {
+    return res.status(400).send({
+      status: false,
+      message: "Something error while creating coupon",
+    });
+  }
+});
+
+const getAllStoreCoupons = asyncHandler(async (req, res) => {
+  const isStoreExist = await Store.findOne({
+    _id: req.params.id,
+    isSuspend: false,
+    isDeleted: false,
+  });
+
+  if (!isStoreExist) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Store record not exists" });
+  }
+
+  const coupons = await StoreCoupon.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+  });
+  if (coupons?.length > 0) {
+    return res.status(200).json({
+      status: true,
+      coupons,
+    });
+  } else {
+    return res
+      .status(200)
+      .json({ status: true, message: "Coupons record not found" });
+  }
+});
+
+const deleteStoreCoupon = asyncHandler(async (req, res) => {
+  const coupon = await StoreCoupon.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+  });
+  if (coupon) {
+    await StoreCoupon.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: false },
+      { isDeleted: true }
+    );
+    return res
+      .status(200)
+      .send({ status: true, message: "Coupon deleted successfully" });
+  } else {
+    return res
+      .status(404)
+      .send({ status: false, message: "Coupon does not exists" });
+  }
+});
+
+const updateStoreCoupon = asyncHandler(async (req, res) => {
+  const { error } = validateCoupon(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .send({ status: false, message: error?.details[0]?.message });
+  }
+
+  const couponFind = await StoreCoupon.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+  });
+
+  if (!couponFind)
+    return res
+      .status(404)
+      .send({ status: false, message: "Coupon does not exists." });
+
+  const couponUpdate = await StoreCoupon.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+  });
+
+  return res.status(200).json({
+    status: true,
+    message: "Coupon updated successfully",
+    coupon: couponUpdate,
+  });
+});
+
+export {
+  //   getOneCoupon,
+  //   getAllCoupons,
+  //   deletedCoupon,
+  //   updateCoupon,
+  deleteStoreCoupon,
+  getAllStoreCoupons,
+  createStoreCoupon,
+};

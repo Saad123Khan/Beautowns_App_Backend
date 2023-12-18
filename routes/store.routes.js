@@ -8,12 +8,18 @@ import {
   getStoreStaffServices,
   getStoreAnalytics,
   getStoreGraphsData,
+  completeStoreInfo,
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
   storeReferralLinkGenerated,
-  getStoreReferral
+  getStoreReferral,
 } from "#controllers/store.controller";
+import {
+  createStoreCoupon,
+  deleteStoreCoupon,
+  getAllStoreCoupons,
+} from "#controllers/StoreCoupon.controller";
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from "#utils/multer";
 import { getStoreAvailableSlots } from "#controllers/slots.controller";
@@ -25,15 +31,14 @@ storeRoute
   .post(multerUpload.single("image"), createStore)
   .get(getAllStore);
 
-
-//Create referral 
-storeRoute.post("/referral/:id",storeReferralLinkGenerated);
-
+//Create referral
+storeRoute.post("/referral/:id", storeReferralLinkGenerated);
 
 //Get Referral Store
 storeRoute.get("/referral/:id", [validateObjectId], getStoreReferral);
 
-
+storeRoute.get("/complete-info/:id", [validateObjectId], completeStoreInfo);
+storeRoute.post("/coupon", createStoreCoupon);
 
 storeRoute.route("/update/:id").put(
   validateObjectId,
@@ -55,6 +60,8 @@ storeRoute.route("/update/:id").put(
 );
 
 storeRoute.route("/:id").get(validateObjectId, getOneStore);
+storeRoute.route("/coupon/:id").get(validateObjectId, getAllStoreCoupons);
+storeRoute.route("/coupon/:id").delete(validateObjectId, deleteStoreCoupon);
 storeRoute
   .route("/getStaffandServices/:id")
   .get(validateObjectId, getStoreStaffServices);

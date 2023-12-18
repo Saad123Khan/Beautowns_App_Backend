@@ -15,6 +15,12 @@ class SocketServer {
       sendVerificationSuccess(userData) {
         this.socket.emit("verificationSuccess", userData);
       }
+      sendNotificationStaffSucess(notData) {
+        this.socket.emit("sendNotificationStaff", notData);
+      }
+      sendNotificationStoreSucess(notData) {
+        this.socket.emit("sendNotificationStore", notData);
+      }
       sendNotificationSucess(notData) {
         this.socket.emit("notification", notData);
       }

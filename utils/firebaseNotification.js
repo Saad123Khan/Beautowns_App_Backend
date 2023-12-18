@@ -32,11 +32,32 @@ export const firebaseNotification = async (notification, users, type, target, fr
         await sendNotificationEmail(email, notification)
         const response = await rp(options);
         console.log('Notification sent:', response);
-        const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 })
+        const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 }).populate("userId")
         const unSeenNotifications = await Notification.find({ userId: notificationCreated?.userId, isSeen: false }).countDocuments()
+ 
+        
+        
+      console.log(users,"USERRRRRRRRR DAta")
+        if(users?.role === "user")
+        {
+          console.log("CALL USER")
+          sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        }
+        else if(users?.role === "store")
+        { 
+          console.log("CALL STORE")
+          sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        }
+        else if(users?.role === "staff")
+        {
+          console.log("CALL STAFF")
+          sockets.sendNotificationStaffSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        }
 
-        sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
 
+
+
+        // console.log(notifications,"notifications")
       }
       else {
         const notificationCreated = notification.image ? await new Notification({ notification, target, type, userId, image: notification.image, from, to }) :
@@ -45,7 +66,26 @@ export const firebaseNotification = async (notification, users, type, target, fr
         await sendNotificationEmail(email, notification)
         const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 })
         const unSeenNotifications = await Notification.find({ userId: notificationCreated?.userId, isSeen: false }).countDocuments()
-        sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        // sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+      
+      console.log(users,"USERRRRRRRRR DAta")
+        if(users?.role === "user")
+        {
+          console.log("CALL USER")
+          sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        }
+        else if(users?.role === "store")
+        { 
+          console.log("CALL STORE")
+          sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        }
+        else if(users?.role === "staff")
+        {
+          console.log("CALL STAFF")
+          sockets.sendNotificationStaffSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+        }
+
+      
       }
     } catch (error) {
       console.log('Notification faled', error);

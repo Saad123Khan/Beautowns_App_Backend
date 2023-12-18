@@ -8,10 +8,11 @@ import {
   getStaffNotification,
   staffNotificationSeen,
   changeStaffStatus,
+  completeStaffData,
   getStaffReferral,
   getStaffGraph,
   getStaffAnalytics,
-  staffReferralLinkGenerated
+  staffReferralLinkGenerated,
 } from "#controllers/staff.controller";
 
 import validateObjectId from "#middlewares/validateObjectId";
@@ -19,8 +20,7 @@ import { multerUpload } from "#utils/multer";
 
 const staffRoute = express.Router();
 
-
-staffRoute.post("/referral/:id",staffReferralLinkGenerated);
+staffRoute.post("/referral/:id", staffReferralLinkGenerated);
 
 staffRoute.get("/referral/:id", [validateObjectId], getStaffReferral);
 
@@ -31,7 +31,7 @@ staffRoute
   .route("/update/:id")
   .put([validateObjectId, multerUpload.single("image")], updateStaff);
 staffRoute.route("/store/:id").get(validateObjectId, getAllStoreStaffs);
-
+staffRoute.route("/complete-info/:id").get(validateObjectId, completeStaffData);
 staffRoute.route("/:id").get(validateObjectId, getOneStaff);
 staffRoute.route("/analytics/:id").get(validateObjectId, getStaffAnalytics);
 staffRoute.route("/graph/:id").get(validateObjectId, getStaffGraph);

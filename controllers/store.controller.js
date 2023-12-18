@@ -4,17 +4,20 @@ import AdminNotification from "#models/adminNotificationModel";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { PATH, LIVEPATH } from "#constant/constant";
 import { Service } from "#models/services_model";
+import { Coupon } from "#models/coupons_model";
+import { StoreCoupon } from "#models/store_coupon_model";
+import { Blog } from "#models/blogs_model";
 import { Staffs } from "#models/staff_model";
 import Notification from "#models/notificationModel";
 import { Booking } from "#models/booking_model";
+import { StaffPayroll } from "#models/staff_payroll_model";
 import _ from "lodash";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
 import Joi from "joi";
-
+import { Payment } from "#models/payment_model";
 import { Referral } from "#models/referral_modal";
 import { generateRandomCode } from "#utils/generateRandomCode";
-
 import { StoreCategories } from "#models/store_categories_model";
 
 function validateUpdateStores(store) {
@@ -27,14 +30,6 @@ function validateUpdateStores(store) {
     longitude: Joi.number(),
     category_Id: Joi.string(),
     no_of_slots: Joi.number(),
-    // store_timings: Joi.array().items(
-    //   Joi.object({
-    //     day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
-    //     from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-    //     to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-    //     isAvailable: Joi.boolean().required(),
-    //   })
-    // ).min(7).max(7).unique('day', { ignoreUndefined: true }),
 
     details: Joi.string(),
 
@@ -539,7 +534,11 @@ const getStoreAnalytics = asyncHandler(async (req, res) => {
     percentageReturningClients,
   };
 
-  return res.status(200).json(analyticsData);
+  if (req?.query?.to === "manual") {
+    return analyticsData;
+  } else {
+    return res.status(200).json(analyticsData);
+  }
 });
 
 const getStoreGraphsData = asyncHandler(async (req, res) => {
@@ -621,7 +620,7 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
 
       // Staff Booking Counts
       const staffFind = await Staffs.findById(
-        booking.salon_staff_Id.toString()
+        booking?.salon_staff_Id?.toString()
       );
       const staffName = staffFind?.name;
       if (!staffBookingCounts[staffName]) {
@@ -679,7 +678,11 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
     staffBookingPercentage,
   };
 
-  return res.status(200).json(analyticsData);
+  if (req.query.to === "manual") {
+    return analyticsData;
+  } else {
+    return res.status(200).json(analyticsData);
+  }
 });
 
 const sendStoreNotification = asyncHandler(async (req, res) => {
@@ -908,7 +911,171 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
   }
 });
 
+const completeStoreInfo = asyncHandler(async (req, res) => {
+  let staffs = [];
+  let storeInfo = "";
+  let bookings = [];
+  let blogs = [];
+  let services = [];
+  let coupons = [];
+  let referrals = [];
+  let categories = [];
+  let notifications = [];
+  let transactions = [];
+  let analytics = "";
+  let staffPayroll = [];
+  let graphs = "";
+
+  const store = await Store.findOne({
+    _id: req.params.id,
+    isSuspend: false,
+    isDeleted: false,
+  }).populate({ path: "salon_owner_Id", select: "_id" });
+
+  if (!store) {
+    return res
+      .status(404)
+      .send({ status: false, message: "Store record not exists" });
+  } else if (store) {
+    storeInfo = store;
+  }
+
+  const storeAnalytics = await getStoreAnalytics(req, res);
+  if (storeAnalytics) {
+    analytics = storeAnalytics;
+  }
+
+  const storeGraphs = await getStoreGraphsData(req, res);
+  if (storeGraphs) {
+    graphs = storeGraphs;
+  }
+
+  const getAllStaffs = await Staffs.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("salon_staff_Id", "name isDeleted");
+
+  if (getAllStaffs?.length > 0) {
+    staffs = getAllStaffs;
+  }
+
+  const storebooking = await Booking.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSessionExpired: false,
+  })
+    .populate("service_Ids")
+    .populate({ path: "user_Id", select: "name gender email phone" })
+    .populate("store_Id salon_staff_Id");
+  if (storebooking?.length > 0) {
+    bookings = storebooking;
+  }
+
+  const storeBlogs = await Blog.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
+  if (storeBlogs?.length > 0) {
+    blogs = storeBlogs;
+  }
+
+  const StoreService = await Service.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("service_category_Id");
+  if (StoreService?.length > 0) {
+    services = StoreService;
+  }
+
+  const storeCoupon = await StoreCoupon.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+  });
+  if (storeCoupon?.length > 0) {
+    coupons = storeCoupon;
+  }
+
+  const user = await User.findOne({
+    _id: store?.salon_owner_Id._id,
+    role: "store",
+    isDeleted: false,
+  });
+
+  const referralFind = await Referral.find({
+    from_referral_userId: user?._id,
+  }).populate("from_referral_userId to_referral_userId");
+
+  const totalAmountReward = referralFind?.reduce(
+    (acc, obj) => (acc += obj.rewarded_amount),
+    0
+  );
+  if (referralFind.length > 0) {
+    referrals = referralFind;
+  }
+
+  const storeNotifications = await Notification.find({
+    userId: store?.salon_owner_Id._id,
+  }).sort({ createdAt: -1 });
+
+  if (storeNotifications?.length > 0) {
+    notifications = storeNotifications;
+  }
+
+  const storeCategories = await StoreCategories.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+  });
+  if (storeCategories?.length > 0) {
+    categories = storeCategories;
+  }
+
+  const storeTransactions = await Payment.find({
+    store_Id: req.params.id,
+  }).populate({
+    path: "user_Id store_Id",
+    select: "name",
+  });
+
+  if (storeTransactions?.length > 0) {
+    transactions = storeTransactions;
+  }
+
+  const getStaffPayroll = await StaffPayroll.find({
+    store_Id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate({ path: "staff_Id", select: "name title" });
+
+  if (getStaffPayroll?.length > 0) {
+    staffPayroll = getStaffPayroll;
+  }
+
+  const storeData = {
+    staffs,
+    storeInfo,
+    bookings,
+    blogs,
+    services,
+    coupons,
+    referrals,
+    totalAmountReward,
+    categories,
+    transactions,
+    notifications,
+    graphs,
+    analytics,
+    staffPayroll,
+  };
+
+  return res.status(200).json(storeData);
+});
+
 export {
+  completeStoreInfo,
   getStoreReferral,
   storeReferralLinkGenerated,
   createStore,
