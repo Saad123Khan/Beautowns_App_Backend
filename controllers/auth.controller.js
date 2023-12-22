@@ -225,7 +225,7 @@ const loginUser = asyncHandler(async (req, res) => {
     salon_owner_Id: user?._id,
     isDeleted: false,
     isSuspend: false,
-  }).populate("category_Id");
+  }).populate("category_Ids");
 
   let staffDetails;
 
