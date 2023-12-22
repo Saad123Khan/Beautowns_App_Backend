@@ -11,7 +11,7 @@ function validateUpdateServices(service) {
     name: Joi.string(),
     description: Joi.string(),
     value: Joi.number(),
-    noOfPeople: Joi.number(),
+    // noOfPeople: Joi.number(),
     segment_Id: Joi.number().valid(1, 2, 3),
     duration: Joi.number(),
     image: Joi.string(),
@@ -187,12 +187,10 @@ const delete_service = asyncHandler(async (req, res) => {
         .status(200)
         .send({ status: true, message: "Service Deleted Successfully!" });
     } else {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          message: "Something Wents Wrong While Deleting Service",
-        });
+      return res.status(400).send({
+        status: false,
+        message: "Something Wents Wrong While Deleting Service",
+      });
     }
   } else {
     return res

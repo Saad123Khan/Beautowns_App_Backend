@@ -28,13 +28,10 @@ function validateUpdateStores(store) {
     phone: Joi.number(),
     latitude: Joi.number(),
     longitude: Joi.number(),
-    category_Id: Joi.string(),
+    category_Ids: Joi.array(),
     no_of_slots: Joi.number(),
-
     details: Joi.string(),
-
     location: Joi.string(),
-
     store_timings: Joi.array()
       .items(
         Joi.object({
@@ -80,6 +77,7 @@ function validateUpdateStores(store) {
 }
 
 const createStore = asyncHandler(async (req, res) => {
+  console.log(req.body, ":req.body");
   const { error } = validateStores(req.body);
   if (error) {
     return res
@@ -111,8 +109,8 @@ const createStore = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store owner record not exists" });
   }
 
-  const categoryFind = await Categories.findOne({
-    _id: req.body.category_Id,
+  const categoryFind = await Categories.find({
+    _id: { $in: req.body.category_Ids },
     isSuspend: false,
     isDeleted: false,
   });
@@ -220,7 +218,7 @@ const updateStore = asyncHandler(async (req, res) => {
       "no_of_slots",
     ]),
     { new: true }
-  ).populate("category_Id");
+  ).populate("category_Ids");
   return res.status(200).send({
     status: true,
     message: "Updated store details successfully",
@@ -255,18 +253,6 @@ const changeStoreStatus = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllStore = asyncHandler(async (req, res) => {
-  const store = await Store.find({ isDeleted: false, isSuspend: false });
-  if (store?.length > 0) {
-    return res.status(200).send({ status: true, store: store });
-  } else {
-    return res.status(404).send({
-      status: false,
-      message: "Store record does not exists",
-      store: [],
-    });
-  }
-});
 
 const getOneStore = asyncHandler(async (req, res) => {
   let store;
@@ -344,35 +330,6 @@ const getOneStore = asyncHandler(async (req, res) => {
   }
 });
 
-const getStoreStaffServices = asyncHandler(async (req, res) => {
-  const isExist = await Store.findOne({
-    _id: req.params.id,
-    isDeleted: false,
-    isSuspend: false,
-  });
-  if (isExist) {
-    const countService = await Service.countDocuments({
-      store_Id: req.params.id,
-      isDeleted: false,
-      isSuspend: false,
-    });
-    const countStaff = await Service.countDocuments({
-      store_Id: req.params.id,
-      isDeleted: false,
-      isSuspend: false,
-    });
-    return res.status(200).send({
-      status: true,
-      total_service: countService,
-      total_staff: countStaff,
-    });
-  } else {
-    return res.status(404).send({
-      status: false,
-      message: "Store record does not exists",
-    });
-  }
-});
 
 const getStoreAnalytics = asyncHandler(async (req, res) => {
   console.log(req.params.id, "req.params.id");
@@ -930,7 +887,9 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     _id: req.params.id,
     isSuspend: false,
     isDeleted: false,
-  }).populate({ path: "salon_owner_Id", select: "_id" });
+  })
+    .populate({ path: "salon_owner_Id", select: "_id" })
+    .populate("category_Ids");
 
   if (!store) {
     return res
@@ -1079,11 +1038,9 @@ export {
   getStoreReferral,
   storeReferralLinkGenerated,
   createStore,
-  getAllStore,
   getOneStore,
   changeStoreStatus,
   updateStore,
-  getStoreStaffServices,
   getStoreAnalytics,
   getStoreGraphsData,
   sendStoreNotification,

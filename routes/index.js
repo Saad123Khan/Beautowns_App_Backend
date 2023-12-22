@@ -11,11 +11,11 @@ import bookingRoute from "#routes/booking.routes";
 import couponRoute from "#routes/coupon.routes";
 import blogRoute from "#routes/blog.routes";
 import adminCouponRoute from "#routes/Admin/admin.coupon.routes";
+import adminStoreRoute from "#routes/Admin/admin.store.routes";
 import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 import paymentRoute from "#routes/payment.routes";
 import staffPayrollRoutes from "#routes/staffPayroll.routes";
 import adminAnalyticsRoute from "#routes/Admin/admin.analytics.routes";
-
 
 const routes = (app) => {
   // app.get("*",(req,res)=>{
@@ -56,25 +56,18 @@ const routes = (app) => {
   // Coupon
   app.use("/api/coupon", couponRoute);
 
-  
-// Admin Coupon 
-app.use("/api/admin/coupon", adminCouponRoute);
+  // Admin Coupon
+  app.use("/api/admin/coupon", adminCouponRoute);
+  // Admin Store
+  app.use("/api/admin/store", adminStoreRoute);
 
-// Admin Notification 
-app.use("/api/admin/notification", adminNotificationRoute);
+  // Admin Notification
+  app.use("/api/admin/notification", adminNotificationRoute);
 
+  // Payment
+  app.use("/api/payment", paymentRoute);
 
-
-// Payment
-app.use("/api/payment", paymentRoute);
-
-
-// Analytics
-app.use("/api/admin/analytics", adminAnalyticsRoute);
-
-
-
-  
-
+  // Analytics
+  app.use("/api/admin/analytics", adminAnalyticsRoute);
 };
 export default routes;

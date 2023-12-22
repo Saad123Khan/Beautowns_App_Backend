@@ -19,9 +19,9 @@ const ServicesSchema = new mongoose.Schema({
     value: {
         type: Number,
     },
-    noOfPeople: {
-        type: Number
-    },
+    // noOfPeople: {
+    //     type: Number
+    // },
     segment_Id: 
         {
             enum: [1, 2, 3],
@@ -51,7 +51,7 @@ function validateServices(service) {
         name: Joi.string().required(),
         description: Joi.string().required(),
         value: Joi.number().required(),
-        noOfPeople: Joi.number().required(),
+        // noOfPeople: Joi.number().required(),
         segment_Id: Joi.number().valid(1, 2, 3).required(),
         duration: Joi.number().required(),
         image: Joi.string(),

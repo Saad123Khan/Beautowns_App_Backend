@@ -1,11 +1,9 @@
 import express from "express";
 import {
   createStore,
-  getAllStore,
   getOneStore,
   changeStoreStatus,
   updateStore,
-  getStoreStaffServices,
   getStoreAnalytics,
   getStoreGraphsData,
   completeStoreInfo,
@@ -26,10 +24,7 @@ import { getStoreAvailableSlots } from "#controllers/slots.controller";
 
 const storeRoute = express.Router();
 
-storeRoute
-  .route("/")
-  .post(multerUpload.single("image"), createStore)
-  .get(getAllStore);
+storeRoute.route("/").post(multerUpload.single("image"), createStore);
 
 //Create referral
 storeRoute.post("/referral/:id", storeReferralLinkGenerated);
@@ -62,9 +57,6 @@ storeRoute.route("/update/:id").put(
 storeRoute.route("/:id").get(validateObjectId, getOneStore);
 storeRoute.route("/coupon/:id").get(validateObjectId, getAllStoreCoupons);
 storeRoute.route("/coupon/:id").delete(validateObjectId, deleteStoreCoupon);
-storeRoute
-  .route("/getStaffandServices/:id")
-  .get(validateObjectId, getStoreStaffServices);
 
 storeRoute.route("/slots/:id").get(validateObjectId, getStoreAvailableSlots);
 
