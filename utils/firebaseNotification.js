@@ -37,18 +37,18 @@ export const firebaseNotification = async (notification, users, type, target, fr
  
         
         
-      console.log(users,"USERRRRRRRRR DAta")
-        if(users?.role === "user")
+      console.log(users,"US======= DAta")
+        if(users?.[0]?.role === "user")
         {
           console.log("CALL USER")
           sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.role === "store")
+        else if(users?.[0]?.role === "store")
         { 
           console.log("CALL STORE")
           sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.role === "staff")
+        else if(users?.[0]?.role === "staff")
         {
           console.log("CALL STAFF")
           sockets.sendNotificationStaffSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
@@ -68,18 +68,18 @@ export const firebaseNotification = async (notification, users, type, target, fr
         const unSeenNotifications = await Notification.find({ userId: notificationCreated?.userId, isSeen: false }).countDocuments()
         // sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
       
-      console.log(users,"USERRRRRRRRR DAta")
-        if(users?.role === "user")
+      console.log(users,"USER------------- DAta")
+        if(users?.[0]?.role === "user")
         {
           console.log("CALL USER")
           sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.role === "store")
+        else if(users?.[0]?.role === "store")
         { 
           console.log("CALL STORE")
           sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.role === "staff")
+        else if(users?.[0]?.role === "staff")
         {
           console.log("CALL STAFF")
           sockets.sendNotificationStaffSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });

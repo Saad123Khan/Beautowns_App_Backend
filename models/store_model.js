@@ -3,23 +3,25 @@ import Joi from "joi";
 
 const StoreSchema = new mongoose.Schema(
   {
-     salon_owner_Id: {
+    salon_owner_Id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    category_Id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Categories",
-    },
+    category_Ids: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Categories",
+      },
+    ],
     name: {
       type: String,
     },
     details: {
       type: String,
     },
-    phone:{
-      type: String,  
-    },   
+    phone: {
+      type: String,
+    },
     location: {
       type: String,
     },
@@ -42,13 +44,24 @@ const StoreSchema = new mongoose.Schema(
     ],
     store_timings: [
       {
-        day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
+        day: {
+          type: String,
+          enum: [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+          ],
+        },
         from: String,
         to: String,
         isAvailable: Boolean,
       },
     ],
-    no_of_slots:{
+    no_of_slots: {
       type: Number,
     },
     segment_Id: {
@@ -82,31 +95,45 @@ const StoreSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-
 function validateStores(store) {
   const schema = Joi.object({
     salon_owner_Id: Joi.string().required(),
-    category_Id: Joi.string().required(),
+    category_Ids: Joi.array().required(),
     name: Joi.string().required(),
-
     details: Joi.string().required(),
     location: Joi.string().required(),
-
     country: Joi.string().required(),
     city: Joi.string().required(),
     phone: Joi.number().required(),
-    no_of_slots: Joi.number().required(),    
+    no_of_slots: Joi.number().required(),
     latitude: Joi.number().required(),
     longitude: Joi.number().required(),
-    store_timings: Joi.array().items(
-      Joi.object({
-        day: Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday').required(),
-        from: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-        to: Joi.string().regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i).required(),
-        isAvailable: Joi.boolean().required(),
-      })
-    ).min(7).max(7).unique('day', { ignoreUndefined: true }),
+    store_timings: Joi.array()
+      .items(
+        Joi.object({
+          day: Joi.string()
+            .valid(
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday"
+            )
+            .required(),
+          from: Joi.string()
+            .regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i)
+            .required(),
+          to: Joi.string()
+            .regex(/^([1-9]|1[0-2]):[0-5][0-9][ap]m$/i)
+            .required(),
+          isAvailable: Joi.boolean().required(),
+        })
+      )
+      .min(7)
+      .max(7)
+      .unique("day", { ignoreUndefined: true }),
     documents: Joi.array().items(Joi.string()),
     segment_Id: Joi.number().valid(1, 2, 3).required(),
     image: Joi.string(),
@@ -119,7 +146,6 @@ function validateStores(store) {
   return schema.validate(store);
 }
 
-
 const Store = mongoose.model("Store", StoreSchema);
 
-export { Store, validateStores};
+export { Store, validateStores };
