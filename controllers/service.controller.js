@@ -23,6 +23,7 @@ function validateUpdateServices(service) {
 }
 
 const createService = asyncHandler(async (req, res) => {
+  let services = [];
   const { error } = validateServices(req.body);
   if (error) {
     return res
@@ -60,9 +61,20 @@ const createService = asyncHandler(async (req, res) => {
 
   const service = await new Service(req.body).save();
   if (service) {
-    return res
-      .status(201)
-      .send({ status: true, message: "Sucessfully created service", service });
+    const findServics = await Service.find({
+      store_Id: service?.store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    }).populate("service_category_Id");
+    if (findServics.length > 0) {
+      services = findServics;
+    }
+    return res.status(201).send({
+      status: true,
+      message: "Sucessfully created service",
+      service,
+      services: services,
+    });
   } else {
     return res.status(400).send({
       status: false,
@@ -72,6 +84,7 @@ const createService = asyncHandler(async (req, res) => {
 });
 
 const updateService = asyncHandler(async (req, res) => {
+  let services = [];
   const { error } = validateUpdateServices(req.body);
   if (error) {
     return res
@@ -98,10 +111,19 @@ const updateService = asyncHandler(async (req, res) => {
     new: true,
   });
   if (service) {
+    const findServics = await Service.find({
+      store_Id: service?.store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    }).populate("service_category_Id");
+    if (findServics.length > 0) {
+      services = findServics;
+    }
     return res.status(200).send({
       status: true,
       message: "Sucessfully updated service",
       service,
+      services: services,
     });
   } else {
     return res.status(400).send({
@@ -170,6 +192,7 @@ const getOneService = asyncHandler(async (req, res) => {
 });
 
 const delete_service = asyncHandler(async (req, res) => {
+  let services = [];
   const isExist = await Service.findOne({
     _id: req.params.id,
     isDeleted: false,
@@ -177,15 +200,25 @@ const delete_service = asyncHandler(async (req, res) => {
   });
 
   if (isExist) {
-    const delete_cat = await Service.findOneAndUpdate(
+    const delete_service = await Service.findOneAndUpdate(
       { _id: req.params.id },
       { $set: { isDeleted: true } }
     );
 
-    if (delete_cat) {
-      return res
-        .status(200)
-        .send({ status: true, message: "Service Deleted Successfully!" });
+    if (delete_service) {
+      const findServics = await Service.find({
+        store_Id: isExist?.store_Id,
+        isDeleted: false,
+        isSuspend: false,
+      }).populate("service_category_Id");
+      if (findServics.length > 0) {
+        services = findServics;
+      }
+      return res.status(200).send({
+        status: true,
+        message: "Service Deleted Successfully!",
+        services: services,
+      });
     } else {
       return res.status(400).send({
         status: false,

@@ -56,6 +56,7 @@ function validateUpdatedStaff(service) {
 
 const createSalonStaff = asyncHandler(async (req, res) => {
   const { email, password, ...rest } = req.body;
+  let staffs = [];
 
   const { error } = validateStaff(rest);
   if (error) {
@@ -99,9 +100,21 @@ const createSalonStaff = asyncHandler(async (req, res) => {
 
   const staff = await new Staffs(req.body).save();
   if (staff) {
-    return res
-      .status(201)
-      .send({ status: true, message: "Sucessfully created Staff", staff });
+    const getAllStaff = await Staffs.find({
+      store_Id: staff?.store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    }).populate("salon_staff_Id", "name isDeleted");
+    if (getAllStaff?.length > 0) {
+      staffs = getAllStaff;
+    }
+
+    return res.status(201).send({
+      status: true,
+      message: "Sucessfully created Staff",
+      staff,
+      staffs: staffs,
+    });
   } else {
     return res
       .status(400)
@@ -110,6 +123,7 @@ const createSalonStaff = asyncHandler(async (req, res) => {
 });
 
 const updateStaff = asyncHandler(async (req, res) => {
+  let staffs = [];
   const { error } = validateUpdatedStaff(req.body);
   if (error) {
     return res
@@ -139,10 +153,21 @@ const updateStaff = asyncHandler(async (req, res) => {
     ]),
     { new: true }
   );
+
+  const getAllStaff = await Staffs.find({
+    store_Id: updatedStaff?.store_Id,
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("salon_staff_Id", "name isDeleted");
+  if (getAllStaff?.length > 0) {
+    staffs = getAllStaff;
+  }
+
   return res.status(200).send({
     status: true,
     message: "Updated staff details successfully",
     staff: updatedStaff,
+    staffs: staffs,
   });
 });
 
@@ -191,6 +216,7 @@ const getOneStaff = asyncHandler(async (req, res) => {
 });
 
 const delete_staff = asyncHandler(async (req, res) => {
+  let staffs = [];
   const isStaffExist = await Staffs.findOne({
     _id: req.params.id,
     isDeleted: false,
@@ -207,9 +233,20 @@ const delete_staff = asyncHandler(async (req, res) => {
   );
 
   if (delete_cat) {
-    return res
-      .status(200)
-      .send({ status: true, message: "Staff Deleted Successfully!" });
+    const getAllStaff = await Staffs.find({
+      store_Id: delete_cat?.store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    }).populate("salon_staff_Id", "name isDeleted");
+    if (getAllStaff?.length > 0) {
+      staffs = getAllStaff;
+    }
+
+    return res.status(200).send({
+      status: true,
+      message: "Staff Deleted Successfully!",
+      staffs: staffs,
+    });
   } else {
     return res
       .status(404)
@@ -218,6 +255,7 @@ const delete_staff = asyncHandler(async (req, res) => {
 });
 
 const changeStaffStatus = asyncHandler(async (req, res) => {
+  let staffs = [];
   const isStaffExist = await Staffs.findOne({
     _id: req.params.id,
     isDeleted: false,
@@ -234,9 +272,20 @@ const changeStaffStatus = asyncHandler(async (req, res) => {
   );
 
   if (change_status) {
-    return res
-      .status(200)
-      .send({ status: true, message: "Changed staff status successfully!" });
+    const getAllStaff = await Staffs.find({
+      store_Id: isStaffExist?.store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    }).populate("salon_staff_Id", "name isDeleted");
+    if (getAllStaff?.length > 0) {
+      staffs = getAllStaff;
+    }
+
+    return res.status(200).send({
+      status: true,
+      message: "Changed staff status successfully!",
+      staffs: staffs,
+    });
   } else {
     return res
       .status(404)

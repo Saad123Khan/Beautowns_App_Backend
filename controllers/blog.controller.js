@@ -18,15 +18,14 @@ function validateUpdateBlogs(store) {
 }
 
 const createBlog = asyncHandler(async (req, res) => {
+  let blogs = [];
   let image = req?.files?.image?.[0]?.filename;
   let author_image = req?.files?.author_image?.[0]?.filename;
   req.body.image = image && `${LIVEPATH}/uploads/${image}`;
   req.body.author_image = author_image && `${LIVEPATH}/uploads/${author_image}`;
 
   if (req.uploadError) {
-    res
-      .status(400)
-      .send({ status: false,  });
+    res.status(400).send({ status: false });
 
     throw new Error(req.uploadError);
   }
@@ -65,9 +64,21 @@ const createBlog = asyncHandler(async (req, res) => {
 
   const blog = await new Blog(req.body).save();
   if (blog) {
-    return res
-      .status(201)
-      .send({ status: true, message: "Sucessfully created blog", blog });
+    const findBlogs = await Blog.find({
+      store_Id: blog?.store_Id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+    if (findBlogs?.length > 0) {
+      blogs = findBlogs;
+    }
+
+    return res.status(201).send({
+      status: true,
+      message: "Sucessfully created blog",
+      blog,
+      blogs: blogs,
+    });
   } else {
     return res.status(400).send({
       status: false,
@@ -106,8 +117,14 @@ const getAllBlogs = asyncHandler(async (req, res) => {
 });
 
 const updateBlog = asyncHandler(async (req, res) => {
+  let blogs = [];
   const image = req?.files?.image?.[0]?.filename;
   const author_image = req?.files?.author_image?.[0]?.filename;
+  const isBlogExist = await Blog.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    isSuspend: false,
+  });
   req.body.image = image ? `${LIVEPATH}/uploads/${image}` : isBlogExist?.image;
   req.body.author_image = author_image
     ? `${LIVEPATH}/uploads/${author_image}`
@@ -131,11 +148,6 @@ const updateBlog = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Store record not exists" });
   }
 
-  const isBlogExist = await Blog.findOne({
-    _id: req.params.id,
-    isDeleted: false,
-    isSuspend: false,
-  });
   if (isBlogExist) {
     function slugify(string) {
       return string
@@ -153,10 +165,21 @@ const updateBlog = asyncHandler(async (req, res) => {
       new: true,
     });
     if (updateBlog) {
+      const findBlogs = await Blog.find({
+        store_Id: updateBlog?.store_Id,
+        isDeleted: false,
+        isSuspend: false,
+      });
+
+      if (findBlogs?.length > 0) {
+        blogs = findBlogs;
+      }
+
       res.status(200).send({
         status: true,
         message: "Successfully Updated blog",
         updateBlog,
+        blogs: blogs,
       });
     } else {
       return res.status(400).send({
@@ -190,6 +213,7 @@ const getOneBlog = asyncHandler(async (req, res) => {
 });
 
 const deleteBlog = asyncHandler(async (req, res) => {
+  let blogs = [];
   const blog = await Blog.findOne({
     _id: req.params.id,
     isDeleted: false,
@@ -200,9 +224,20 @@ const deleteBlog = asyncHandler(async (req, res) => {
     blog.isDeleted = true;
     const delete_blog = await blog.save();
     if (delete_blog) {
-      return res
-        .status(200)
-        .send({ status: true, message: "Successfully deleted Blog" });
+      const findBlogs = await Blog.find({
+        store_Id: delete_blog?.store_Id,
+        isDeleted: false,
+        isSuspend: false,
+      });
+      if (findBlogs?.length > 0) {
+        blogs = findBlogs;
+      }
+
+      return res.status(200).send({
+        status: true,
+        message: "Successfully deleted Blog",
+        blogs: blogs,
+      });
     } else {
       return res.status(500).send({
         status: false,
