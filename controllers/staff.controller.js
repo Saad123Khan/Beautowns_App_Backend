@@ -99,6 +99,7 @@ const createSalonStaff = asyncHandler(async (req, res) => {
   req.body.salon_staff_Id = createStaff?._id;
 
   const staff = await new Staffs(req.body).save();
+  
   if (staff) {
     const getAllStaff = await Staffs.find({
       store_Id: staff?.store_Id,

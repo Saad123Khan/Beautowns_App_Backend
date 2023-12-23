@@ -118,9 +118,11 @@ const deleteStoreCoupon = asyncHandler(async (req, res) => {
       store_Id: coupon?.store_Id,
       isDeleted: false,
     });
-    return res
-      .status(200)
-      .send({ status: true, message: "Coupon deleted successfully",coupons:coupons });
+    return res.status(200).send({
+      status: true,
+      message: "Coupon deleted successfully",
+      coupons: coupons,
+    });
   } else {
     return res
       .status(404)

@@ -69,6 +69,7 @@ const createBlog = asyncHandler(async (req, res) => {
       isDeleted: false,
       isSuspend: false,
     });
+    
     if (findBlogs?.length > 0) {
       blogs = findBlogs;
     }
