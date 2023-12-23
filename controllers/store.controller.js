@@ -146,6 +146,7 @@ const createStore = asyncHandler(async (req, res) => {
 });
 
 const updateStore = asyncHandler(async (req, res) => {
+  console.log(req.body,"req")
   const { error } = validateUpdateStores(req.body);
   if (error) {
     return res
@@ -216,6 +217,7 @@ const updateStore = asyncHandler(async (req, res) => {
       "details",
       "location",
       "no_of_slots",
+      "category_Ids",
     ]),
     { new: true }
   ).populate("category_Ids");
