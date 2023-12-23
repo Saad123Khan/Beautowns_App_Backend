@@ -38,17 +38,17 @@ export const firebaseNotification = async (notification, users, type, target, fr
         
         
       console.log(users,"US======= DAta")
-        if(users?.[0]?.role === "user")
+        if(users?.[0]?.role === "user" || users?.role === "user")
         {
           console.log("CALL USER")
           sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.[0]?.role === "store")
+        else if(users?.[0]?.role === "store" || users?.role === "store")
         { 
           console.log("CALL STORE1str")
           sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.[0]?.role === "staff")
+        else if(users?.[0]?.role === "staff" || users?.role === "staff")
         {
           console.log("CALL STAFF")
           sockets.sendNotificationStaffSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
@@ -69,17 +69,17 @@ export const firebaseNotification = async (notification, users, type, target, fr
         // sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
       
       console.log(users,"USER------------- DAta")
-        if(users?.[0]?.role === "user")
+        if(users?.[0]?.role === "user" || users?.role === "user")
         {
           console.log("CALL USER")
           sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.[0]?.role === "store")
+        else if(users?.[0]?.role === "store" || users?.role === "store" )
         { 
           console.log("CALL STORE 2nd")
           sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
-        else if(users?.[0]?.role === "staff")
+        else if(users?.[0]?.role === "staff" || users?.role === "staff")
         {
           console.log("CALL STAFF")
           sockets.sendNotificationStaffSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });

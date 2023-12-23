@@ -6,7 +6,7 @@ const TOKEN_EXPIRE_TIME = "5d";
 
 const PATH = "http://localhost:5000";
 
-const LIVEPATH = "http://3.109.150.147:5000";
+const LIVEPATH = "https://api.beautowns.com";
 
 const SOCKET_ORIGINS = ['http://localhost:*']
 
