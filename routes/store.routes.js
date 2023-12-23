@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createStore,
+  getAllStore,
   getOneStore,
   changeStoreStatus,
   updateStore,
@@ -24,7 +25,7 @@ import { getStoreAvailableSlots } from "#controllers/slots.controller";
 
 const storeRoute = express.Router();
 
-storeRoute.route("/").post(multerUpload.single("image"), createStore);
+storeRoute.route("/").post(multerUpload.single("image"), createStore).get(getAllStore);
 
 //Create referral
 storeRoute.post("/referral/:id", storeReferralLinkGenerated);
