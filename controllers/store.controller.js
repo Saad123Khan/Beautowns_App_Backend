@@ -1035,8 +1035,23 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   return res.status(200).json(storeData);
 });
 
+
+const getAllStore = asyncHandler(async (req, res) => {
+  const store = await Store.find({ isDeleted: false, isSuspend: false });
+  if (store?.length > 0) {
+    return res.status(200).send({ status: true, store: store });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Store record does not exists",
+      store: [],
+    });
+  }
+});
+
 export {
   completeStoreInfo,
+  getAllStore,
   getStoreReferral,
   storeReferralLinkGenerated,
   createStore,
