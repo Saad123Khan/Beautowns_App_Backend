@@ -169,7 +169,7 @@ const updateStore = asyncHandler(async (req, res) => {
       documentUrls.push(documentUrl);
     });
   }
-  console.log(req.body, "req.body.documents");
+
   req.body.documents =
     documentUrls?.length > 0
       ? [...documentUrls, ...isStoreExist?.documents]
@@ -867,6 +867,19 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllStore = asyncHandler(async (req, res) => {
+  const store = await Store.find({ isDeleted: false, isSuspend: false }).populate("category_Ids");
+  if (store?.length > 0) {
+    return res.status(200).send({ status: true, store: store });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Store record does not exists",
+      store: [],
+    });
+  }
+});
+
 const completeStoreInfo = asyncHandler(async (req, res) => {
   let staffs = [];
   let storeInfo = "";
@@ -1045,4 +1058,5 @@ export {
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
+  getAllStore
 };
