@@ -45,7 +45,7 @@ export const firebaseNotification = async (notification, users, type, target, fr
         }
         else if(users?.[0]?.role === "store" || users?.role === "store")
         { 
-          console.log("CALL STORE")
+          console.log("CALL STORE1str")
           sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
         else if(users?.[0]?.role === "staff" || users?.role === "staff")
@@ -76,7 +76,7 @@ export const firebaseNotification = async (notification, users, type, target, fr
         }
         else if(users?.[0]?.role === "store" || users?.role === "store" )
         { 
-          console.log("CALL STORE")
+          console.log("CALL STORE 2nd")
           sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
         else if(users?.[0]?.role === "staff" || users?.role === "staff")

@@ -56,10 +56,15 @@ const createStoreCoupon = asyncHandler(async (req, res) => {
 
   const couponCreated = await new StoreCoupon(req.body).save();
   if (couponCreated) {
+    const coupons = await StoreCoupon.find({
+      store_Id: couponCreated?.store_Id,
+      isDeleted: false,
+    });
     return res.status(201).send({
       status: true,
       message: "Coupon Created Sucessfully",
       coupon: couponCreated,
+      coupons: coupons,
     });
   } else {
     return res.status(400).send({
@@ -108,9 +113,16 @@ const deleteStoreCoupon = asyncHandler(async (req, res) => {
       { _id: req.params.id, isDeleted: false },
       { isDeleted: true }
     );
-    return res
-      .status(200)
-      .send({ status: true, message: "Coupon deleted successfully" });
+
+    const coupons = await StoreCoupon.find({
+      store_Id: coupon?.store_Id,
+      isDeleted: false,
+    });
+    return res.status(200).send({
+      status: true,
+      message: "Coupon deleted successfully",
+      coupons: coupons,
+    });
   } else {
     return res
       .status(404)
@@ -136,9 +148,13 @@ const updateStoreCoupon = asyncHandler(async (req, res) => {
       .status(404)
       .send({ status: false, message: "Coupon does not exists." });
 
-  const couponUpdate = await StoreCoupon.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  const couponUpdate = await StoreCoupon.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+    }
+  );
 
   return res.status(200).json({
     status: true,

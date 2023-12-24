@@ -36,6 +36,21 @@ const generatePayroll = asyncHandler(async (req, res) => {
   } else {
     const payroll = await new StaffPayroll(req.body).save();
     if (payroll) {
+      let payrolls = [];
+      const staffPayroll = await StaffPayroll.find({
+        store_Id: payroll?.store_Id,
+        isDeleted: false,
+        isSuspend: false,
+      }).populate({ path: "staff_Id", select: "name title" });
+      if (staffPayroll.length > 0) {
+        payrolls = staffPayroll;
+      }
+
+      if (staffPayroll?.length > 0) {
+        return res
+          .status(201)
+          .send({ status: true, staffPayroll,message:"Payroll created successfully", payrolls: payrolls });
+      }
       return res.status(201).send({
         status: true,
         message: "Sucessfully created staff payroll",
@@ -66,7 +81,7 @@ const getStaffPayroll = asyncHandler(async (req, res) => {
     staff_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  }).populate({path:"staff_Id",select:"name title"});;
+  }).populate({ path: "staff_Id", select: "name title" });
   if (staffPayroll?.length > 0) {
     return res.status(200).send({ status: true, staffPayroll });
   } else {
@@ -92,7 +107,7 @@ const getAllStaffPayroll = asyncHandler(async (req, res) => {
     store_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
-  }).populate({path:"staff_Id",select:"name title"});
+  }).populate({ path: "staff_Id", select: "name title" });
 
   if (staffPayroll?.length > 0) {
     return res.status(200).send({ status: true, staffPayroll });

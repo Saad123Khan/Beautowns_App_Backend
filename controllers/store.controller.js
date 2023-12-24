@@ -169,7 +169,7 @@ const updateStore = asyncHandler(async (req, res) => {
       documentUrls.push(documentUrl);
     });
   }
-  console.log(req.body, "req.body.documents");
+
   req.body.documents =
     documentUrls?.length > 0
       ? [...documentUrls, ...isStoreExist?.documents]
@@ -216,6 +216,7 @@ const updateStore = asyncHandler(async (req, res) => {
       "details",
       "location",
       "no_of_slots",
+      "category_Ids",
     ]),
     { new: true }
   ).populate("category_Ids");
@@ -252,7 +253,6 @@ const changeStoreStatus = asyncHandler(async (req, res) => {
     });
   }
 });
-
 
 const getOneStore = asyncHandler(async (req, res) => {
   let store;
@@ -329,7 +329,6 @@ const getOneStore = asyncHandler(async (req, res) => {
     });
   }
 });
-
 
 const getStoreAnalytics = asyncHandler(async (req, res) => {
   console.log(req.params.id, "req.params.id");
@@ -868,6 +867,19 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllStore = asyncHandler(async (req, res) => {
+  const store = await Store.find({ isDeleted: false, isSuspend: false }).populate("category_Ids");
+  if (store?.length > 0) {
+    return res.status(200).send({ status: true, store: store });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Store record does not exists",
+      store: [],
+    });
+  }
+});
+
 const completeStoreInfo = asyncHandler(async (req, res) => {
   let staffs = [];
   let storeInfo = "";
@@ -1033,23 +1045,8 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   return res.status(200).json(storeData);
 });
 
-
-const getAllStore = asyncHandler(async (req, res) => {
-  const store = await Store.find({ isDeleted: false, isSuspend: false });
-  if (store?.length > 0) {
-    return res.status(200).send({ status: true, store: store });
-  } else {
-    return res.status(404).send({
-      status: false,
-      message: "Store record does not exists",
-      store: [],
-    });
-  }
-});
-
 export {
   completeStoreInfo,
-  getAllStore,
   getStoreReferral,
   storeReferralLinkGenerated,
   createStore,
@@ -1061,4 +1058,5 @@ export {
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
+  getAllStore
 };
