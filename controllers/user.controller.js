@@ -11,11 +11,11 @@ import { generateRandomCode } from "#utils/generateRandomCode";
 
 function validateUpdateUser(user) {
   const schema = Joi.object({
-    name: Joi.string().required(),
-    gender: Joi.string().valid("male", "female", "other"),
-    image: Joi.string(),
-    phone: Joi.string(),
-    address: Joi.string()
+    name: Joi.string().optional(),
+    gender: Joi.string().valid("male", "female", "other").optional(),
+    image: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    address: Joi.string().optional()
   });
 
   return schema.validate(user);
