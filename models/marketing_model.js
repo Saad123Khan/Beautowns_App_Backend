@@ -5,8 +5,9 @@ const MarketingSchema = new mongoose.Schema(
   {
     target: {
       type: String,
+      enum: ["all", "specific"],
     },
-    user_Ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    userIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     store_Id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
@@ -20,8 +21,12 @@ const MarketingSchema = new mongoose.Schema(
 
 function validateMarketing(market) {
   const schema = Joi.object({
-    target: Joi.string().required(),
-    user_Ids: Joi.array().required(),
+    target: Joi.string().required().valid("all", "specific"),
+    userIds: Joi.when('target', {
+      is: 'specific',
+      then: Joi.array().required(),
+      otherwise: Joi.array().optional().allow(null),
+    }),
     store_Id: Joi.string().required(),
     image: Joi.string().required(),
   });

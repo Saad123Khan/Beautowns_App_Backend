@@ -11,11 +11,14 @@ import { generateRandomCode } from "#utils/generateRandomCode";
 
 function validateUpdateUser(user) {
   const schema = Joi.object({
-    name: Joi.string().allow(null, '').optional(),
-    gender: Joi.string().valid("male", "female", "other").allow(null, '').optional(),
-    image: Joi.string().allow(null, '').optional(),
-    phone: Joi.string().allow(null, '').optional(),
-    address: Joi.string().allow(null, '').optional()
+    name: Joi.string().allow(null, "").optional(),
+    gender: Joi.string()
+      .valid("male", "female", "other")
+      .allow(null, "")
+      .optional(),
+    image: Joi.string().allow(null, "").optional(),
+    phone: Joi.string().allow(null, "").optional(),
+    address: Joi.string().allow(null, "").optional(),
   });
 
   return schema.validate(user);
@@ -85,22 +88,19 @@ const updateUser = asyncHandler(async (req, res) => {
     const image = req?.file?.filename;
     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : user?.image;
 
-    const updatingUser = await User.findByIdAndUpdate(user?._id,  _.pick(req.body, [
-      "gender",
-      "image",
-      "name",
-      "phone",
-      "address",
-    ]),
-     {
-      new: true,
-    }).select("-password");
+    const updatingUser = await User.findByIdAndUpdate(
+      user?._id,
+      _.pick(req.body, ["gender", "image", "name", "phone", "address"]),
+      {
+        new: true,
+      }
+    ).select("-password");
 
     if (updatingUser) {
       return res.status(200).send({
         status: true,
         message: `Profile updated successfully`,
-       user: updatingUser,
+        user: updatingUser,
       });
     } else {
       return res.status(400).json({
@@ -134,7 +134,7 @@ const updateUserProfileToken = asyncHandler(async (req, res) => {
     { not_token: req.body.not_token },
     { new: true }
   ).populate("favourite.stores favourite.services");
-  
+
   await User.populate(user, {
     path: "favourite.services",
     populate: {
@@ -219,9 +219,13 @@ const userNotificationSeen = asyncHandler(async (req, res) => {
 //@acess  private
 
 const addFavouriteSalonServices = asyncHandler(async (req, res) => {
-  const { type, store_Id, service_Id ,user_Id } = req.body;
+  const { type, store_Id, service_Id, user_Id } = req.body;
 
-  const user = await User.findOne({ _id: user_Id, isDeleted: false, role: "user" });
+  const user = await User.findOne({
+    _id: user_Id,
+    isDeleted: false,
+    role: "user",
+  });
 
   if (!user) {
     return res.status(200).json({ status: false, message: "User not exists!" });
@@ -289,45 +293,78 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
 });
 
 const getUserReferral = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id,role:"user", isDeleted: false })
+  const user = await User.findOne({
+    _id: req.params.id,
+    role: "user",
+    isDeleted: false,
+  });
   if (!user) {
     return res.status(200).json({ status: false, message: "User not exists!" });
   }
-  
-  const referralFind = await Referral.find({ from_referral_userId: user?._id}).populate("from_referral_userId to_referral_userId");
-  
-  const totalAmountReward = referralFind?.reduce((acc,obj)=>acc+=obj.rewarded_amount,0)
-  
+
+  const referralFind = await Referral.find({
+    from_referral_userId: user?._id,
+  }).populate("from_referral_userId to_referral_userId");
+
+  const totalAmountReward = referralFind?.reduce(
+    (acc, obj) => (acc += obj.rewarded_amount),
+    0
+  );
+
   referralFind?.length === 0
     ? res
-      .status(200)
-      .send({ status: false, message: "Referral does not exist", referral: [] })
-    : res.status(200).send({ status: true, referral: referralFind,totalReferral:totalAmountReward });
-
-})
-
+        .status(200)
+        .send({
+          status: false,
+          message: "Referral does not exist",
+          referral: [],
+        })
+    : res
+        .status(200)
+        .send({
+          status: true,
+          referral: referralFind,
+          totalReferral: totalAmountReward,
+        });
+});
 
 const userReferralLinkGenerated = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false });
   if (!user) {
     return res.status(404).json({ status: false, message: "User not exists!" });
   }
-  
-  console.log(user)
+
+  console.log(user);
   if (user?.referralCode) {
-    return res.status(200).json({ status: true, message: "ReferralLink already generated", user });
+    return res
+      .status(200)
+      .json({ status: true, message: "ReferralLink already generated", user });
   }
 
-  const userReferralId = await generateRandomCode(user?.name)
+  const userReferralId = await generateRandomCode(user?.name);
 
-  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  const userUpdate = await User.findOneAndUpdate(
+    { _id: req.params.id, isDeleted: false },
+    { referralCode: userReferralId },
+    { new: true }
+  );
   if (userUpdate) {
-    return res.status(200).json({ status: true, message: "Your referral link has been generated", user: userUpdate });
+    return res
+      .status(200)
+      .json({
+        status: true,
+        message: "Your referral link has been generated",
+        user: userUpdate,
+      });
+  } else {
+    return res
+      .status(404)
+      .json({
+        status: false,
+        message: "Something error while generating referralLink",
+      });
   }
-  else {
-    return res.status(404).json({ status: false, message: "Something error while generating referralLink" });
-  }
-})
+});
 
 export {
   userReferralLinkGenerated,
