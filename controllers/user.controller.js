@@ -219,7 +219,7 @@ const userNotificationSeen = asyncHandler(async (req, res) => {
 //@acess  private
 
 const addFavouriteSalonServices = asyncHandler(async (req, res) => {
-  const { type, store_Id, service_Id ,user_Id } = req.body;
+  const { type, store_Id, service_Id, user_Id, action } = req.body;
 
   const user = await User.findOne({ _id: user_Id, isDeleted: false, role: "user" });
 
@@ -237,12 +237,16 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
     });
 
     if (!salonFind) {
-      return res
-        .status(200)
-        .json({ status: false, message: "Invalid Store Id" });
+      return res.status(200).json({ status: false, message: "Invalid Store Id" });
     }
 
-    updateFields = { $addToSet: { "favourite.stores": store_Id } };
+    if (action === "add") {
+      updateFields = { $addToSet: { "favourite.stores": store_Id } };
+    } else if (action === "remove") {
+      updateFields = { $pull: { "favourite.stores": store_Id } };
+    } else {
+      return res.status(400).json({ status: false, message: "Invalid action!" });
+    }
   } else if (type === "service") {
     const serviceFind = await Service.findOne({
       _id: service_Id,
@@ -251,12 +255,16 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
     });
 
     if (!serviceFind) {
-      return res
-        .status(200)
-        .json({ status: false, message: "Invalid Service Id" });
+      return res.status(200).json({ status: false, message: "Invalid Service Id" });
     }
 
-    updateFields = { $addToSet: { "favourite.services": service_Id } };
+    if (action === "add") {
+      updateFields = { $addToSet: { "favourite.services": service_Id } };
+    } else if (action === "remove") {
+      updateFields = { $pull: { "favourite.services": service_Id } };
+    } else {
+      return res.status(400).json({ status: false, message: "Invalid action!" });
+    }
   } else {
     return res.status(400).json({ status: false, message: "Invalid type!" });
   }
@@ -264,7 +272,7 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
   const userUpdate = await User.findByIdAndUpdate(user?._id, updateFields, {
     new: true,
   })
-    .select("role email name phone gender isVerified favourite")
+    .select("-password")
     .populate("favourite.stores favourite.services");
   await User.populate(userUpdate, {
     path: "favourite.services",
@@ -277,16 +285,17 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
   if (userUpdate) {
     return res.status(200).json({
       status: true,
-      message: "Favourite Added Successfully",
+      message: `Favourite ${action === "add" ? "Added" : "Removed"} Successfully`,
       user: userUpdate,
     });
   } else {
     return res.status(400).json({
       status: false,
-      message: "Something went wrong while adding favourites",
+      message: `Something went wrong while ${action === "add" ? "adding" : "removing"} favourites`,
     });
   }
 });
+
 
 const getUserReferral = asyncHandler(async (req, res) => {
   const user = await User.findOne({ _id: req.params.id,role:"user", isDeleted: false })
