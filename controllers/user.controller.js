@@ -85,7 +85,7 @@ const updateUser = asyncHandler(async (req, res) => {
     const image = req?.file?.filename;
     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : user?.image;
 
-    const updaingUser = await User.findByIdAndUpdate(user?._id,  _.pick(req.body, [
+    const updatingUser = await User.findByIdAndUpdate(user?._id,  _.pick(req.body, [
       "gender",
       "image",
       "name",
@@ -94,13 +94,13 @@ const updateUser = asyncHandler(async (req, res) => {
     ]),
      {
       new: true,
-    }).select("role email image name phone address isVerified");
+    }).select("-password");
 
-    if (updaingUser) {
+    if (updatingUser) {
       return res.status(200).send({
         status: true,
         message: `Profile updated successfully`,
-        updaingUser,
+       user: updatingUser,
       });
     } else {
       return res.status(400).json({
