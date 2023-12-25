@@ -16,6 +16,7 @@ import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 import paymentRoute from "#routes/payment.routes";
 import staffPayrollRoutes from "#routes/staffPayroll.routes";
 import adminAnalyticsRoute from "#routes/Admin/admin.analytics.routes";
+import marketingRoute from "#routes/marketing.routes";
 
 const routes = (app) => {
   // app.get("*",(req,res)=>{
@@ -37,6 +38,7 @@ const routes = (app) => {
 
   //Service
   app.use("/api/service", serviceRoute);
+  app.use("/api/marketing", marketingRoute);
 
   //Staff
   app.use("/api/staff", staffRoute);

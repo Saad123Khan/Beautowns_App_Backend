@@ -89,7 +89,7 @@ const updateUser = asyncHandler(async (req, res) => {
     if (updaingUser) {
       return res.status(200).send({
         status: true,
-        message: `Sucessfully updated ${user?.role}`,
+        message: `Profile updated successfully`,
         updaingUser,
       });
     } else {

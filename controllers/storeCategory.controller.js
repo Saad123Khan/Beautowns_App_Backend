@@ -88,9 +88,7 @@ const getOneCategory = asyncHandler(async (req, res) => {
 
 const delete_catgory = asyncHandler(async (req, res) => {
   const isCategoryExists = await StoreCategories.find({
-    // _id: req.params.id,
-    // _id: req.params.id,
-    isSuspend: false,
+    _id: req.params.id,
     isDeleted: false,
   });
 
@@ -108,36 +106,40 @@ const delete_catgory = asyncHandler(async (req, res) => {
     isSuspend: false,
   });
 
-  // const delete_cat = await StoreCategories.findOneAndUpdate(
-  //   { _id: req.params.id },
-  //   // { $set: { isDeleted: true } }
-  // );
+  const delete_cat = await StoreCategories.findOneAndUpdate(
+    { _id: req.params.id },
+    { $set: { isDeleted: true } }
+  );
 
   console.log(findServices, "findServices");
 
-  if (findServices) {
-    // if (findServices?.length > 0) {
-    // //  const deleteServices =  await Service.updateMany(
-    // //     {
-    // //       _id: { $in: findServices.map((service) => service._id) },
-    // //     },
-    // //     {
-    // //       $set: { isDeleted: true },
-    // //     }
-    // //   );
-    //   // console.log(deleteServices,"deleteServices")
-    // }
+  if (delete_cat) {
+    if (findServices?.length > 0) {
+      await Service.updateMany(
+        {
+          _id: { $in: findServices.map((service) => service._id) },
+        },
+        {
+          $set: { isDeleted: true },
+        }
+      );
+      // console.log(deleteServices, "deleteServices");
+    }
 
     let categories = [];
     let services = [];
     const storeCategories = await StoreCategories.find({
-      // store_Id: delete_cat?.store_Id,
+      store_Id: delete_cat?.store_Id,
       isDeleted: false,
     });
+    console.log(storeCategories, "storeCategories");
     if (storeCategories?.length > 0) {
       categories = storeCategories;
     }
-    const findServices1 = await Service.find({});
+    const findServices1 = await Service.find({
+      store_Id: delete_cat?.store_Id,
+      isDeleted: false,
+    });
 
     if (findServices1?.length > 0) {
       services = findServices1;
