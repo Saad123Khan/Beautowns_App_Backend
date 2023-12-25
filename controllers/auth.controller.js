@@ -263,7 +263,7 @@ const loginUser = asyncHandler(async (req, res) => {
   return res
     .cookie("x-auth-token", token, {
       httpOnly: true,
-      maxAge: 365 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     })
     .header("x-auth-token", token)
     .header("access-control-expose-headers", "x-auth-token")
@@ -432,7 +432,7 @@ const otpVerify = asyncHandler(async (req, res) => {
     return res
       .cookie("x-auth-token", token, {
         httpOnly: true,
-        maxAge: 365 * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
       }) // maxAge expire after 1 hour
       .header("x-auth-token", token)
       .header("access-control-expose-headers", "x-auth-token")

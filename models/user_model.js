@@ -31,6 +31,9 @@ const UserSchema = new mongoose.Schema(
     phone: {
       type: String,
     },
+    address: {
+      type: String,
+    },
     gender: {
       type: String,
       enum: ["male", "female", "other"],
@@ -76,7 +79,7 @@ UserSchema.pre("save", async function (next) {
 UserSchema.methods.generateAuthToken = function () {
   const payload = { _id: this._id, name: this.name, email: this.email };
   const secret = getEnv("JWT_SECRET");
-  const options = { expiresIn: "1d" };
+  const options = { expiresIn: "30d" };
   return jwt.sign(payload, secret, options);
 };
 
@@ -89,7 +92,7 @@ function validateUser(user) {
     password: Joi.string().min(8).max(255).required(),
     image: Joi.string(),
     phone: Joi.string(),
-    
+    address: Joi.string(),
     not_token: Joi.string(),
     isDeleted: Joi.boolean(),
     isSuspend: Joi.boolean(),
