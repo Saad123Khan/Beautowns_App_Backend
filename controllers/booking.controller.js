@@ -779,15 +779,15 @@ const bookingConfirm = asyncHandler(async (req, res) => {
       .json({ status: false, message: "Booking already Confirmed" });
   }
 
-  const paymentFind = await Payment.findOne({
-    payment_Id: req.body.payment_Id,
-  });
+  // const paymentFind = await Payment.findOne({
+  //   payment_Id: req.body.payment_Id,
+  // });
 
-  if (!paymentFind) {
-    return res
-      .status(404)
-      .json({ status: false, message: "Payment record not found!" });
-  }
+  // if (!paymentFind) {
+  //   return res
+  //     .status(404)
+  //     .json({ status: false, message: "Payment record not found!" });
+  // }
 
   // if (paymentFind?.booking_Id === bookingFind?._id) {
 
