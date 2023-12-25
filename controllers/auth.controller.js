@@ -391,7 +391,7 @@ const otpVerify = asyncHandler(async (req, res) => {
       { $set: { isVerified: true } },
       { new: true }
     )
-      .select("role email name phone isVerified favourite")
+      .select("-password")
       .populate("favourite.stores favourite.services");
 
     await User.populate(user, {
