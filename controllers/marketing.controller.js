@@ -78,7 +78,7 @@ const sendMarketing = asyncHandler(async (req, res) => {
       store_Id: market.store_Id,
     });
 
-    if (market?.length > 0) {
+    if (allMarket?.length > 0) {
       allStoreMarketing = allMarket;
     }
     return res.status(200).send({
