@@ -5,6 +5,7 @@ import Notification from "#models/notificationModel";
 import { Service } from "#models/services_model";
 import { Store } from "#models/store_model";
 import Joi from "joi";
+import _ from "lodash";
 import { Referral } from "#models/referral_modal";
 import { generateRandomCode } from "#utils/generateRandomCode";
 
@@ -13,6 +14,8 @@ function validateUpdateUser(user) {
     name: Joi.string().required(),
     gender: Joi.string().valid("male", "female", "other"),
     image: Joi.string(),
+    phone: Joi.string(),
+    address: Joi.string()
   });
 
   return schema.validate(user);
@@ -82,14 +85,21 @@ const updateUser = asyncHandler(async (req, res) => {
     const image = req?.file?.filename;
     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : user?.image;
 
-    const updaingUser = await User.findByIdAndUpdate(user?._id, req.body, {
+    const updaingUser = await User.findByIdAndUpdate(user?._id,  _.pick(req.body, [
+      "gender",
+      "image",
+      "name",
+      "phone",
+      "address",
+    ]),
+     {
       new: true,
-    }).select("role email image name phone isVerified");
+    }).select("role email image name phone address isVerified");
 
     if (updaingUser) {
       return res.status(200).send({
         status: true,
-        message: `Sucessfully updated ${user?.role}`,
+        message: `Profile updated successfully`,
         updaingUser,
       });
     } else {
