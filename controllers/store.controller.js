@@ -2,8 +2,9 @@ import asyncHandler from "#middlewares/asyncHandler";
 import { Store, validateStores } from "#models/store_model";
 import AdminNotification from "#models/adminNotificationModel";
 import { firebaseNotification } from "#utils/firebaseNotification";
-import { PATH, LIVEPATH } from "#constant/constant";
+import { LIVEPATH } from "#constant/constant";
 import { Service } from "#models/services_model";
+import { Marketing } from "#models/marketing_model";
 import { Coupon } from "#models/coupons_model";
 import { StoreCoupon } from "#models/store_coupon_model";
 import { Blog } from "#models/blogs_model";
@@ -653,7 +654,6 @@ const sendStoreNotification = asyncHandler(async (req, res) => {
       .status(404)
       .send({ status: false, message: "Store record not exists" });
   }
-  console.log(req.body.target);
 
   const image = req?.file?.filename;
   req.body.image = image ? `${LIVEPATH}/upload/${image}` : false;
@@ -679,22 +679,18 @@ const sendStoreNotification = asyncHandler(async (req, res) => {
     });
   } else if (req.body.target === "Staffs") {
     let usersData = await Staffs.find({
-      // isDeleted: false,
-      // // role: "staff",
       store_Id: req.params.id,
     });
     let data = usersData?.map((item) => item.salon_staff_Id);
     users = await User.find({
       _id: { $in: data },
       role: "staff",
-      // store_Id: req.params.id,
       isDeleted: false,
     });
   } else if (req.body.target === "Specific-Staff") {
     users = await User.find({
       _id: { $in: req.body.userIds },
       role: "staff",
-      // store_Id: req.params.id,
       isDeleted: false,
     });
   } else {
@@ -702,8 +698,6 @@ const sendStoreNotification = asyncHandler(async (req, res) => {
       .status(400)
       .send({ status: false, message: "Invalid target type" });
   }
-
-  console.log(users, "users");
 
   if (users?.length > 0) {
     await firebaseNotification(
@@ -868,32 +862,20 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
 });
 
 const getAllStore = asyncHandler(async (req, res) => {
-  const user_Id  = req.query.user_Id;
-  const store = await Store.find({ isDeleted: false, isSuspend: false }).populate("category_Ids");
-  const user = await User.findOne({ _id: user_Id, isDeleted: false, role: "user" });
-
-  if (!user) {
-    return res.status(404).send({ status: false, message: "User not found" });
-  }
-
-  const favoriteStoreIds = user.favourite.stores.map(store => store.toString());
-
-  const storesWithFavouriteFlag = store.map(storeItem => {
-    const isFavourite = favoriteStoreIds.includes(storeItem._id.toString());
-    return { ...storeItem.toObject(), isFavourite };
-  });
-
-  if (storesWithFavouriteFlag.length > 0) {
-    return res.status(200).send({ status: true, store: storesWithFavouriteFlag });
+  const store = await Store.find({
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("category_Ids");
+  if (store?.length > 0) {
+    return res.status(200).send({ status: true, store: store });
   } else {
     return res.status(404).send({
       status: false,
-      message: "Store record does not exist",
+      message: "Store record does not exists",
       store: [],
     });
   }
 });
-
 
 const completeStoreInfo = asyncHandler(async (req, res) => {
   let staffs = [];
@@ -909,6 +891,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   let analytics = "";
   let staffPayroll = [];
   let graphs = "";
+  let storeMarketing = [];
 
   const store = await Store.findOne({
     _id: req.params.id,
@@ -975,6 +958,14 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   }).populate("service_category_Id");
   if (StoreService?.length > 0) {
     services = StoreService;
+  }
+
+  const market = await Marketing?.find({
+    store_Id: req.params.id,
+  });
+
+  if (market?.length > 0) {
+    storeMarketing = market;
   }
 
   const storeCoupon = await StoreCoupon.find({
@@ -1055,6 +1046,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     graphs,
     analytics,
     staffPayroll,
+    storeMarketing
   };
 
   return res.status(200).json(storeData);
@@ -1073,5 +1065,5 @@ export {
   sendStoreNotification,
   getStoreNotification,
   StoreNotificationSeen,
-  getAllStore
+  getAllStore,
 };
