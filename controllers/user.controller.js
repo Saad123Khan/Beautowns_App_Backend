@@ -317,7 +317,7 @@ const getUserReferral = asyncHandler(async (req, res) => {
 
 
 const userReferralLinkGenerated = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id, isDeleted: false })
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false }).select('-password')
   if (!user) {
     return res.status(404).json({ status: false, message: "User not exists!" });
   }
@@ -329,7 +329,7 @@ const userReferralLinkGenerated = asyncHandler(async (req, res) => {
 
   const userReferralId = await generateRandomCode(user?.name)
 
-  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true});
+  const userUpdate = await User.findOneAndUpdate({ _id: req.params.id, isDeleted: false }, { referralCode: userReferralId },{ new : true}).select('-password');
   if (userUpdate) {
     return res.status(200).json({ status: true, message: "Your referral link has been generated", user: userUpdate });
   }
