@@ -21,10 +21,6 @@ function validateUpdateUser(user) {
   return schema.validate(user);
 }
 
-
-  return schema.validate(user);
-}
-
 //@desc  User Get All
 //@route  /user
 //@request Get Request
