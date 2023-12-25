@@ -44,7 +44,7 @@ userRoute.get("/notification/:id", [authMiddleware], getUserNotification);
 //Add Favourites Salon and Services
 
 userRoute.post(
-  "/favourite-add/:id",
+  "/favourite-add",
   [authMiddleware],
   addFavouriteSalonServices
 );

@@ -219,10 +219,9 @@ const userNotificationSeen = asyncHandler(async (req, res) => {
 //@acess  private
 
 const addFavouriteSalonServices = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { type, store_Id, service_Id } = req.body;
+  const { type, store_Id, service_Id ,user_Id } = req.body;
 
-  const user = await User.findOne({ _id: id, isDeleted: false, role: "user" });
+  const user = await User.findOne({ _id: user_Id, isDeleted: false, role: "user" });
 
   if (!user) {
     return res.status(200).json({ status: false, message: "User not exists!" });
