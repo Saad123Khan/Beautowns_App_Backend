@@ -868,17 +868,32 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
 });
 
 const getAllStore = asyncHandler(async (req, res) => {
+  const user_Id  = req.query.user_Id;
   const store = await Store.find({ isDeleted: false, isSuspend: false }).populate("category_Ids");
-  if (store?.length > 0) {
-    return res.status(200).send({ status: true, store: store });
+  const user = await User.findOne({ _id: user_Id, isDeleted: false, role: "user" });
+
+  if (!user) {
+    return res.status(404).send({ status: false, message: "User not found" });
+  }
+
+  const favoriteStoreIds = user.favourite.stores.map(store => store.toString());
+
+  const storesWithFavouriteFlag = store.map(storeItem => {
+    const isFavourite = favoriteStoreIds.includes(storeItem._id.toString());
+    return { ...storeItem.toObject(), isFavourite };
+  });
+
+  if (storesWithFavouriteFlag.length > 0) {
+    return res.status(200).send({ status: true, store: storesWithFavouriteFlag });
   } else {
     return res.status(404).send({
       status: false,
-      message: "Store record does not exists",
+      message: "Store record does not exist",
       store: [],
     });
   }
 });
+
 
 const completeStoreInfo = asyncHandler(async (req, res) => {
   let staffs = [];
