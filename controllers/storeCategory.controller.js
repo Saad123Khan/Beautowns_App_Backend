@@ -82,7 +82,22 @@ const getOneCategory = asyncHandler(async (req, res) => {
   } else {
     return res
       .status(404)
-      .send({ status: false, message: "Store Category does not exists" });
+      .send({ status: false, message: "Service Category does not exists" });
+  }
+});
+
+const updateCategory = asyncHandler(async (req, res) => {
+  const storeCategories = await StoreCategories.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+  });
+
+  if (storeCategories) {
+    return res.status(200).send({ status: true, storeCategories });
+  } else {
+    return res
+      .status(404)
+      .send({ status: false, message: "Service Category does not exists" });
   }
 });
 
@@ -92,16 +107,14 @@ const delete_catgory = asyncHandler(async (req, res) => {
     isDeleted: false,
   });
 
-  console.log(isCategoryExists, "isCategoryExists");
-
   if (!isCategoryExists) {
     return res
       .status(404)
-      .send({ status: false, message: "Store Category does not exists" });
+      .send({ status: false, message: "Service Category does not exists" });
   }
 
   const findServices = await Service?.find({
-    service_category_Id: isCategoryExists?._id,
+    service_category_Id: req.params.id,
     isDeleted: false,
     isSuspend: false,
   });
@@ -110,8 +123,6 @@ const delete_catgory = asyncHandler(async (req, res) => {
     { _id: req.params.id },
     { $set: { isDeleted: true } }
   );
-
-  console.log(findServices, "findServices");
 
   if (delete_cat) {
     if (findServices?.length > 0) {
@@ -123,7 +134,6 @@ const delete_catgory = asyncHandler(async (req, res) => {
           $set: { isDeleted: true },
         }
       );
-      // console.log(deleteServices, "deleteServices");
     }
 
     let categories = [];
@@ -132,7 +142,7 @@ const delete_catgory = asyncHandler(async (req, res) => {
       store_Id: delete_cat?.store_Id,
       isDeleted: false,
     });
-    console.log(storeCategories, "storeCategories");
+
     if (storeCategories?.length > 0) {
       categories = storeCategories;
     }

@@ -36,6 +36,7 @@ const getAllStoreMarketing = asyncHandler(async (req, res) => {
 const sendMarketing = asyncHandler(async (req, res) => {
   const image = req?.file?.filename;
   req.body.image = image ? `${LIVEPATH}/upload/${image}` : false;
+  
   const { error } = validateMarketing(req.body);
   if (error) {
     return res
@@ -68,7 +69,7 @@ const sendMarketing = asyncHandler(async (req, res) => {
       .send({ status: false, message: "Invalid target type" });
   }
 
-  console.log(users, "users");
+  // console.log(users, "users");
 
   const market = await new Marketing(req.body).save();
 
