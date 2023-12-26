@@ -73,18 +73,18 @@ const sendMarketing = asyncHandler(async (req, res) => {
   const market = await new Marketing(req.body).save();
 
   if (market) {
-    let allStoreMarketing = [];
+    let storeMarketing = [];
     const allMarket = await Marketing?.find({
       store_Id: market.store_Id,
     });
 
     if (allMarket?.length > 0) {
-      allStoreMarketing = allMarket;
+      storeMarketing = allMarket;
     }
     return res.status(200).send({
       status: true,
       message: "Market sended successfully",
-      allStoreMarketing: allStoreMarketing,
+      storeMarketing: storeMarketing,
     });
   } else {
     return res
