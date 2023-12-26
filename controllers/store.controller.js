@@ -863,7 +863,7 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
 
 const getAllStore = asyncHandler(async (req, res) => {
   const store = await Store.find({ isDeleted: false, isSuspend: false }).populate("category_Ids");
-  const { user_Id } = req.body;
+  const user_Id  = req.query.user_Id;
 
   if (!user_Id) {
     return res.status(400).send({ status: false, message: "User ID is required" });
