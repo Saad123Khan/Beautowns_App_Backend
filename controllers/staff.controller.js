@@ -427,7 +427,9 @@ const staffReferralLinkGenerated = asyncHandler(async (req, res) => {
 });
 
 const getStaffAnalytics = asyncHandler(async (req, res) => {
+  
   const allBookings = await Booking.find({ salon_staff_Id: req.params.id });
+  // console.log(allBookings,"allBookings")
   let totalAppointments = 0;
   let completedAppointments = 0;
   let notCompletedAppointments = 0;
@@ -451,7 +453,7 @@ const getStaffAnalytics = asyncHandler(async (req, res) => {
   const returningClientUserIds = new Set();
 
   allBookings?.forEach((booking) => {
-    console.log(booking);
+    // console.log(booking);
     if (!booking.isSessionExpired && booking.paymentDone) {
       totalAppointments++;
 
@@ -586,6 +588,7 @@ const getStaffAnalytics = asyncHandler(async (req, res) => {
   };
 
   if (req.query.to === "manual") {
+    // console.log(analyticsData,"analyticsData")
     return analyticsData;
   } else {
     return res.status(200).json(analyticsData);
@@ -682,12 +685,13 @@ const completeStaffData = asyncHandler(async (req, res) => {
     staffInfo = isStaffExist;
   }
 
-  const staffAna = getStaffAnalytics(req, res);
+  const staffAna = await getStaffAnalytics(req, res);
+  console.log(staffAna,"staffAna")
   if (staffAna) {
     analytics = staffAna;
   }
 
-  const staffGraphs = getStaffGraph(req, res);
+  const staffGraphs = await getStaffGraph(req, res);
   if (staffAna) {
     graphs = staffGraphs;
   }
