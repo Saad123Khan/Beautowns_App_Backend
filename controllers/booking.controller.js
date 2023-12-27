@@ -1015,7 +1015,7 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
 
   await firebaseNotification(
     notification,
-    [bookingFind?.user_Id],
+    [bookingFind?.user_Id?._id],
     "news",
     "Specific-User",
     "system",
