@@ -88,6 +88,8 @@ const createBooking = asyncHandler(async (req, res) => {
       isVerified: true,
     });
   } else if (req.body.booking_type === "manual") {
+    
+    
     if (req.body.email !== "") {
       user = await User.findOne({
         email: req.body.email,
@@ -97,7 +99,6 @@ const createBooking = asyncHandler(async (req, res) => {
       });
     } else {
       user = await User.findOne({
-        _id: req.body.user_Id,
         phone: req.body.phone,
         role: "user",
         isSuspend: false,
