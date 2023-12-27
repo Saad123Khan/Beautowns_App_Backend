@@ -973,25 +973,31 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
       .json({ status: false, message: "Booking already CheckIn" });
   }
 
-  if (bookingFind?.booking_type === "auto") {
-    if (!bookingFind?.payment_Id) {
-      return res.status(404).json({
-        status: false,
-        message: "Please kindly proceed the payment for this booking!",
-      });
-    }
+  // if (bookingFind?.booking_type === "auto") {
+   
+   
+      // if (!bookingFind?.payment_Id) {
+   
+      //   return res.status(404).json({
+      //   status: false,
+      //   message: "Please kindly proceed the payment for this booking!",
+      // });
+   
+   
+   
+    // }
 
-    const paymentFind = await Payment.findOne({
-      _id: bookingFind?.payment_Id,
-    });
+    // const paymentFind = await Payment.findOne({
+    //   _id: bookingFind?.payment_Id,
+    // });
 
-    if (!paymentFind) {
-      return res
-        .status(404)
+    // if (!paymentFind) {
+    //   return res
+    //     .status(404)
 
-        .json({ status: false, message: "Booking Payment record not found!" });
-    }
-  }
+    //     .json({ status: false, message: "Booking Payment record not found!" });
+    // }
+  // }
 
   const booking = await Booking.findOneAndUpdate(
     { _id: req.body.booking_Id },
