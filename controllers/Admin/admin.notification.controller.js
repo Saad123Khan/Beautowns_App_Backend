@@ -11,7 +11,7 @@ import { PATH, LIVEPATH } from "#constant/constant";
 */
 const sendPushNotification = asyncHandler(async (req, res) => {
   const image = req?.file?.filename;
-  req.body.image = image ? `${LIVEPATH}/upload/${image}` : false;
+  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : false;
   let notification = req.body.image
     ? {
         title: req.body.title,
