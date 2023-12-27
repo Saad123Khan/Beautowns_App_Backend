@@ -107,10 +107,12 @@ const createBooking = asyncHandler(async (req, res) => {
     }
 
     if (!user) {
+
       let password = generateRandomCode(req.body.name);
+      let email = `${generateRandomCode(req.body.name)}@gmail.com`
       user = await new User({
         name: req.body.name,
-        email: req.body.email,
+        email: req.body.email ? req.body.email : email,
         phone: req.body.phone,
         password,
       }).save();
