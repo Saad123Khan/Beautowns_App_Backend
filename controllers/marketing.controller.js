@@ -3,6 +3,7 @@ import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import asyncHandler from "#middlewares/asyncHandler";
 import { LIVEPATH } from "#constant/constant";
+import fs from 'fs';
 
 const getAllStoreMarketing = asyncHandler(async (req, res) => {
   const isStoreExist = await Store.findOne({
@@ -35,9 +36,29 @@ const getAllStoreMarketing = asyncHandler(async (req, res) => {
 
 const sendMarketing = asyncHandler(async (req, res) => {
 
-  console.log(req.files,"REQ FILE")
-  const image = req?.file?.filename;
-  req.body.image = image ? `${LIVEPATH}/uploads/${image}` : false;
+  // console.log(req.files,"REQ FILE")
+  // const image = req?.file?.filename;
+  
+  if (req.body.image == "null") {
+    return res
+      .status(400)
+      .send({ status: false, message: "Plz capture or generate a signature first!" });
+  }
+  var matches = req.body.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
+  response = {};
+
+response.type = matches[1];
+response.data = new Buffer.from(matches[2], 'base64');
+let decodedImg = response;
+let imageBuffer = decodedImg.data;
+
+const timestamp = Date.now();
+const randomValue = Math.floor(Math.random() * 1000);
+const imageName = `image-${timestamp}-${randomValue}.png`;
+
+fs.writeFileSync("./uploads/" + imageName, imageBuffer, 'utf8');
+
+  req.body.image = `${LIVEPATH}/uploads/${imageName}`;
   
   const { error } = validateMarketing(req.body);
   if (error) {
