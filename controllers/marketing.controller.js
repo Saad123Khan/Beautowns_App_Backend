@@ -35,7 +35,7 @@ const getAllStoreMarketing = asyncHandler(async (req, res) => {
 
 const sendMarketing = asyncHandler(async (req, res) => {
 
-  console.log(req.file,"REQ FILE")
+  console.log(req.files,"REQ FILE")
   const image = req?.file?.filename;
   req.body.image = image ? `${LIVEPATH}/uploads/${image}` : false;
   
