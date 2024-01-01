@@ -36,6 +36,7 @@ function validateBooking(service) {
       otherwise: Joi.forbidden(),
     }),
     booking_type: Joi.string().valid("manual", "auto").required(),
+    advance_Amount: Joi.number().optional(),
     store_Id: Joi.string().required(),
     service_Ids: Joi.array().items(Joi.string()).min(1).required(),
     time: Joi.string()
@@ -58,9 +59,9 @@ function validateBooking(service) {
 
 const createBooking = asyncHandler(async (req, res) => {
   // await Booking.deleteMany({ user_Id:req.body.user_Id,paymentDone:false,isCheckIn:false, isDeleted :false, isCancel:false})
-  console.log(req.body, "Book");
+  // console.log(req.body, "Book");
   req.body.date = moment(req.body.date).format("YYYY-MM-DD");
-  console.log(req.body?.date);
+  // console.log(req.body?.date);
 
   const { error } = validateBooking(req.body);
   if (error) {
@@ -88,7 +89,6 @@ const createBooking = asyncHandler(async (req, res) => {
       isVerified: true,
     });
   } else if (req.body.booking_type === "manual") {
-  
     if (req.body.email) {
       user = await User.findOne({
         email: req.body.email,
@@ -105,12 +105,11 @@ const createBooking = asyncHandler(async (req, res) => {
       });
     }
 
-    console.log(user,"USER CHECK")
+    // console.log(user, "USER CHECK");
 
     if (!user) {
-
       let password = generateRandomCode(req.body.name);
-      let email = `${generateRandomCode(req.body.name)}@gmail.com`
+      let email = `${generateRandomCode(req.body.name)}@gmail.com`;
       user = await new User({
         name: req.body.name,
         email: req.body.email ? req.body.email : email,
@@ -120,7 +119,7 @@ const createBooking = asyncHandler(async (req, res) => {
     }
   }
 
-  console.log(user, "USERRRRRR");
+  // console.log(user, "USERRRRRR");
 
   if (!user) {
     return res
@@ -251,6 +250,7 @@ const createBooking = asyncHandler(async (req, res) => {
           user_Id: user?._id,
           store_Id: req.body.store_Id,
           service_Ids: req.body.service_Ids,
+          advance_Amount: req.body.advance_Amount,
           time: req.body.time,
           date: formattedDate,
           end: endTime,
@@ -265,6 +265,7 @@ const createBooking = asyncHandler(async (req, res) => {
           user_Id: user?._id,
           store_Id: req.body.store_Id,
           service_Ids: req.body.service_Ids,
+          advance_Amount: req.body.advance_Amount,
           time: req.body.time,
           date: formattedDate,
           end: endTime,
@@ -279,18 +280,123 @@ const createBooking = asyncHandler(async (req, res) => {
       }
 
       await booking.save();
- 
-      
- 
-await Booking.populate(booking,"store_Id user_Id salon_staff_Id")
-      console.log(booking,"bookingbookingbooking")
- 
-      if (booking) {
-      
-        if(req.body.booking_type === "manual")
-        {
-        
 
+      await Booking.populate(booking, "store_Id user_Id salon_staff_Id");
+      // console.log(booking,"bookingbookingbooking")
+
+      if (booking) {
+        if (req.body.booking_type === "manual") {
+          const userNotification = {
+            title: "Appointment Booked Successfully",
+            body: `You've successfully Booked your appointment at ${booking?.store_Id?.name}. Our team is ready to make your experience exceptional. Enjoy your time with us!`,
+          };
+
+          await firebaseNotification(
+            userNotification,
+            [booking?.user_Id],
+            "news",
+            "Specific-User",
+            "system",
+            "users"
+          );
+
+          const staffNotification = {
+            title: "Appointment Booked Successfully",
+            body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${formattedDate}. Be Ready surve your best service!`,
+          };
+
+          if (booking?.salon_staff_Id) {
+            const staffSalonFind = await User.findById(
+              booking?.salon_staff_Id?.salon_staff_Id
+            );
+
+            await firebaseNotification(
+              staffNotification,
+              [staffSalonFind],
+              "news",
+              "Specific-Staff",
+              "system",
+              "staffs"
+            );
+          }
+
+          const salonNotification = {
+            title: "Appointment Booked Successfully",
+            body: `${booking?.user_Id?.name} have booked appointment with you at Your salon on ${booking?.time} ${formattedDate}. Be Ready surve your best service!`,
+          };
+
+          const ownerSalonFind = await User.findById(
+            booking?.store_Id?.salon_owner_Id
+          );
+
+          //  console.log(ownerSalonFind,"OWENEEEEE")
+          if (ownerSalonFind) {
+            await firebaseNotification(
+              salonNotification,
+              [ownerSalonFind],
+              "news",
+              "Specific-Salon",
+              "system",
+              "store"
+            );
+          }
+        }
+
+        return res.status(201).send({
+          status: true,
+          message: "Booking created successfully",
+          booking,
+        });
+      } else {
+        return res
+          .status(400)
+          .send({ status: false, message: "Error while creating booking" });
+      }
+    } else {
+      return res
+        .status(404)
+        .send({ status: false, message: "Invalid coupon code" });
+    }
+  } else {
+    let booking;
+    if (req.body.booking_type === "manual") {
+      booking = await new Booking({
+        user_Id: user?._id,
+        store_Id: req.body.store_Id,
+        service_Ids: req.body.service_Ids,
+        advance_Amount: req.body.advance_Amount,
+        time: req.body.time,
+        date: formattedDate,
+        end: endTime,
+        duration: req.body.duration,
+        amount: totalValue,
+        booking_type: req.body.booking_type,
+        paymentDone: true,
+      });
+    } else {
+      booking = await new Booking({
+        user_Id: user?._id,
+        store_Id: req.body.store_Id,
+        service_Ids: req.body.service_Ids,
+        advance_Amount: req.body.advance_Amount,
+        time: req.body.time,
+        date: formattedDate,
+        end: endTime,
+        duration: req.body.duration,
+        amount: totalValue,
+        booking_type: req.body.booking_type,
+      });
+    }
+
+    if (req.body.staff_Id) {
+      booking.salon_staff_Id = req.body.staff_Id;
+    }
+
+    await booking.save();
+
+    await Booking.populate(booking, "store_Id user_Id salon_staff_Id");
+    if (booking) {
+      if (req.body.booking_type === "manual") {
         const userNotification = {
           title: "Appointment Booked Successfully",
           body: `You've successfully Booked your appointment at ${booking?.store_Id?.name}. Our team is ready to make your experience exceptional. Enjoy your time with us!`,
@@ -329,142 +435,24 @@ await Booking.populate(booking,"store_Id user_Id salon_staff_Id")
           title: "Appointment Booked Successfully",
           body: `${booking?.user_Id?.name} have booked appointment with you at Your salon on ${booking?.time} ${formattedDate}. Be Ready surve your best service!`,
         };
-  
-       const ownerSalonFind =  await User.findById(booking?.store_Id?.salon_owner_Id)
-      
-       
-       console.log(ownerSalonFind,"OWENEEEEE")
-       if(ownerSalonFind)
-       {
-        await firebaseNotification(
-          salonNotification,
-          [ownerSalonFind],
-          "news",
-          "Specific-Salon",
-          "system",
-          "store"
+
+        const ownerSalonFind = await User.findById(
+          booking?.store_Id?.salon_owner_Id
         );
-      
-       }
-      }        
-    
-        return res.status(201).send({
-          status: true,
-          message: "Booking created successfully",
-          booking,
-        });
-      } else {
-        return res
-          .status(400)
-          .send({ status: false, message: "Error while creating booking" });
+
+        //  console.log(ownerSalonFind,"OWENEEEEE")
+        if (ownerSalonFind) {
+          await firebaseNotification(
+            salonNotification,
+            [ownerSalonFind],
+            "news",
+            "Specific-Salon",
+            "system",
+            "store"
+          );
+        }
       }
-    } else {
-      return res
-        .status(404)
-        .send({ status: false, message: "Invalid coupon code" });
-    }
-  } else {
-    let booking;
-    if (req.body.booking_type === "manual") {
-      booking = await new Booking({
-        user_Id: user?._id,
-        store_Id: req.body.store_Id,
-        service_Ids: req.body.service_Ids,
-        time: req.body.time,
-        date: formattedDate,
-        end: endTime,
-        duration: req.body.duration,
-        amount: totalValue,
-        booking_type: req.body.booking_type,
-        paymentDone: true,
-      });
-    } else {
-      booking = await new Booking({
-        user_Id: user?._id,
-        store_Id: req.body.store_Id,
-        service_Ids: req.body.service_Ids,
-        time: req.body.time,
-        date: formattedDate,
-        end: endTime,
-        duration: req.body.duration,
-        amount: totalValue,
-        booking_type: req.body.booking_type,
-      });
-    }
 
-    if (req.body.staff_Id) {
-      booking.salon_staff_Id = req.body.staff_Id;
-    }
-
-    await booking.save();
-
-await Booking.populate(booking,"store_Id user_Id salon_staff_Id")
-if (booking) {
-
-if(req.body.booking_type === "manual")
-{
-  const userNotification = {
-    title: "Appointment Booked Successfully",
-    body: `You've successfully Booked your appointment at ${booking?.store_Id?.name}. Our team is ready to make your experience exceptional. Enjoy your time with us!`,
-  };
-
-  await firebaseNotification(
-    userNotification,
-    [booking?.user_Id],
-    "news",
-    "Specific-User",
-    "system",
-    "users"
-  );
-
-  const staffNotification = {
-    title: "Appointment Booked Successfully",
-    body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${formattedDate}. Be Ready surve your best service!`,
-  };
-
-
-  if(booking?.salon_staff_Id)
-  {
-    const staffSalonFind =  await User.findById(booking?.salon_staff_Id?.salon_staff_Id)
-  
-    await firebaseNotification(
-      staffNotification,
-      [staffSalonFind],
-      "news",
-      "Specific-Staff",
-      "system",
-      "staffs"
-    );
-
-  }
-
-   
-    const salonNotification = {
-      title: "Appointment Booked Successfully",
-      body: `${booking?.user_Id?.name} have booked appointment with you at Your salon on ${booking?.time} ${formattedDate}. Be Ready surve your best service!`,
-    };
-
-   const ownerSalonFind =  await User.findById(booking?.store_Id?.salon_owner_Id)
-  
-   
-   console.log(ownerSalonFind,"OWENEEEEE")
-   if(ownerSalonFind)
-   {
-    await firebaseNotification(
-      salonNotification,
-      [ownerSalonFind],
-      "news",
-      "Specific-Salon",
-      "system",
-      "store"
-    );
-  
-   }
-    
-
-}
-  
-  
       return res.status(201).send({
         status: true,
         message: "Booking created successfully",
@@ -475,8 +463,8 @@ if(req.body.booking_type === "manual")
         .status(400)
         .send({ status: false, message: "Error while creating booking" });
     }
-  }}
-);
+  }
+});
 
 const getAllStoreBooking = asyncHandler(async (req, res) => {
   const store = await Store.findOne({
@@ -551,7 +539,7 @@ const couponCodeBookingAdded = asyncHandler(async (req, res) => {
       .status(400)
       .send({ status: false, message: "Coupon Code field is not empty" });
   }
-  console.log(req.body);
+  // console.log(req.body);
   const booking = await Booking.findOne({
     _id: req.body.booking_Id,
     user_Id: req.body.user_Id,
@@ -740,30 +728,28 @@ const deleteBooking = asyncHandler(async (req, res) => {
 //@acess  private
 
 const bookingConfirm = asyncHandler(async (req, res) => {
-  console.log(req.body);
- 
+  // console.log(req.body);
 
   let user = await User.findOne({
-      _id: req.body.user_Id,
-      role: "user",
-      isSuspend: false,
-      isDeleted: false,
-      isVerified: true,
-    });
-    if (!user) {
-      return res
-        .status(404)
-        .send({ status: false, message: "User does not exists" });
-    }
+    _id: req.body.user_Id,
+    role: "user",
+    isSuspend: false,
+    isDeleted: false,
+    isVerified: true,
+  });
+  if (!user) {
+    return res
+      .status(404)
+      .send({ status: false, message: "User does not exists" });
+  }
 
-    let bookingFind = await Booking.findOne({
-      _id: req.body.booking_Id,
-      user_Id: req.body.user_Id,
-      isCheckIn: false,
-      isCancel: false,
-      isDeleted: false,
-    }).populate("store_Id user_Id salon_staff_Id");
-  
+  let bookingFind = await Booking.findOne({
+    _id: req.body.booking_Id,
+    user_Id: req.body.user_Id,
+    isCheckIn: false,
+    isCancel: false,
+    isDeleted: false,
+  }).populate("store_Id user_Id salon_staff_Id");
 
   if (!bookingFind) {
     return res
@@ -800,14 +786,7 @@ const bookingConfirm = asyncHandler(async (req, res) => {
       to_referral_userId: user?._id,
     });
 
-    console.log(user, "useruseruser");
-
-    console.log(referralFind, "referralFindreferralFindreferralFind");
-
     if (referralFind?.status !== "customer") {
-      console.log(user);
-
-      console.log(referralFind);
       let reward = 100;
       const refer = await Referral.findOneAndUpdate(
         { to_referral_userId: user?._id },
@@ -839,8 +818,11 @@ const bookingConfirm = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-let booking = await Booking.populate(bookingData,"store_Id user_Id salon_staff_Id")
-  
+  let booking = await Booking.populate(
+    bookingData,
+    "store_Id user_Id salon_staff_Id"
+  );
+
   // const notification = {
   //   title: "Booking Confirmed",
   //   body: `Your appointment at ${bookingFind?.store_Id?.name} on ${booking?.date} has been successfully booked. We look forward to serving you!`,
@@ -856,8 +838,6 @@ let booking = await Booking.populate(bookingData,"store_Id user_Id salon_staff_I
   //     "users"
   //   );
   // }
-
-
 
   const userNotification = {
     title: "Appointment Booked Successfully",
@@ -878,44 +858,38 @@ let booking = await Booking.populate(bookingData,"store_Id user_Id salon_staff_I
     body: `${booking?.user_Id?.name} have booked appointment with you at ${booking?.time} on ${booking?.date}. Be Ready surve your best service!`,
   };
 
-if(booking?.salon_staff_Id)
-{
-  const staffSalonFind =  await User.findById(booking?.salon_staff_Id?.salon_staff_Id)
+  if (booking?.salon_staff_Id) {
+    const staffSalonFind = await User.findById(
+      booking?.salon_staff_Id?.salon_staff_Id
+    );
 
-  await firebaseNotification(
-    staffNotification,
-    [staffSalonFind],
-    "news",
-    "Specific-Staff",
-    "system",
-    "staffs"
-  );
+    await firebaseNotification(
+      staffNotification,
+      [staffSalonFind],
+      "news",
+      "Specific-Staff",
+      "system",
+      "staffs"
+    );
+  }
 
-}
-
- 
   const salonNotification = {
     title: "Appointment Booked Successfully",
     body: `${booking?.user_Id?.name} have booked appointment with you at Your salon on ${booking?.time} ${booking?.date}. Be Ready surve your best service!`,
   };
 
- const ownerSalonFind =  await User.findById(booking?.store_Id?.salon_owner_Id)
+  const ownerSalonFind = await User.findById(booking?.store_Id?.salon_owner_Id);
 
- 
- console.log(ownerSalonFind,"OWENEEEEE")
- if(ownerSalonFind)
- {
-  await firebaseNotification(
-    salonNotification,
-    [ownerSalonFind],
-    "news",
-    "Specific-Salon",
-    "system",
-    "store"
-  );
-
- }
-        
+  if (ownerSalonFind) {
+    await firebaseNotification(
+      salonNotification,
+      [ownerSalonFind],
+      "news",
+      "Specific-Salon",
+      "system",
+      "store"
+    );
+  }
 
   return res
     .status(200)
@@ -978,36 +952,33 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
   }
 
   // if (bookingFind?.booking_type === "auto") {
-   
-   
-      // if (!bookingFind?.payment_Id) {
-   
-      //   return res.status(404).json({
-      //   status: false,
-      //   message: "Please kindly proceed the payment for this booking!",
-      // });
-   
-   
-   
-    // }
 
-    // const paymentFind = await Payment.findOne({
-    //   _id: bookingFind?.payment_Id,
-    // });
+  // if (!bookingFind?.payment_Id) {
 
-    // if (!paymentFind) {
-    //   return res
-    //     .status(404)
+  //   return res.status(404).json({
+  //   status: false,
+  //   message: "Please kindly proceed the payment for this booking!",
+  // });
 
-    //     .json({ status: false, message: "Booking Payment record not found!" });
-    // }
+  // }
+
+  // const paymentFind = await Payment.findOne({
+  //   _id: bookingFind?.payment_Id,
+  // });
+
+  // if (!paymentFind) {
+  //   return res
+  //     .status(404)
+
+  //     .json({ status: false, message: "Booking Payment record not found!" });
+  // }
   // }
 
   const booking = await Booking.findOneAndUpdate(
     { _id: req.body.booking_Id },
-
     {
       isCheckIn: true,
+      collected_Amount: req.body.collected_Amount,
     },
     { new: true }
   );
