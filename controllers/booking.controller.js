@@ -921,6 +921,7 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
       isCancel: false,
       isDeleted: false,
     }).populate("store_Id user_Id");
+
   } else if (req.body.salon_owner_Id) {
     bookingFind = await Booking.findOne({
       _id: req.body.booking_Id,
@@ -990,7 +991,7 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
 
   await firebaseNotification(
     notification,
-    [bookingFind?.user_Id?._id],
+    [bookingFind?.user_Id],
     "news",
     "Specific-User",
     "system",

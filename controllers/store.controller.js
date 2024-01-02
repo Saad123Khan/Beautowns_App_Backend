@@ -862,28 +862,41 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
 });
 
 const getAllStore = asyncHandler(async (req, res) => {
-  const store = await Store.find({ isDeleted: false, isSuspend: false }).populate("category_Ids");
-  const user_Id  = req.query.user_Id;
+  const store = await Store.find({
+    isDeleted: false,
+    isSuspend: false,
+  }).populate("category_Ids");
+  const user_Id = req.query.user_Id;
 
   if (!user_Id) {
-    return res.status(400).send({ status: false, message: "User ID is required" });
+    return res
+      .status(400)
+      .send({ status: false, message: "User ID is required" });
   }
 
-  const user = await User.findOne({ _id: user_Id, isDeleted: false, role: "user" });
+  const user = await User.findOne({
+    _id: user_Id,
+    isDeleted: false,
+    role: "user",
+  });
 
   if (!user) {
     return res.status(404).send({ status: false, message: "User not found" });
   }
 
-  const favoriteStoreIds = user.favourite.stores.map(store => store.toString());
+  const favoriteStoreIds = user.favourite.stores.map((store) =>
+    store.toString()
+  );
 
-  const storesWithFavouriteFlag = store.map(storeItem => {
+  const storesWithFavouriteFlag = store.map((storeItem) => {
     const isFavourite = favoriteStoreIds.includes(storeItem._id.toString());
     return { ...storeItem.toObject(), isFavourite };
   });
 
   if (storesWithFavouriteFlag.length > 0) {
-    return res.status(200).send({ status: true, store: storesWithFavouriteFlag });
+    return res
+      .status(200)
+      .send({ status: true, store: storesWithFavouriteFlag });
   } else {
     return res.status(404).send({
       status: false,
@@ -1062,7 +1075,7 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     graphs,
     analytics,
     staffPayroll,
-    storeMarketing
+    storeMarketing,
   };
 
   return res.status(200).json(storeData);
