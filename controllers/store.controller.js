@@ -78,7 +78,7 @@ function validateUpdateStores(store) {
 }
 
 const createStore = asyncHandler(async (req, res) => {
-  console.log(req.body, ":req.body");
+  // console.log(req.body, ":req.body");
   const { error } = validateStores(req.body);
   if (error) {
     return res
@@ -332,7 +332,7 @@ const getOneStore = asyncHandler(async (req, res) => {
 });
 
 const getStoreAnalytics = asyncHandler(async (req, res) => {
-  console.log(req.params.id, "req.params.id");
+
   const allBookings = await Booking.find({ store_Id: req.params.id });
   let totalAppointments = 0;
   let completedAppointments = 0;
@@ -357,7 +357,7 @@ const getStoreAnalytics = asyncHandler(async (req, res) => {
   const returningClientUserIds = new Set();
 
   allBookings?.forEach((booking) => {
-    console.log(booking);
+  
     if (!booking.isSessionExpired && booking.paymentDone) {
       totalAppointments++;
 
@@ -587,7 +587,7 @@ const getStoreGraphsData = asyncHandler(async (req, res) => {
 
       booking.service_Ids.forEach((service) => {
         const serviceName = service.name;
-        console.log(serviceName);
+  
         if (serviceCounts.hasOwnProperty(serviceName)) {
           serviceCounts[serviceName]++;
         }
@@ -831,7 +831,7 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
       .json({ status: false, message: "Store owner not exists!" });
   }
 
-  console.log(user);
+  // console.log(user);
   if (user?.referralCode) {
     return res.status(200).json({
       status: true,

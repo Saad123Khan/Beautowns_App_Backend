@@ -3,8 +3,6 @@ import { Staffs, validateStaff } from "#models/staff_model";
 import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import _ from "lodash";
-import bcrypt from "bcryptjs";
-import { PATH, LIVEPATH } from "#constant/constant";
 import Joi from "joi";
 import { Service } from "#models/services_model";
 import { getAvailableSlots } from "#controllers/slots.controller";
@@ -921,7 +919,6 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
       isCancel: false,
       isDeleted: false,
     }).populate("store_Id user_Id");
-
   } else if (req.body.salon_owner_Id) {
     bookingFind = await Booking.findOne({
       _id: req.body.booking_Id,
@@ -980,6 +977,9 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
     {
       isCheckIn: true,
       collected_Amount: req.body.collected_Amount,
+      salon_staff_Id: bookingFind?.salon_staff_Id
+        ? bookingFind.salon_staff_Id
+        : req.body.salon_staff_Id,
     },
     { new: true }
   );
