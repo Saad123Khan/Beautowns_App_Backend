@@ -18,6 +18,7 @@ import {
   createStoreCoupon,
   deleteStoreCoupon,
   getAllStoreCoupons,
+  validateStoreCoupon
 } from "#controllers/StoreCoupon.controller";
 import validateObjectId from "#middlewares/validateObjectId";
 import { multerUpload } from "#utils/multer";
@@ -57,6 +58,7 @@ storeRoute.route("/update/:id").put(
 
 storeRoute.route("/:id").get(validateObjectId, getOneStore);
 storeRoute.route("/coupon/:id").get(validateObjectId, getAllStoreCoupons);
+storeRoute.route("/coupon/validate/:id").get(validateObjectId, validateStoreCoupon);
 storeRoute.route("/coupon/:id").delete(validateObjectId, deleteStoreCoupon);
 
 storeRoute.route("/slots/:id").get(validateObjectId, getStoreAvailableSlots);

@@ -9,7 +9,9 @@ import { getAvailableSlots } from "#controllers/slots.controller";
 import moment from "moment";
 import { Booking } from "#models/booking_model";
 import { validateBookingCoupon } from "#controllers/coupon.controller";
+import { validateStoreCoupon,validateStoreCouponForBooking } from "#controllers/StoreCoupon.controller";
 import { Coupon } from "#models/coupons_model";
+import { StoreCoupon } from "#models/store_coupon_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
 import { Payment } from "#models/payment_model";
 import { generateRandomCode } from "#utils/generateRandomCode";
@@ -228,14 +230,17 @@ const createBooking = asyncHandler(async (req, res) => {
   const formattedDate = moment(req.body.date, "YYYY-MM-DD").format(
     "D MMMM YYYY"
   );
-
+console.log(req.body,"req.body")
   if (req.body.couponCode) {
-    const coupon = await validateBookingCoupon(req, res);
+    const coupon = await validateStoreCouponForBooking(req, res);
+    // console.log(coupon,"coupon")
     if (coupon) {
       let discountAmount = coupon?.type?.fixedAmount
         ? parseFloat(coupon?.type?.fixedAmount)
         : (totalValue * parseFloat(coupon?.type?.percentage)) / 100;
-      await Coupon.findOneAndUpdate(
+
+        // console.log(discountAmount,"discountAmount")
+      await StoreCoupon.findOneAndUpdate(
         { _id: coupon?._id },
         { $inc: { quantity: -1, totalAmount: discountAmount } }
       );
@@ -563,7 +568,7 @@ const couponCodeBookingAdded = asyncHandler(async (req, res) => {
     let discountAmount = coupon?.type?.fixedAmount
       ? parseFloat(coupon?.type?.fixedAmount)
       : (booking?.amount * parseFloat(coupon?.type?.percentage)) / 100;
-    await Coupon.findOneAndUpdate(
+    await StoreCoupon.findOneAndUpdate(
       { _id: coupon?._id },
       { $inc: { quantity: -1, totalAmount: discountAmount } }
     );

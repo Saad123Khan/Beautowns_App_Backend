@@ -1,6 +1,7 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { User } from "#models/user_model";
 import _ from "lodash";
+import { Booking } from "#models/booking_model";
 import { StoreCoupon, validateCoupon } from "#models/store_coupon_model";
 import mongoose from "mongoose";
 import { Store } from "#models/store_model";
@@ -163,11 +164,188 @@ const updateStoreCoupon = asyncHandler(async (req, res) => {
   });
 });
 
+// const validateStoreCoupon = asyncHandler(async (req, res) => {
+//   const user = await User.findOne({ _id: req.params.id, isDeleted: false });
+//   if (!user)
+//     return res.status(404).send({ status: false, message: "User not exists" });
+
+//   const coupon = await StoreCoupon.findOne({
+//     value: req.query.value,
+//     isDeleted: false,
+//     isSuspend: false,
+//   });
+
+//   if (coupon) {
+//     const book = await Booking.findOne({
+//       coupons_Id: coupon?._id,
+//       user_Id: req.body.user_Id,
+//       paymentDone: true,
+//     });
+//     if (book) {
+//       return res
+//         .status(404)
+//         .send({ status: false, message: "Coupon already used" });
+//     }
+
+//     if (new Date(coupon?.validityDate) <= new Date()) {
+//       return res
+//         .status(404)
+//         .send({ status: false, message: "Coupon expired!" });
+//     }
+//     if (!coupon?.quantity > 0) {
+//       return res
+//         .status(404)
+//         .send({ status: false, message: "Coupon expired!" });
+//     }
+
+//     if (coupon?.target !== "specific") {
+//       return res
+//         .status(200)
+//         .send({
+//           status: true,
+//           message: "Coupon added sucessfully",
+//           coupon: coupon,
+//         });
+//     } else {
+//       const isValidUserId =
+//         user?._id && coupon?.userIds.some((userId) => userId === user?._id);
+//       if (isValidUserId) {
+//         return res
+//           .status(200)
+//           .send({
+//             status: true,
+//             message: "Coupon added sucessfully",
+//             coupon: coupon,
+//           });
+//       } else {
+//         return res
+//           .status(404)
+//           .send({ status: false, message: "Invalid coupon code" });
+//       }
+//     }
+//   } else {
+//     return res
+//       .status(404)
+//       .send({ status: false, message: "Invalid coupon code" });
+//   }
+// });
+
+const validateStoreCoupon = asyncHandler(async (req, res) => {
+
+  // if(req.body.store_Id){
+  //   const findStoreOwner = await Store.findOne({_id:req.body.store_Id})
+  //   req.params.id = findStoreOwner?.salon_owner_Id
+  
+  // }
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false });
+  if (!user)
+    return res.status(404).send({ status: false, message: "User not exists" });
+
+  const coupon = await StoreCoupon.findOne({
+    value: req.query.value,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
+  if (coupon) {
+    const book = await Booking.findOne({
+      coupons_Id: coupon?._id,
+      user_Id: req.body.user_Id,
+      paymentDone: true,
+    });
+    if (book) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Coupon already used" });
+    }
+
+    if (new Date(coupon?.validityDate) <= new Date()) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Coupon expired!" });
+    }
+    if (!coupon?.quantity > 0) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Coupon expired!" });
+    }
+
+    if (coupon?.target !== "specific") {
+      return res.status(200).send({
+        status: true,
+        message: "Coupon added sucessfully",
+        coupon: coupon,
+      });
+    } else {
+      const isValidUserId =
+        user?._id && coupon?.userIds.some((userId) => userId === user?._id);
+      if (isValidUserId) {
+        return res.status(200).send({
+          status: true,
+          message: "Coupon added sucessfully",
+          coupon: coupon,
+        });
+      } else {
+        return res
+          .status(404)
+          .send({ status: false, message: "Invalid coupon code" });
+      }
+    }
+  } else {
+    return res
+      .status(404)
+      .send({ status: false, message: "Invalid coupon code" });
+  }
+});
+
+const validateStoreCouponForBooking = asyncHandler(async (req, res) => {
+ 
+  const coupon = await StoreCoupon.findOne({
+    value: req.body.couponCode,
+    isDeleted: false,
+    isSuspend: false,
+  });
+
+  if (coupon) {
+    const book = await Booking.findOne({
+      coupons_Id: coupon?._id,
+      user_Id: req.body.user_Id,
+      paymentDone: true,
+    });
+    if (book) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Coupon already used" });
+    }
+
+    if (new Date(coupon?.validityDate) <= new Date()) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Coupon expired!" });
+    }
+    if (!coupon?.quantity > 0) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Coupon expired!" });
+    }
+
+    if (coupon?.target !== "specific") {
+      return coupon;
+    } 
+  } else {
+    return res
+      .status(404)
+      .send({ status: false, message: "Invalid coupon code" });
+  }
+});
+
 export {
   //   getOneCoupon,
   //   getAllCoupons,
   //   deletedCoupon,
   //   updateCoupon,
+  validateStoreCouponForBooking,
+  validateStoreCoupon,
   deleteStoreCoupon,
   getAllStoreCoupons,
   createStoreCoupon,
