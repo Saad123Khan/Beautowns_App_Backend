@@ -5,6 +5,7 @@ import _ from "lodash";
 import { PATH, LIVEPATH } from "#constant/constant";
 import { Coupon } from "#models/coupons_model";
 import { Booking } from "#models/booking_model";
+import { StoreCoupon } from "#models/store_coupon_model";
 
 const validateBookingCoupon = asyncHandler(async (req, res) => {
   const coupon = await Coupon.findOne({
@@ -53,7 +54,7 @@ const validateCoupon = asyncHandler(async (req, res) => {
   if (!user)
     return res.status(404).send({ status: false, message: "User not exists" });
 
-  const coupon = await Coupon.findOne({
+  const coupon = await StoreCoupon.findOne({
     value: req.query.value,
     isDeleted: false,
     isSuspend: false,
