@@ -963,9 +963,9 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
     isDeleted: false,
     isSessionExpired: false,
   })
-    .populate("service_Ids")
+    .populate("service_Ids cancelledBy")
     .populate({ path: "user_Id", select: "name gender email phone" })
-    .populate("store_Id salon_staff_Id");
+    .populate("store_Id salon_staff_Id cancelledBy");
   if (storebooking?.length > 0) {
     bookings = storebooking;
   }

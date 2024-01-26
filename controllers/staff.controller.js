@@ -99,7 +99,7 @@ const createSalonStaff = asyncHandler(async (req, res) => {
   req.body.salon_staff_Id = createStaff?._id;
 
   const staff = await new Staffs(req.body).save();
-  
+
   if (staff) {
     const getAllStaff = await Staffs.find({
       store_Id: staff?.store_Id,
@@ -141,6 +141,7 @@ const updateStaff = asyncHandler(async (req, res) => {
   if (!isStaffExist) {
     return res.status(400).send({ status: false, message: "Staff not exist" });
   }
+
   let updatedStaff = await Staffs.findByIdAndUpdate(
     isStaffExist?._id,
     _.pick(req.body, [
@@ -156,7 +157,7 @@ const updateStaff = asyncHandler(async (req, res) => {
   );
 
   const getAllStaff = await Staffs.find({
-    store_Id: updatedStaff?.store_Id,
+    ...(req.query.role !== "admin" && { store_Id: updatedStaff?.store_Id }),
     isDeleted: false,
     isSuspend: false,
   }).populate("salon_staff_Id", "name isDeleted");
@@ -173,21 +174,22 @@ const updateStaff = asyncHandler(async (req, res) => {
 });
 
 const getAllStoreStaffs = asyncHandler(async (req, res) => {
-  console.log(req.params.id);
-  const store = await Store.findOne({
-    _id: req.params.id,
-    isSuspend: false,
-    isDeleted: false,
-  });
+  if (req.query.role !== "admin") {
+    const store = await Store.findOne({
+      _id: req.params.id,
+      isSuspend: false,
+      isDeleted: false,
+    });
 
-  if (!store) {
-    return res
-      .status(404)
-      .send({ status: false, message: "Store record not exists" });
+    if (!store) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Store record not exists00000" });
+    }
   }
 
   const staff = await Staffs.find({
-    store_Id: req.params.id,
+    ...(req.query.role !== "admin" && { store_Id: req.params.id }),
     isDeleted: false,
     isSuspend: false,
   }).populate("salon_staff_Id", "name isDeleted");
@@ -235,10 +237,11 @@ const delete_staff = asyncHandler(async (req, res) => {
 
   if (delete_cat) {
     const getAllStaff = await Staffs.find({
-      store_Id: delete_cat?.store_Id,
+      ...(req.query.role !== "admin" && { store_Id: delete_cat?.store_Id }),
       isDeleted: false,
       isSuspend: false,
     }).populate("salon_staff_Id", "name isDeleted");
+
     if (getAllStaff?.length > 0) {
       staffs = getAllStaff;
     }
@@ -427,7 +430,6 @@ const staffReferralLinkGenerated = asyncHandler(async (req, res) => {
 });
 
 const getStaffAnalytics = asyncHandler(async (req, res) => {
-  
   const allBookings = await Booking.find({ salon_staff_Id: req.params.id });
   // console.log(allBookings,"allBookings")
   let totalAppointments = 0;
@@ -686,7 +688,7 @@ const completeStaffData = asyncHandler(async (req, res) => {
   }
 
   const staffAna = await getStaffAnalytics(req, res);
-  console.log(staffAna,"staffAna")
+  console.log(staffAna, "staffAna");
   if (staffAna) {
     analytics = staffAna;
   }

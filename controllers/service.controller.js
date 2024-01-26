@@ -112,7 +112,7 @@ const updateService = asyncHandler(async (req, res) => {
   });
   if (service) {
     const findServics = await Service.find({
-      store_Id: service?.store_Id,
+      ...(req.query.role !== "admin" && { store_Id: service?.store_Id}),
       isDeleted: false,
       isSuspend: false,
     }).populate("service_category_Id");
@@ -132,21 +132,24 @@ const updateService = asyncHandler(async (req, res) => {
     });
   }
 });
-const getAllStoreServices = asyncHandler(async (req, res) => {
-  const store = await Store.findOne({
-    _id: req.params.id,
-    isSuspend: false,
-    isDeleted: false,
-  });
 
-  if (!store) {
-    return res
-      .status(404)
-      .send({ status: false, message: "Store record not exists" });
+const getAllStoreServices = asyncHandler(async (req, res) => {
+  if (req.query.role !== "admin") {
+    const store = await Store.findOne({
+      _id: req.params.id,
+      isSuspend: false,
+      isDeleted: false,
+    });
+
+    if (!store) {
+      return res
+        .status(404)
+        .send({ status: false, message: "Store record not exists" });
+    }
   }
 
   const service = await Service.find({
-    store_Id: req.params.id,
+    ...(req.query.role !== "admin" && { store_Id: req.params.id }),
     isDeleted: false,
     isSuspend: false,
   }).populate("service_category_Id");
@@ -207,7 +210,7 @@ const delete_service = asyncHandler(async (req, res) => {
 
     if (delete_service) {
       const findServics = await Service.find({
-        store_Id: isExist?.store_Id,
+        ...(req.query.role !== "admin" && { store_Id: isExist?.store_Id }),
         isDeleted: false,
         isSuspend: false,
       }).populate("service_category_Id");

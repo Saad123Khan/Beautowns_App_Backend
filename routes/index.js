@@ -3,8 +3,8 @@ import userRoute from "#routes/user.routes";
 import authRoute from "#routes/auth.routes";
 import serviceRoute from "#routes/service.routes";
 import storeRoute from "#routes/store.routes";
+import serviceCategoryRoute from "#routes/serviceCategory.routes";
 import storeCategoryRoute from "#routes/storeCategory.routes";
-import categoryRoute from "#routes/category.routes";
 import staffRoute from "#routes/staff.routes";
 import membershipRoute from "#routes/membership.routes";
 import bookingRoute from "#routes/booking.routes";
@@ -16,6 +16,7 @@ import adminNotificationRoute from "#routes/Admin/admin.notification.routes";
 import paymentRoute from "#routes/payment.routes";
 import staffPayrollRoutes from "#routes/staffPayroll.routes";
 import adminAnalyticsRoute from "#routes/Admin/admin.analytics.routes";
+import adminStoreCategoryRoute from "#routes/Admin/admin.storeCategory.routes";
 import marketingRoute from "#routes/marketing.routes";
 
 const routes = (app) => {
@@ -33,21 +34,27 @@ const routes = (app) => {
 
   //Store
   app.use("/api/store", storeRoute);
+
+  // blog
   app.use("/api/blog", blogRoute);
+
+  // staff payroll
   app.use("/api/staffpayroll", staffPayrollRoutes);
 
   //Service
   app.use("/api/service", serviceRoute);
+
+  // marketing
   app.use("/api/marketing", marketingRoute);
 
   //Staff
   app.use("/api/staff", staffRoute);
 
-  //Category
-  app.use("/api/category", categoryRoute);
-
-  //Store Category
+  //store Category
   app.use("/api/store-category", storeCategoryRoute);
+
+  //Service Category
+  app.use("/api/service-category", serviceCategoryRoute);
 
   // MemberShips
   app.use("/api/membership", membershipRoute);
@@ -65,6 +72,10 @@ const routes = (app) => {
 
   // Admin Notification
   app.use("/api/admin/notification", adminNotificationRoute);
+
+
+  // Admin store cateogry
+  app.use("/api/admin/store-category", adminStoreCategoryRoute);
 
   // Payment
   app.use("/api/payment", paymentRoute);
