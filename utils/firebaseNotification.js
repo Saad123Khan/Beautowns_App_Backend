@@ -1,14 +1,16 @@
 import rp from 'request-promise';
 import Notification from "#models/notificationModel";
+import { Store } from "#models/store_model";
+import { Booking } from "#models/booking_model";
 import { sendNotificationEmail } from '#utils/email';
 import { sockets } from '../server.js';
 
 export const firebaseNotification = async (notification, users, type, target, from, to) => {
   const send = async (token, notification, type, target, email, userId) => {
     //  await Notification.deleteMany({})
-    console.log(users)
-    console.log(token)
-    console.log(notification)
+    // console.log(users)
+    // console.log(token)
+    // console.log(notification)
     try {
       if (token) {
         const options = {
@@ -31,13 +33,13 @@ export const firebaseNotification = async (notification, users, type, target, fr
 
         await sendNotificationEmail(email, notification)
         const response = await rp(options);
-        console.log('Notification sent:', response);
+        // console.log('Notification sent:', response);
         const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 }).populate("userId")
         const unSeenNotifications = await Notification.find({ userId: notificationCreated?.userId, isSeen: false }).countDocuments()
  
         
         
-      console.log(users,"US======= DAta")
+      // console.log(users,"US======= DAta")
         if(users?.[0]?.role === "user" || users?.role === "user")
         {
           console.log("CALL USER")
@@ -66,9 +68,22 @@ export const firebaseNotification = async (notification, users, type, target, fr
         await sendNotificationEmail(email, notification)
         const notifications = await Notification.find({ userId: notificationCreated?.userId }).sort({ createdAt: -1 })
         const unSeenNotifications = await Notification.find({ userId: notificationCreated?.userId, isSeen: false }).countDocuments()
+        const findStore = await Store.findOne({
+          salon_owner_Id: notificationCreated?.userId,
+          isSuspend: false,
+          isDeleted: false,
+        });
+        console.log(findStore?._id,"findStore")
+        const storebooking = await Booking.find({
+          store_Id: findStore?._id,
+          isDeleted: false,
+          isSessionExpired: false,
+        })
+          .populate("service_Ids cancelledBy store_Id salon_staff_Id")
+          .populate({ path: "user_Id", select: "name gender email phone" })
         // sockets.sendNotificationSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
-      
-      console.log(users,"USER------------- DAta")
+        console.log(storebooking,"storebooking")
+      // console.log(users,"USER------------- DAta")
         if(users?.[0]?.role === "user" || users?.role === "user")
         {
           console.log("CALL USER")
@@ -77,7 +92,7 @@ export const firebaseNotification = async (notification, users, type, target, fr
         else if(users?.[0]?.role === "store" || users?.role === "store" )
         { 
           console.log("CALL STORE 2nd")
-          sockets.sendNotificationStoreSucess({ notifications, unSeenNotifications, userId: notificationCreated?.userId });
+          sockets.sendNotificationStoreSucess({storebooking, notifications, unSeenNotifications, userId: notificationCreated?.userId });
         }
         else if(users?.[0]?.role === "staff" || users?.role === "staff")
         {

@@ -74,6 +74,10 @@ const BookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     isCheckIn: {
       type: Boolean,
       default: false,

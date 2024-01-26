@@ -16,7 +16,7 @@ import { multerUpload } from "#utils/multer";
 const bookingRoute = express.Router();
 
 bookingRoute.route("/").post(createBooking);
-bookingRoute.route("/:id").get(validateObjectId, getAllStoreBooking);
+bookingRoute.route("/store/:id").get(validateObjectId, getAllStoreBooking);
 bookingRoute.route("/staff/:id").get(validateObjectId, getStaffBooking);
 bookingRoute.route("/user/:id").get(validateObjectId, getUserBooking);
 bookingRoute.route("/cancelled").post(cancelledBooking);

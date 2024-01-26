@@ -1,12 +1,8 @@
-import express from 'express';
-import { createStoreCategory,getAllCategories ,getOneCategory,delete_catgory } from '#controllers/storeCategory.controller';
-import validateObjectId from "#middlewares/validateObjectId";
-import { multerUpload } from '#utils/multer';
+import express from "express";
+import { getAllCategories } from "#controllers/storeCategory.controller";
 
 const storeCategoryRoute = express.Router();
-storeCategoryRoute.route('/').post(multerUpload.single('image'),createStoreCategory);
-storeCategoryRoute.route('/store/:id').get(validateObjectId,getAllCategories);
-storeCategoryRoute.route('/:id').get(validateObjectId,getOneCategory);
-storeCategoryRoute.route('/:id').delete(validateObjectId,delete_catgory);
+
+storeCategoryRoute.route("/").get(getAllCategories);
 
 export default storeCategoryRoute;

@@ -9,7 +9,10 @@ import { getAvailableSlots } from "#controllers/slots.controller";
 import moment from "moment";
 import { Booking } from "#models/booking_model";
 import { validateBookingCoupon } from "#controllers/coupon.controller";
-import { validateStoreCoupon,validateStoreCouponForBooking } from "#controllers/StoreCoupon.controller";
+import {
+  validateStoreCoupon,
+  validateStoreCouponForBooking,
+} from "#controllers/StoreCoupon.controller";
 import { Coupon } from "#models/coupons_model";
 import { StoreCoupon } from "#models/store_coupon_model";
 import { firebaseNotification } from "#utils/firebaseNotification";
@@ -230,7 +233,7 @@ const createBooking = asyncHandler(async (req, res) => {
   const formattedDate = moment(req.body.date, "YYYY-MM-DD").format(
     "D MMMM YYYY"
   );
-console.log(req.body,"req.body")
+  console.log(req.body, "req.body");
   if (req.body.couponCode) {
     const coupon = await validateStoreCouponForBooking(req, res);
     // console.log(coupon,"coupon")
@@ -239,7 +242,7 @@ console.log(req.body,"req.body")
         ? parseFloat(coupon?.type?.fixedAmount)
         : (totalValue * parseFloat(coupon?.type?.percentage)) / 100;
 
-        // console.log(discountAmount,"discountAmount")
+      // console.log(discountAmount,"discountAmount")
       await StoreCoupon.findOneAndUpdate(
         { _id: coupon?._id },
         { $inc: { quantity: -1, totalAmount: discountAmount } }
@@ -487,9 +490,9 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     isDeleted: false,
     isSessionExpired: false,
   })
-    .populate("service_Ids")
+    .populate("service_Ids cancelledBy store_Id salon_staff_Id")
     .populate({ path: "user_Id", select: "name gender email phone" })
-    .populate("store_Id salon_staff_Id");
+  
   if (storebooking?.length > 0) {
     return res.status(200).send({ status: true, booking: storebooking });
   } else {
@@ -517,7 +520,7 @@ const getStaffBooking = asyncHandler(async (req, res) => {
     isDeleted: false,
     isSessionExpired: false,
   })
-    .populate("service_Ids salon_staff_Id store_Id")
+    .populate("service_Ids salon_staff_Id store_Id cancelledBy")
     .populate({ path: "user_Id", select: "name gender phone" });
 
   if (staffbooking?.length > 0) {
@@ -618,7 +621,7 @@ const getUserBooking = asyncHandler(async (req, res) => {
     user_Id: req.params.id,
     isDeleted: false,
     isSessionExpired: false,
-  }).populate("service_Ids store_Id");
+  }).populate("service_Ids store_Id cancelledBy");
 
   if (booking?.length > 0) {
     return res.status(200).send({ status: true, booking: booking });
@@ -637,9 +640,10 @@ const getUserBooking = asyncHandler(async (req, res) => {
 //@acess  private
 
 const cancelledBooking = asyncHandler(async (req, res) => {
-  const user = await User.findOne({
+  let user
+   user = await User.findOne({
     _id: req.body.user_Id,
-    role: "user",
+    // role: "user",
     isSuspend: false,
     isDeleted: false,
     isVerified: true,
@@ -670,13 +674,13 @@ const cancelledBooking = asyncHandler(async (req, res) => {
     }
     const book = await Booking.findOneAndUpdate(
       { _id: booking?._id },
-      { isCancel: true },
+      { isCancel: true, cancelledBy: user?._id },
       { new: true }
     );
     if (book) {
       const notification = {
-        title: "Appointment Canceled",
-        body: `You've successfully canceled your appointment at ${booking?.store_Id?.name}. If you have any questions or need to reschedule, please don't hesitate to contact us. We look forward to serving you in the future!`,
+        title: "Appointment Cancelled",
+        body: `You've successfully cancelled your appointment at ${booking?.store_Id?.name}. If you have any questions or need to reschedule, please don't hesitate to contact us. We look forward to serving you in the future!`,
       };
 
       await firebaseNotification(
@@ -687,6 +691,8 @@ const cancelledBooking = asyncHandler(async (req, res) => {
         "system",
         "users"
       );
+
+      
       return res.status(200).send({
         status: true,
         message: "Booking cancelled sucessfully",
