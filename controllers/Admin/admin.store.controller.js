@@ -31,7 +31,7 @@ const suspendStore = asyncHandler(async (req, res) => {
     ...(req.query.type === "unsuspended" && { isSuspend: true }),
     ...(req.query.type === "deleted" && { isDeleted: false }),
   }).populate("salon_owner_Id");
-  console.log(isExist, "isExist");
+
   if (isExist) {
     await Store.findByIdAndUpdate(
       req.params.id,
@@ -49,15 +49,6 @@ const suspendStore = asyncHandler(async (req, res) => {
             $set: { isSuspend: false },
           }
         : ""
-      //   {
-
-      //   $set: { isSuspend: true },
-
-      //   $set:
-      //     req.query.type === "suspended"
-      //       ? { isSuspend: true }
-      //       : { isDeleted: true },
-      // }
     );
     const store = await Store.find({ isDeleted: false }).populate(
       "salon_owner_Id"
