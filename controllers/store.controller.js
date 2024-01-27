@@ -1081,7 +1081,94 @@ const completeStoreInfo = asyncHandler(async (req, res) => {
   return res.status(200).json(storeData);
 });
 
+
+
+
+const searchSalonServices = asyncHandler(async (req, res) => {
+  const { search, category, time, date, location } = req.body;
+
+  const filter = {
+    isDeleted: false,
+    isSuspend: false,
+  };
+
+  if (search && search !== "") {
+    filter.$or = [
+      { name: { $regex: new RegExp(search, 'i') } }
+    ];
+  }
+
+ 
+  if (location && location != "") {
+    filter.city = { $regex: new RegExp(location, 'i') };
+  }
+
+  
+ 
+
+ if (date && time) {
+    const day = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+  
+    filter.store_timings = {
+      $elemMatch: {
+        day: day,
+        from: { $lte: time },
+        to: { $gte: time },
+        isAvailable: true,
+      },
+    };
+  }
+ else if (date) {
+    const day = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+  
+    filter.store_timings = {
+      $elemMatch: {
+        day: day,
+        isAvailable: true,
+      },
+    };
+  }
+  else if (time) {
+    
+    filter.store_timings = {
+      $elemMatch: {
+        from: { $lte: time },
+        to: { $gte: time },
+        isAvailable: true,
+      },
+    };
+  }
+
+
+
+    console.log(filter,"filter")
+  const salonResults = await Store.find(filter).populate('category_Ids');
+  const serviceResults = await Service.find(filter).populate('store_Id');
+  const staffResults = await Staffs.find(filter);
+
+  const filteredStaffResults = filterResultsByTitle(staffResults, category);
+
+  res.json({
+    salonResults: salonResults,
+    serviceResults: serviceResults,
+    staffResults: filteredStaffResults,
+  });
+});
+
+
+// Helper function to filter results by title for Staff
+const filterResultsByTitle = (results, categoryName) => {
+  if (!categoryName) {
+    return results;
+  }
+
+  return results.filter(result => result.title.toLowerCase().includes(categoryName.toLowerCase()));
+};
+
+
+
 export {
+  searchSalonServices,
   completeStoreInfo,
   getStoreReferral,
   storeReferralLinkGenerated,

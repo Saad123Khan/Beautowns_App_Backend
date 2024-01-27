@@ -7,6 +7,7 @@ import { Coupon } from "#models/coupons_model";
 import { Booking } from "#models/booking_model";
 import { StoreCoupon } from "#models/store_coupon_model";
 
+
 const validateBookingCoupon = asyncHandler(async (req, res) => {
   const coupon = await Coupon.findOne({
     value: req.body.couponCode,
