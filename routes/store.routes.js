@@ -13,6 +13,7 @@ import {
   StoreNotificationSeen,
   storeReferralLinkGenerated,
   getStoreReferral,
+  searchSalonServices
 } from "#controllers/store.controller";
 import {
   createStoreCoupon,
@@ -27,6 +28,10 @@ import { getStoreAvailableSlots } from "#controllers/slots.controller";
 const storeRoute = express.Router();
 
 storeRoute.route("/").post(multerUpload.single("image"), createStore).get(getAllStore);
+
+
+//searchSalonServices
+storeRoute.post("/search", searchSalonServices);
 
 //Create referral
 storeRoute.post("/referral/:id", storeReferralLinkGenerated);
