@@ -131,6 +131,43 @@ const createStore = asyncHandler(async (req, res) => {
   const image = req?.file?.filename;
   req.body.image = image ? `${LIVEPATH}/uploads/${image}` : "";
 
+  
+  function slugifyStoreName(storeName) {
+    return storeName
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\-]+/g, "")
+      .replace(/\-\-+/g, "-")
+      .replace(/^-+/, "")
+      .replace(/-+$/, "");
+  }
+
+  let originalSlug = slugifyStoreName(req.body.name);
+
+  // Function to check if the slug already exists
+  const isSlugUnique = async (slug) => {
+    const existingStore = await Store.findOne({ slug, _id: { $ne: isStoreExist._id } });
+    return !existingStore;
+  };
+
+  // Generate a unique slug
+  async function generateUniqueSlug(slug) {
+    let counter = 1;
+    let uniqueSlug = slug;
+
+    while (!(await isSlugUnique(uniqueSlug))) {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
+    return uniqueSlug;
+  }
+
+  req.body.slug = await generateUniqueSlug(originalSlug);
+
+
   const store = await new Store(req.body).save();
 
   if (store) {
@@ -265,7 +302,7 @@ const getOneStore = asyncHandler(async (req, res) => {
     });
   } else if (req.query.type === "store") {
     store = await Store.findOne({
-      _id: req.params.id,
+      slug: req.params.id,
       isDeleted: false,
       isSuspend: false,
     });
@@ -285,7 +322,7 @@ const getOneStore = asyncHandler(async (req, res) => {
     }).populate("service_category_Id");
 
     const services = {};
-    let serviceId = 1;
+   
     servicesData.forEach((service) => {
       const category = service.service_category_Id
         ? service.service_category_Id.name
@@ -1164,6 +1201,63 @@ const filterResultsByTitle = (results, categoryName) => {
 
   return results.filter(result => result.title.toLowerCase().includes(categoryName.toLowerCase()));
 };
+
+
+
+
+// const updateAllStoreSlugs = async () => {
+//   try {
+//     const allStores = await Store.find({ isDeleted: false, isSuspend: false });
+
+//     for (const store of allStores) {
+//       const originalSlug = slugifyStoreName(store.name);
+//       const uniqueSlug = await generateUniqueSlug(originalSlug, store._id);
+
+//       // Update the store with the new unique slug
+//       await Store.findByIdAndUpdate(store._id, { $set: { slug: uniqueSlug } });
+//     }
+
+//     console.log('All store slugs updated successfully');
+//   } catch (error) {
+//     console.error('Error updating store slugs:', error.message);
+//   }
+// };
+
+// // Function to generate a unique slug using the store name
+// function slugifyStoreName(storeName) {
+//   return storeName
+//     .toString()
+//     .trim()
+//     .toLowerCase()
+//     .replace(/\s+/g, "-")
+//     .replace(/[^\w\-]+/g, "")
+//     .replace(/\-\-+/g, "-")
+//     .replace(/^-+/, "")
+//     .replace(/-+$/, "");
+// }
+
+// // Function to check if the slug already exists for a different store
+// const isSlugUnique = async (slug, currentStoreId) => {
+//   const existingStore = await Store.findOne({ slug, _id: { $ne: currentStoreId } });
+//   return !existingStore;
+// };
+
+// // Function to generate a unique slug
+// async function generateUniqueSlug(slug, currentStoreId) {
+//   let counter = 1;
+//   let uniqueSlug = slug;
+
+//   while (!(await isSlugUnique(uniqueSlug, currentStoreId))) {
+//     uniqueSlug = `${slug}-${counter}`;
+//     counter++;
+//   }
+
+//   return uniqueSlug;
+// }
+
+// // Call the function to update all store slugs
+// updateAllStoreSlugs();
+
 
 
 

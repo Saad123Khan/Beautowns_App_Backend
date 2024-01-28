@@ -227,6 +227,8 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
     role: "user",
   });
 
+
+
   if (!user) {
     return res.status(200).json({ status: false, message: "User not exists!" });
   }
@@ -239,6 +241,7 @@ const addFavouriteSalonServices = asyncHandler(async (req, res) => {
       isDeleted: false,
       isSuspend: false,
     });
+    console.log(salonFind,"salonFind")
 
     if (!salonFind) {
       return res.status(200).json({ status: false, message: "Invalid Store Id" });

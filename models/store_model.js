@@ -16,6 +16,9 @@ const StoreSchema = new mongoose.Schema(
     name: {
       type: String,
     },
+    slug: {
+      type: String,
+    },
     details: {
       type: String,
     },

@@ -61,7 +61,7 @@ storeRoute.route("/update/:id").put(
   updateStore
 );
 
-storeRoute.route("/:id").get(validateObjectId, getOneStore);
+storeRoute.route("/:id").get(getOneStore);
 storeRoute.route("/coupon/:id").get(validateObjectId, getAllStoreCoupons);
 storeRoute.route("/coupon/validate/:id").get(validateObjectId, validateStoreCoupon);
 storeRoute.route("/coupon/:id").delete(validateObjectId, deleteStoreCoupon);
