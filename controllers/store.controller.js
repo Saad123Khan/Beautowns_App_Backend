@@ -302,6 +302,84 @@ const getOneStore = asyncHandler(async (req, res) => {
     });
   } else if (req.query.type === "store") {
     store = await Store.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Invalid type",
+      storeData: [],
+    });
+  }
+
+  if (store) {
+    const servicesData = await Service.find({
+      store_Id: store?._id,
+      isDeleted: false,
+      isSuspend: false,
+    }).populate("service_category_Id");
+
+    const services = {};
+   
+    servicesData.forEach((service) => {
+      const category = service.service_category_Id
+        ? service.service_category_Id.name
+        : "Uncategorized";
+
+      if (!services[category]) {
+        services[category] = [];
+      }
+
+      const serviceObject = { ...service.toObject() }; // Convert Mongoose Document to plain object
+      // serviceObject.id = serviceId++;
+      services[category].push(serviceObject);
+    });
+
+    let id = 1;
+
+    for (const category in services) {
+      if (services.hasOwnProperty(category)) {
+        const items = services[category];
+        for (const item of items) {
+          item.id = id++;
+        }
+      }
+    }
+
+    const categories = Object.keys(services);
+
+    const staff = await Staffs.find({
+      store_Id: store?._id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+
+    const data = { store, services, staff, serviceCategory: categories };
+
+    return res.status(200).send({ status: true, storeData: data });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Store record does not exists",
+      storeData: [],
+    });
+  }
+});
+
+
+
+const getOneStoreWithSlug = asyncHandler(async (req, res) => {
+  let store;
+  if (req.query.type === "owner") {
+    store = await Store.findOne({
+      salon_owner_Id: req.params.id,
+      isDeleted: false,
+      isSuspend: false,
+    });
+  } else if (req.query.type === "store") {
+    store = await Store.findOne({
       slug: req.params.id,
       isDeleted: false,
       isSuspend: false,
@@ -367,6 +445,7 @@ const getOneStore = asyncHandler(async (req, res) => {
     });
   }
 });
+
 
 const getStoreAnalytics = asyncHandler(async (req, res) => {
 
@@ -1268,6 +1347,7 @@ export {
   storeReferralLinkGenerated,
   createStore,
   getOneStore,
+  getOneStoreWithSlug,
   changeStoreStatus,
   updateStore,
   getStoreAnalytics,
