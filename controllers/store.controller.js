@@ -978,6 +978,7 @@ const storeReferralLinkGenerated = asyncHandler(async (req, res) => {
 });
 
 const getAllStore = asyncHandler(async (req, res) => {
+  console.log(req.socket.remoteAddress,"req.socket.remoteAddress")
   const store = await Store.find({
     isDeleted: false,
     isSuspend: false,

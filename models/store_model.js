@@ -83,6 +83,10 @@ const StoreSchema = new mongoose.Schema(
       type: Number,
       default: 5,
     },
+    totalRatings: {
+      type: Number,
+      default: 0,
+   },
     completeProgess: { type: Number, default: 1 },
 
     isSuspend: {

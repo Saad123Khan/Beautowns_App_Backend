@@ -11,7 +11,6 @@ function validateUpdateServices(service) {
     name: Joi.string(),
     description: Joi.string(),
     value: Joi.number(),
-    // noOfPeople: Joi.number(),
     segment_Id: Joi.number().valid(1, 2, 3),
     duration: Joi.number(),
     image: Joi.string(),
@@ -112,7 +111,7 @@ const updateService = asyncHandler(async (req, res) => {
   });
   if (service) {
     const findServics = await Service.find({
-      ...(req.query.role !== "admin" && { store_Id: service?.store_Id}),
+      ...(req.query.role !== "admin" && { store_Id: service?.store_Id }),
       isDeleted: false,
       isSuspend: false,
     }).populate("service_category_Id");

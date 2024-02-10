@@ -14,6 +14,8 @@ import { email } from "#utils/email";
 import { User, validateUser } from "#models/user_model";
 import { Store } from "#models/store_model";
 import { Staffs } from "#models/staff_model";
+import { StoreCategories } from "#models/store_categories_model";
+import { Service } from "#models/services_model";
 import { Wallet } from "#models/wallet_model";
 import { Contact, validateContact } from "#models/contact_model";
 import { contactEmail } from "#utils/email";
@@ -227,6 +229,25 @@ const loginUser = asyncHandler(async (req, res) => {
     isSuspend: false,
   }).populate("category_Ids");
 
+  let noOfStaff;
+  let noOfServices;
+  let noOfCategory;
+
+  if (isStoreExist) {
+    noOfStaff = await Staffs.countDocuments({
+      store_Id: isStoreExist?._id,
+      isDeleted: false,
+    });
+    noOfServices = await Service.countDocuments({
+      store_Id: isStoreExist?._id,
+      isDeleted: false,
+    });
+    noOfCategory = await StoreCategories.countDocuments({
+      store_Id: isStoreExist?._id,
+      isDeleted: false,
+    });
+  }
+
   let staffDetails;
 
   if (user?.role === "staff") {
@@ -275,6 +296,9 @@ const loginUser = asyncHandler(async (req, res) => {
       wallet: { balance },
       store: isStoreExist,
       staffDetail: staffDetails,
+      noOfStaff,
+      noOfServices,
+      noOfCategory
     });
 });
 

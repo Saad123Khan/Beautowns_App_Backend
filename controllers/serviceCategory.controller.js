@@ -5,7 +5,7 @@ import {
 } from "#models/store_categories_model";
 import { Store } from "#models/store_model";
 import { Service } from "#models/services_model";
-import { PATH, LIVEPATH } from "#constant/constant";
+import { LIVEPATH } from "#constant/constant";
 
 const createStoreCategory = asyncHandler(async (req, res) => {
   const { error } = validateStoreCategories(req.body);
