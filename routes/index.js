@@ -18,6 +18,7 @@ import staffPayrollRoutes from "#routes/staffPayroll.routes";
 import adminAnalyticsRoute from "#routes/Admin/admin.analytics.routes";
 import adminStoreCategoryRoute from "#routes/Admin/admin.storeCategory.routes";
 import marketingRoute from "#routes/marketing.routes";
+import ratingRoute from "#routes/rating.routes";
 
 const routes = (app) => {
   // app.get("*",(req,res)=>{
@@ -31,6 +32,9 @@ const routes = (app) => {
 
   //User
   app.use("/api/user", userRoute);
+
+  // Rating
+  app.use("/api/rating", ratingRoute);
 
   //Store
   app.use("/api/store", storeRoute);
