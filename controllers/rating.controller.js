@@ -35,18 +35,27 @@ const giveRating = asyncHandler(async (req, res) => {
   if (
     JSON.stringify(isBookingExist?.user_Id) === JSON.stringify(isUserExist._id)
   ) {
+
     const findStore = await Store.findById(isBookingExist?.store_Id);
+    
+    const newRating = Rating.find({storeId:findStore?._id});
+
+    let totalRating = newRating.reduce((acc, obj) => {
+      acc += obj.rating;
+      return acc;
+  }, 0);
+  
 
     if (findStore) {
       const userRating = req.body.rating;
       req.body.store_Id = isBookingExist?.store_Id;
 
-      // Create a new rating entry
       const newRating = new Rating(req.body);
       await newRating.save();
-      let multi = findStore.totalRatings * findStore.rating;
-      let add = multi + userRating;
-      let div = (add / findStore.totalRatings + 1) ;
+
+    
+      let div = ( totalRating / newRating.length) ;
+      
       findStore.totalRatings += 1;
       findStore.rating = div;
 

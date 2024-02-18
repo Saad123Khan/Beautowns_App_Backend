@@ -148,7 +148,8 @@ const createStore = asyncHandler(async (req, res) => {
 
   // Function to check if the slug already exists
   const isSlugUnique = async (slug) => {
-    const existingStore = await Store.findOne({ slug, _id: { $ne: isStoreExist._id } });
+    const existingStore = await Store.findOne({ slug, _id: { $ne: isStoreExist?._id } });
+    console.log(existingStore,"existingStore")
     return !existingStore;
   };
 
