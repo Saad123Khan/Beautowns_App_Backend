@@ -92,12 +92,13 @@ const updateCategory = asyncHandler(async (req, res) => {
     _id: req.params.id,
     isDeleted: false,
   });
-
+  
+  console.log(storeCategories ,"storeCategories")
   if (storeCategories) {
     storeCategories.name = req.body.name;
     await storeCategories.save();
     const findCategory = await StoreCategories.find({
-      ...(req.query.role === "store" && { store_Id: req.params.id }),
+      ...(req.query.role === "store" && { store_Id: storeCategories?.store_Id }),
       // store_Id: storeCategories?.store_Id,
       isDeleted: false,
     });
