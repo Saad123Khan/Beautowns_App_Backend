@@ -36,7 +36,7 @@ const RatingSchema = new mongoose.Schema(
 function validateRating(rate) {
   const schema = Joi.object({
     booking_Id: Joi.string().required(),
-    rating: Joi.number().required(),
+    rating: Joi.string().required(),
     comment: Joi.string().optional(),
     user_Id: Joi.string().required(),
     isDeleted: Joi.boolean(),

@@ -254,6 +254,11 @@ const loginUser = asyncHandler(async (req, res) => {
     staffDetails = await Staffs?.findOne({
       salon_staff_Id: user?._id,
       isDeleted: false,
+    }).populate({
+      path: "store_Id",
+      populate: {
+        path: "salon_owner_Id",
+      },
     });
   }
 
@@ -298,7 +303,7 @@ const loginUser = asyncHandler(async (req, res) => {
       staffDetail: staffDetails,
       noOfStaff,
       noOfServices,
-      noOfCategory
+      noOfCategory,
     });
 });
 
@@ -452,6 +457,19 @@ const otpVerify = asyncHandler(async (req, res) => {
         "users"
       );
     }
+    
+    let staffDetails;
+    if (user?.role === "staff") {
+      staffDetails = await Staffs?.findOne({
+        salon_staff_Id: user?._id,
+        isDeleted: false,
+      }).populate({
+        path: "store_Id",
+        populate: {
+          path: "salon_owner_Id",
+        },
+      });
+    }
 
     return res
       .cookie("x-auth-token", token, {
@@ -465,6 +483,7 @@ const otpVerify = asyncHandler(async (req, res) => {
         status: true,
         message: "Verified successfully",
         user: user,
+        staffDetails: staffDetails,
         wallet: { balance },
       });
   } else {

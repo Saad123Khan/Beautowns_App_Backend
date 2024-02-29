@@ -102,7 +102,8 @@ const createSalonStaff = asyncHandler(async (req, res) => {
 
   if (staff) {
     const getAllStaff = await Staffs.find({
-      store_Id: staff?.store_Id,
+      ...(req.query.role !== "admin" && { store_Id: staff?.store_Id }),
+    
       isDeleted: false,
       isSuspend: false,
     }).populate("salon_staff_Id", "name isDeleted");
@@ -277,7 +278,7 @@ const changeStaffStatus = asyncHandler(async (req, res) => {
 
   if (change_status) {
     const getAllStaff = await Staffs.find({
-      store_Id: isStaffExist?.store_Id,
+      ...(req.query.role !== "admin" && { store_Id: isStaffExist?.store_Id }),
       isDeleted: false,
       isSuspend: false,
     }).populate("salon_staff_Id", "name isDeleted");
