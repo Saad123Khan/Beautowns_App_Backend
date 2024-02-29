@@ -94,7 +94,8 @@ const updateUser = asyncHandler(async (req, res) => {
       {
         new: true,
       }
-    ).select("-password");
+    ).select("-password").populate("favourite.stores favourite.services");
+
 
     if (updatingUser) {
       return res.status(200).send({
@@ -212,6 +213,10 @@ const userNotificationSeen = asyncHandler(async (req, res) => {
     return res.status(404).json({ status: false, message: "Nothing to seen" });
   }
 });
+
+
+
+
 
 //@desc  Add Favourite
 //@route  /user/favourite-added/:id

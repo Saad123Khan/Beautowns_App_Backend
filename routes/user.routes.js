@@ -13,6 +13,8 @@ import {
   userReferralLinkGenerated
 } from "#controllers/user.controller";
 import authMiddleware from "#middlewares/auth.middleware";
+import { userMessageSeen } from "#controllers/chat.controller";
+
 
 const userRoute = express.Router();
 
@@ -59,5 +61,9 @@ userRoute.post(
   [authMiddleware, validateObjectId],
   updateUserProfileToken
 );
+
+//Seen User Messages
+
+userRoute.get("/message-seen/:id", [authMiddleware], userMessageSeen);
 
 export default userRoute;

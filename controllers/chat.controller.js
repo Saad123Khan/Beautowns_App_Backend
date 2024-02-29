@@ -1,5 +1,7 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { Chat, validateChat } from "#models/chat_model";
+import { User } from "#models/user_model";
+
 
 const saveMessage = asyncHandler(async (req, res) => {
   const { error } = validateChat(req.body);
@@ -26,4 +28,41 @@ const getMessages = asyncHandler(async (req, res) => {
   return messages
 });
 
-export { saveMessage, getMessages };
+
+
+
+
+
+//@desc  User Seen Notification
+//@route  /user/notification-seen/:id
+//@request Get Request
+//@acess  private
+
+const userMessageSeen = asyncHandler(async (req, res) => {
+  const user = await User.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    role: "user",
+  });
+  if (!user) {
+    return res.status(200).json({ status: false, message: "User not exists!" });
+  }
+
+  const messages = await Chat.updateMany(
+    { sender_Id: req.params.id, isSeen: false },
+    { isSeen: true }
+  );
+
+
+  if (messages) {
+    return res
+      .status(200)
+      .json({ status: true, message: "Message seen sucessfully" });
+  } else {
+    return res.status(404).json({ status: false, message: "Nothing to seen" });
+  }
+
+
+});
+
+export { saveMessage, getMessages , userMessageSeen };
