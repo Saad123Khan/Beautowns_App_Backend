@@ -88,7 +88,7 @@ const updateUser = asyncHandler(async (req, res) => {
     const image = req?.file?.filename;
     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : user?.image;
 
-    const updatingUser = await User.findByIdAndUpdate(
+    let updatingUser = await User.findByIdAndUpdate(
       user?._id,
       _.pick(req.body, ["gender", "image", "name", "phone", "address"]),
       {
