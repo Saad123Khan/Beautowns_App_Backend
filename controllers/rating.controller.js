@@ -83,7 +83,7 @@ console.log(newRating,"newRating");
 });
 
 const getStoreRating = asyncHandler(async (req, res) => {
-  const isRating = await Rating.find({ store_Id: req.params.id });
+  const isRating = await Rating.find({ store_Id: req.params.id }).populate("user_Id");
 
   if (isRating) {
     return res.status(200).send({
