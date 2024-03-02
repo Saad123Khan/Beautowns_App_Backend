@@ -88,13 +88,23 @@ const updateUser = asyncHandler(async (req, res) => {
     const image = req?.file?.filename;
     req.body.image = image ? `${LIVEPATH}/uploads/${image}` : user?.image;
 
-    const updatingUser = await User.findByIdAndUpdate(
+    let updatingUser = await User.findByIdAndUpdate(
       user?._id,
       _.pick(req.body, ["gender", "image", "name", "phone", "address"]),
       {
         new: true,
       }
-    ).select("-password");
+    ).select("-password").populate("favourite.stores favourite.services");
+
+
+await User.populate(updatingUser, {
+  path: "favourite.services",
+  populate: {
+    path: "store_Id",
+    model: "Store",
+  },
+});
+
 
     if (updatingUser) {
       return res.status(200).send({
@@ -212,6 +222,10 @@ const userNotificationSeen = asyncHandler(async (req, res) => {
     return res.status(404).json({ status: false, message: "Nothing to seen" });
   }
 });
+
+
+
+
 
 //@desc  Add Favourite
 //@route  /user/favourite-added/:id

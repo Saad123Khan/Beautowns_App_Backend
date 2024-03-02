@@ -9,12 +9,91 @@ import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import { Categories } from "#models/category_model";
 
+
 const getAllStore = asyncHandler(async (req, res) => {
   const store = await Store.find({ isDeleted: false }).populate(
     "salon_owner_Id"
   );
   if (store?.length > 0) {
     return res.status(200).send({ status: true, store: store });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Store record does not exists",
+      store: [],
+    });
+  }
+});
+
+const getCompleteStore = asyncHandler(async (req, res) => {
+  const isStore = await Store.findOne({
+    isDeleted: false,
+    slug: req.params.id,
+  }).populate("salon_owner_Id category_Ids");
+
+  let staff;
+  let services;
+  let coupons;
+  let bookings;
+  let blogs;
+  let category;
+  // console.log(isStore,"isStore?._Id")
+  if (isStore) {
+    const findStaffs = await Staffs.find({
+      store_Id: isStore?._id,
+      isDeleted: "false",
+    }).populate("store_Id");
+    if (findStaffs.length > 0) {
+      staff = findStaffs;
+    }
+
+    const findService = await Service.find({
+      store_Id: isStore?._id,
+      isDeleted: "false",
+    }).populate("service_category_Id");
+
+    if (findService.length > 0) {
+      services = findService;
+    }
+    const findCoupons = await StoreCoupon.find({
+      store_Id: isStore?._id,
+      isDeleted: "false",
+    });
+    if (findCoupons.length > 0) {
+      coupons = findCoupons;
+    }
+    const findBookings = await Booking.find({
+      store_Id: isStore?._id,
+      isDeleted: "false",
+    }).populate("user_Id cancelledBy salon_staff_Id service_Ids");
+    if (findBookings.length > 0) {
+      bookings = findBookings;
+    }
+    const findBlogs = await Blog.find({
+      store_Id: isStore?._id,
+      isDeleted: "false",
+    });
+    if (findBlogs.length > 0) {
+      blogs = findBlogs;
+    }
+    const findCateogory = await StoreCategories.find({
+      store_Id: isStore?._id,
+      isDeleted: "false",
+    });
+    if (findCateogory?.length > 0) {
+      category = findCateogory;
+    }
+
+    return res.status(200).send({
+      status: true,
+      StoreDetails: isStore,
+      blogs,
+      services,
+      staff,
+      coupons,
+      bookings,
+      category
+    });
   } else {
     return res.status(404).send({
       status: false,
@@ -170,5 +249,5 @@ const getCompleteAdmin = asyncHandler(async (req, res) => {
 
   return res.status(200).json(complateAdmin);
 });
-
-export { getAllStore, getCompleteAdmin, suspendStore };
+// getCompleteStore()
+export { getAllStore, getCompleteAdmin, suspendStore, getCompleteStore };

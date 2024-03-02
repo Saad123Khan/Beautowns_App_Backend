@@ -20,6 +20,7 @@ import { Payment } from "#models/payment_model";
 import { generateRandomCode } from "#utils/generateRandomCode";
 import { Wallet } from "#models/wallet_model";
 import { Referral } from "#models/referral_modal";
+import { sockets } from "../server.js";
 
 function validateBooking(service) {
   const schema = Joi.object({
@@ -491,8 +492,25 @@ const getAllStoreBooking = asyncHandler(async (req, res) => {
     isSessionExpired: false,
   })
     .populate("service_Ids cancelledBy store_Id salon_staff_Id")
-    .populate({ path: "user_Id", select: "name gender email phone" })
-  
+    .populate({ path: "user_Id", select: "name gender image email phone" });
+
+  if (storebooking?.length > 0) {
+    return res.status(200).send({ status: true, booking: storebooking });
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Booking record does not exists",
+      booking: [],
+    });
+  }
+});
+const getAllBooking = asyncHandler(async (req, res) => {
+  const storebooking = await Booking.find({
+    isDeleted: false,
+    isSessionExpired: false,
+  })
+    .populate("service_Ids cancelledBy store_Id salon_staff_Id")
+    .populate({ path: "user_Id", select: "name gender image email phone" });
   if (storebooking?.length > 0) {
     return res.status(200).send({ status: true, booking: storebooking });
   } else {
@@ -521,7 +539,7 @@ const getStaffBooking = asyncHandler(async (req, res) => {
     isSessionExpired: false,
   })
     .populate("service_Ids salon_staff_Id store_Id cancelledBy")
-    .populate({ path: "user_Id", select: "name gender phone" });
+    .populate({ path: "user_Id", select: "name image gender phone" });
 
   if (staffbooking?.length > 0) {
     return res.status(200).send({ status: true, booking: staffbooking });
@@ -641,8 +659,8 @@ const getUserBooking = asyncHandler(async (req, res) => {
 //@acess  private
 
 const cancelledBooking = asyncHandler(async (req, res) => {
-  let user
-   user = await User.findOne({
+  let user;
+  user = await User.findOne({
     _id: req.body.user_Id,
     // role: "user",
     isSuspend: false,
@@ -693,7 +711,6 @@ const cancelledBooking = asyncHandler(async (req, res) => {
         "users"
       );
 
-      
       return res.status(200).send({
         status: true,
         message: "Booking cancelled sucessfully",
@@ -1010,6 +1027,7 @@ const bookingCheckIn = asyncHandler(async (req, res) => {
     "users"
   );
 
+  sockets.sendRatingRequest({ booking: bookingFind });
   return res
     .status(200)
     .json({ status: true, message: "Booking is check-in", booking });
@@ -1059,4 +1077,5 @@ export {
   deleteBooking,
   getStaffBooking,
   bookingsByCoupon,
+  getAllBooking
 };

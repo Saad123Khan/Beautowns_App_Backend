@@ -40,7 +40,7 @@ const notificationSchema = new mongoose.Schema({
     image:{
         type:String,
     },
-    isSeen:{
+    ddd :{
         type : Boolean,
         default : false
     }

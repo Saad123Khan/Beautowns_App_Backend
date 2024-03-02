@@ -61,7 +61,7 @@ const createService = asyncHandler(async (req, res) => {
   const service = await new Service(req.body).save();
   if (service) {
     const findServics = await Service.find({
-      store_Id: service?.store_Id,
+      ...(req.query.role !== "admin" && { store_Id: service?.store_Id }),
       isDeleted: false,
       isSuspend: false,
     }).populate("service_category_Id");
@@ -146,12 +146,25 @@ const getAllStoreServices = asyncHandler(async (req, res) => {
         .send({ status: false, message: "Store record not exists" });
     }
   }
-
-  const service = await Service.find({
+  let service;
+  // if(req.query.role === "admin"){
+  service = await Service.find({
     ...(req.query.role !== "admin" && { store_Id: req.params.id }),
     isDeleted: false,
     isSuspend: false,
-  }).populate("service_category_Id");
+  }).populate(
+    req.query.role === "admin"
+      ? "service_category_Id store_Id"
+      : "service_category_Id"
+  );
+  // }else {
+  //   service = await Service.find({
+  //    ...(req.query.role !== "admin" && { store_Id: req.params.id }),
+  //    isDeleted: false,
+  //    isSuspend: false,
+  //  }).populate("service_category_Id");
+  // }
+
   if (service?.length > 0) {
     return res.status(200).send({ status: true, service });
   } else {
@@ -212,7 +225,11 @@ const delete_service = asyncHandler(async (req, res) => {
         ...(req.query.role !== "admin" && { store_Id: isExist?.store_Id }),
         isDeleted: false,
         isSuspend: false,
-      }).populate("service_category_Id");
+      }).populate(
+        req.query.role === "admin"
+          ? "service_category_Id store_Id"
+          : "service_category_Id"
+      );;
       if (findServics.length > 0) {
         services = findServics;
       }
