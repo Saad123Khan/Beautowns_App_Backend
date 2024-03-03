@@ -95,17 +95,6 @@ const updateUser = asyncHandler(async (req, res) => {
         new: true,
       }
     ).select("-password").populate("favourite.stores favourite.services");
-
-
-await User.populate(updatingUser, {
-  path: "favourite.services",
-  populate: {
-    path: "store_Id",
-    model: "Store",
-  },
-});
-
-
     if (updatingUser) {
       return res.status(200).send({
         status: true,

@@ -185,7 +185,7 @@ const getAllStoreStaffs = asyncHandler(async (req, res) => {
     if (!store) {
       return res
         .status(404)
-        .send({ status: false, message: "Store record not exists00000" });
+        .send({ status: false, message: "Store record not exist" });
     }
   }
 
