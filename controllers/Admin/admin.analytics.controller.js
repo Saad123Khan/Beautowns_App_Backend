@@ -517,8 +517,7 @@ const getAdminData = asyncHandler(async (req, res) => {
       totalBookings++;
       // Monthly Earnings
       if (bookingDate.getFullYear() === requestedYear) {
-        const monthDifference = currentDate.getMonth() - bookingDate.getMonth();
-        const monthIndex = 11 - monthDifference;
+        const monthIndex =  bookingDate.getMonth();
 
         if (monthIndex >= 0 && monthIndex < 12) {
           monthlyEarnings[monthIndex] += booking.amount;
