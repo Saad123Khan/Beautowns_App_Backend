@@ -1,9 +1,7 @@
 import asyncHandler from "#middlewares/asyncHandler";
 import { Booking } from "#models/booking_model";
 import _ from "lodash";
-import {
-  StoreCategories
-} from "#models/store_categories_model";
+import { StoreCategories } from "#models/store_categories_model";
 import { Service } from "#models/services_model";
 import { Staffs } from "#models/staff_model";
 
@@ -23,98 +21,101 @@ const getAllAnalytics = asyncHandler(async (req, res) => {
   let totalCheckIns = 0;
   let paymentCompletedNotCheckInAppointments = 0;
   let totalWithStaffAppointments = 0;
-   let returningClients = 0;
-   let newClients = 0;
+  let returningClients = 0;
+  let newClients = 0;
 
-   let totalPendingSales = 0;
+  let totalPendingSales = 0;
 
-   let totalPendingDiscount = 0;
+  let totalPendingDiscount = 0;
 
-   
-   
-   const uniqueUserIds = new Set();
-   const returningClientUserIds = new Set();
+  const uniqueUserIds = new Set();
+  const returningClientUserIds = new Set();
 
   allBookings?.forEach((booking) => {
     console.log(booking);
     if (!booking.isSessionExpired && booking.paymentDone) {
       totalAppointments++;
-    
-    
-   
-if(booking.user_Id)
-{
-  uniqueUserIds.add(booking.user_Id);
-    // Check for returning clients
-    if (uniqueUserIds.has(booking.user_Id)) {
-      returningClients++;
-      returningClientUserIds.add(booking.user_Id);
-    } else {
-      newClients++;
-    }
- }
 
-    if (booking.isCancel) {
-      cancelledAppointments++;
-    }
+      if (booking.user_Id) {
+        uniqueUserIds.add(booking.user_Id);
+        // Check for returning clients
+        if (uniqueUserIds.has(booking.user_Id)) {
+          returningClients++;
+          returningClientUserIds.add(booking.user_Id);
+        } else {
+          newClients++;
+        }
+      }
 
-    if (booking.paymentDone && booking.isCheckIn) {
-      completedAppointments++;
-      totalSales += booking.amount;
+      if (booking.isCancel) {
+        cancelledAppointments++;
+      }
 
-      if (booking.coupons_Id) {
-        totalDiscount += booking.discount;
+      if (booking.paymentDone && booking.isCheckIn) {
+        completedAppointments++;
+        totalSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalDiscount += booking.discount;
+        }
+      }
+
+      if (booking.paymentDone && !booking.isCheckIn) {
+        paymentCompletedNotCheckInAppointments++;
+        notCompletedAppointments++;
+        totalPendingSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalPendingDiscount += booking.discount;
+        }
+      }
+
+      if (booking.isCheckIn) {
+        totalCheckIns++;
+      }
+      if (booking.booking_type === "auto") {
+        onlineAppointments++;
+      }
+      if (booking.salon_staff_Id) {
+        totalWithStaffAppointments++;
+      }
+
+      if (booking.booking_type === "manual") {
+        onSiteAppointments++;
+      }
+
+      if (booking.rating) {
+        totalRating += booking.rating;
       }
     }
+  });
 
-    if (booking.paymentDone && !booking.isCheckIn) {
-      paymentCompletedNotCheckInAppointments++;
-      notCompletedAppointments++;
-      totalPendingSales += booking.amount;
-
-      if (booking.coupons_Id) {
-        totalPendingDiscount += booking.discount;
-      }
-    }
-
-    if (booking.isCheckIn) {
-      totalCheckIns++;
-    }
-    if (booking.booking_type === "auto") {
-      onlineAppointments++;
-    }
-    if (booking.salon_staff_Id) {
-      totalWithStaffAppointments++;
-    }
-
-    if (booking.booking_type === "manual") {
-      onSiteAppointments++;
-    }
-
-    if (booking.rating) {
-      totalRating += booking.rating;
-    }
-  }
-}
-  );
-
-  
   const averageSale =
     totalAppointments - cancelledAppointments > 0
       ? totalSales / (totalAppointments - cancelledAppointments)
       : 0;
 
   const averageRating =
-    totalAppointments > 0 ? (totalRating > 0 ? totalRating / totalAppointments : 0) : 0;
+    totalAppointments > 0
+      ? totalRating > 0
+        ? totalRating / totalAppointments
+        : 0
+      : 0;
 
   const percentageCompletedAppointments =
-    totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (completedAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageNotCompletedAppointments =
-    totalAppointments > 0 ? (notCompletedAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (notCompletedAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageCancelledAppointments =
-    totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (cancelledAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageOnlineAppointments =
     totalAppointments > 0 ? (onlineAppointments / totalAppointments) * 100 : 0;
@@ -132,11 +133,10 @@ if(booking.user_Id)
       ? (returningClientUserIds.size / uniqueUserIds.size) * 100
       : 0;
 
-
-const percentageReturningClients =
-  uniqueUserIds.size > 0
-    ? (returningClientUserIds.size / uniqueUserIds.size) * 100
-    : 0;
+  const percentageReturningClients =
+    uniqueUserIds.size > 0
+      ? (returningClientUserIds.size / uniqueUserIds.size) * 100
+      : 0;
 
   const analyticsData = {
     totalAppointments,
@@ -163,25 +163,27 @@ const percentageReturningClients =
     clientRetention,
     returningClients,
     newClients,
-    percentageReturningClients
+    percentageReturningClients,
   };
 
   return res.status(200).json(analyticsData);
 });
 
 const getGraphsData = asyncHandler(async (req, res) => {
-  const requestedYear = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+  const requestedYear = req.query.year
+    ? parseInt(req.query.year)
+    : new Date().getFullYear();
 
   const allCategories = await StoreCategories.find({ store_Id: req.params.id });
   const allStaffs = await Staffs.find({ store_Id: req.params.id });
-  const allServices = await Service.find({ store_Id: req.params.id});
+  const allServices = await Service.find({ store_Id: req.params.id });
 
-  const servicesNames = allServices.map(staff => staff.name);
-  const staffsNames = allStaffs.map(staff => staff.name);
-  const categoryNames = allCategories.map(category => category.name);
+  const servicesNames = allServices.map((staff) => staff.name);
+  const staffsNames = allStaffs.map((staff) => staff.name);
+  const categoryNames = allCategories.map((category) => category.name);
   const allBookings = await Booking.find({ store_Id: req.params.id }).populate({
-    path: 'service_Ids',
-    populate: { path: 'service_category_Id' }
+    path: "service_Ids",
+    populate: { path: "service_category_Id" },
   });
 
   const currentDate = new Date();
@@ -197,18 +199,17 @@ const getGraphsData = asyncHandler(async (req, res) => {
   const staffBookingPercentage = {};
   const serviceCounts = {};
   const servicePercentage = {};
-  let totalBookings = 0; 
+  let totalBookings = 0;
 
-
-  categoryNames.forEach(categoryName => {
+  categoryNames.forEach((categoryName) => {
     categoryCounts[categoryName] = 0;
   });
 
-  staffsNames.forEach(staffName => {
+  staffsNames.forEach((staffName) => {
     staffBookingCounts[staffName] = 0;
   });
 
-  servicesNames.forEach(serviceName => {
+  servicesNames.forEach((serviceName) => {
     serviceCounts[serviceName] = 0;
   });
 
@@ -216,7 +217,7 @@ const getGraphsData = asyncHandler(async (req, res) => {
     const bookingDate = new Date(booking.createdAt);
 
     if (booking.paymentDone && booking.isCheckIn) {
-      totalBookings++; 
+      totalBookings++;
       // Monthly Earnings
       if (bookingDate.getFullYear() === requestedYear) {
         const monthDifference = currentDate.getMonth() - bookingDate.getMonth();
@@ -243,54 +244,52 @@ const getGraphsData = asyncHandler(async (req, res) => {
       });
 
       // Staff Booking Counts
-      const staffFind = await Staffs.findById(booking.salon_staff_Id.toString())
+      const staffFind = await Staffs.findById(
+        booking.salon_staff_Id.toString()
+      );
       const staffName = staffFind?.name;
       if (!staffBookingCounts[staffName]) {
         staffBookingCounts[staffName] = 0;
       }
       staffBookingCounts[staffName]++;
 
-booking.service_Ids.forEach((service) => {
-  const serviceName = service.name; 
-console.log(serviceName)
-  if (serviceCounts.hasOwnProperty(serviceName)) {
-    serviceCounts[serviceName]++;
-  }
-});
-
+      booking.service_Ids.forEach((service) => {
+        const serviceName = service.name;
+        console.log(serviceName);
+        if (serviceCounts.hasOwnProperty(serviceName)) {
+          serviceCounts[serviceName]++;
+        }
+      });
     }
   }
-if (totalBookings > 0) {
-  Object.keys(categoryCounts).forEach(categoryName => {
-    const count = categoryCounts[categoryName];
-    categoryCountsPercentage[categoryName] = (count / totalBookings) * 100;
-  });
+  if (totalBookings > 0) {
+    Object.keys(categoryCounts).forEach((categoryName) => {
+      const count = categoryCounts[categoryName];
+      categoryCountsPercentage[categoryName] = (count / totalBookings) * 100;
+    });
 
-  Object.keys(staffBookingCounts).forEach(staffName => {
-    const count = staffBookingCounts[staffName];
-    staffBookingPercentage[staffName] = (count / totalBookings) * 100;
-  });
+    Object.keys(staffBookingCounts).forEach((staffName) => {
+      const count = staffBookingCounts[staffName];
+      staffBookingPercentage[staffName] = (count / totalBookings) * 100;
+    });
 
-  Object.keys(serviceCounts).forEach(serviceName => {
-    const count = serviceCounts[serviceName];
-    servicePercentage[serviceName] = (count / totalBookings) * 100;
-  });
-} 
-else {
-  Object.keys(categoryCounts).forEach(categoryName => {
-    categoryCountsPercentage[categoryName] = 0;
-  });
+    Object.keys(serviceCounts).forEach((serviceName) => {
+      const count = serviceCounts[serviceName];
+      servicePercentage[serviceName] = (count / totalBookings) * 100;
+    });
+  } else {
+    Object.keys(categoryCounts).forEach((categoryName) => {
+      categoryCountsPercentage[categoryName] = 0;
+    });
 
-  Object.keys(staffBookingCounts).forEach(staffName => {
-    staffBookingPercentage[staffName] = 0;
-  });
+    Object.keys(staffBookingCounts).forEach((staffName) => {
+      staffBookingPercentage[staffName] = 0;
+    });
 
-  Object.keys(serviceCounts).forEach(serviceName => {
-    servicePercentage[serviceName] = 0;
-  });
-}
-
-
+    Object.keys(serviceCounts).forEach((serviceName) => {
+      servicePercentage[serviceName] = 0;
+    });
+  }
 
   const analyticsData = {
     monthlyEarnings,
@@ -306,7 +305,6 @@ else {
 
   return res.status(200).json(analyticsData);
 });
-
 
 const getAdminAnalytics = asyncHandler(async (req, res) => {
   const allBookings = await Booking.find();
@@ -322,98 +320,101 @@ const getAdminAnalytics = asyncHandler(async (req, res) => {
   let totalCheckIns = 0;
   let paymentCompletedNotCheckInAppointments = 0;
   let totalWithStaffAppointments = 0;
-   let returningClients = 0;
-   let newClients = 0;
+  let returningClients = 0;
+  let newClients = 0;
 
-   let totalPendingSales = 0;
+  let totalPendingSales = 0;
 
-   let totalPendingDiscount = 0;
+  let totalPendingDiscount = 0;
 
-   
-   
-   const uniqueUserIds = new Set();
-   const returningClientUserIds = new Set();
+  const uniqueUserIds = new Set();
+  const returningClientUserIds = new Set();
 
   allBookings?.forEach((booking) => {
     console.log(booking);
     if (!booking.isSessionExpired && booking.paymentDone) {
       totalAppointments++;
-    
-    
-   
-if(booking.user_Id)
-{
-  uniqueUserIds.add(booking.user_Id);
-    // Check for returning clients
-    if (uniqueUserIds.has(booking.user_Id)) {
-      returningClients++;
-      returningClientUserIds.add(booking.user_Id);
-    } else {
-      newClients++;
-    }
- }
 
-    if (booking.isCancel) {
-      cancelledAppointments++;
-    }
+      if (booking.user_Id) {
+        uniqueUserIds.add(booking.user_Id);
+        // Check for returning clients
+        if (uniqueUserIds.has(booking.user_Id)) {
+          returningClients++;
+          returningClientUserIds.add(booking.user_Id);
+        } else {
+          newClients++;
+        }
+      }
 
-    if (booking.paymentDone && booking.isCheckIn) {
-      completedAppointments++;
-      totalSales += booking.amount;
+      if (booking.isCancel) {
+        cancelledAppointments++;
+      }
 
-      if (booking.coupons_Id) {
-        totalDiscount += booking.discount;
+      if (booking.paymentDone && booking.isCheckIn) {
+        completedAppointments++;
+        totalSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalDiscount += booking.discount;
+        }
+      }
+
+      if (booking.paymentDone && !booking.isCheckIn) {
+        paymentCompletedNotCheckInAppointments++;
+        notCompletedAppointments++;
+        totalPendingSales += booking.amount;
+
+        if (booking.coupons_Id) {
+          totalPendingDiscount += booking.discount;
+        }
+      }
+
+      if (booking.isCheckIn) {
+        totalCheckIns++;
+      }
+      if (booking.booking_type === "auto") {
+        onlineAppointments++;
+      }
+      if (booking.salon_staff_Id) {
+        totalWithStaffAppointments++;
+      }
+
+      if (booking.booking_type === "manual") {
+        onSiteAppointments++;
+      }
+
+      if (booking.rating) {
+        totalRating += booking.rating;
       }
     }
+  });
 
-    if (booking.paymentDone && !booking.isCheckIn) {
-      paymentCompletedNotCheckInAppointments++;
-      notCompletedAppointments++;
-      totalPendingSales += booking.amount;
-
-      if (booking.coupons_Id) {
-        totalPendingDiscount += booking.discount;
-      }
-    }
-
-    if (booking.isCheckIn) {
-      totalCheckIns++;
-    }
-    if (booking.booking_type === "auto") {
-      onlineAppointments++;
-    }
-    if (booking.salon_staff_Id) {
-      totalWithStaffAppointments++;
-    }
-
-    if (booking.booking_type === "manual") {
-      onSiteAppointments++;
-    }
-
-    if (booking.rating) {
-      totalRating += booking.rating;
-    }
-  }
-}
-  );
-
-  
   const averageSale =
     totalAppointments - cancelledAppointments > 0
       ? totalSales / (totalAppointments - cancelledAppointments)
       : 0;
 
   const averageRating =
-    totalAppointments > 0 ? (totalRating > 0 ? totalRating / totalAppointments : 0) : 0;
+    totalAppointments > 0
+      ? totalRating > 0
+        ? totalRating / totalAppointments
+        : 0
+      : 0;
 
   const percentageCompletedAppointments =
-    totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (completedAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageNotCompletedAppointments =
-    totalAppointments > 0 ? (notCompletedAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (notCompletedAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageCancelledAppointments =
-    totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
+    totalAppointments > 0
+      ? (cancelledAppointments / totalAppointments) * 100
+      : 0;
 
   const percentageOnlineAppointments =
     totalAppointments > 0 ? (onlineAppointments / totalAppointments) * 100 : 0;
@@ -431,11 +432,10 @@ if(booking.user_Id)
       ? (returningClientUserIds.size / uniqueUserIds.size) * 100
       : 0;
 
-
-const percentageReturningClients =
-  uniqueUserIds.size > 0
-    ? (returningClientUserIds.size / uniqueUserIds.size) * 100
-    : 0;
+  const percentageReturningClients =
+    uniqueUserIds.size > 0
+      ? (returningClientUserIds.size / uniqueUserIds.size) * 100
+      : 0;
 
   const analyticsData = {
     totalAppointments,
@@ -462,24 +462,26 @@ const percentageReturningClients =
     clientRetention,
     returningClients,
     newClients,
-    percentageReturningClients
+    percentageReturningClients,
   };
 
   return res.status(200).json(analyticsData);
 });
 
 const getAdminData = asyncHandler(async (req, res) => {
-  const requestedYear = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+  const requestedYear = req.query.year
+    ? parseInt(req.query.year)
+    : new Date().getFullYear();
 
   const allCategories = await StoreCategories.find();
   const allStaffs = await Staffs.find();
   const allServices = await Service.find();
-  const servicesNames = allServices.map(staff => staff.name);
-  const staffsNames = allStaffs.map(staff => staff.name);
-  const categoryNames = allCategories.map(category => category.name);
+  const servicesNames = allServices.map((staff) => staff.name);
+  const staffsNames = allStaffs.map((staff) => staff.name);
+  const categoryNames = allCategories.map((category) => category.name);
   const allBookings = await Booking.find().populate({
-    path: 'service_Ids',
-    populate: { path: 'service_category_Id' }
+    path: "service_Ids",
+    populate: { path: "service_category_Id" },
   });
 
   const currentDate = new Date();
@@ -495,18 +497,17 @@ const getAdminData = asyncHandler(async (req, res) => {
   const staffBookingPercentage = {};
   const serviceCounts = {};
   const servicePercentage = {};
-  let totalBookings = 0; 
+  let totalBookings = 0;
 
-
-  categoryNames.forEach(categoryName => {
+  categoryNames.forEach((categoryName) => {
     categoryCounts[categoryName] = 0;
   });
 
-  staffsNames.forEach(staffName => {
+  staffsNames.forEach((staffName) => {
     staffBookingCounts[staffName] = 0;
   });
 
-  servicesNames.forEach(serviceName => {
+  servicesNames.forEach((serviceName) => {
     serviceCounts[serviceName] = 0;
   });
 
@@ -514,7 +515,7 @@ const getAdminData = asyncHandler(async (req, res) => {
     const bookingDate = new Date(booking.createdAt);
 
     if (booking.paymentDone && booking.isCheckIn) {
-      totalBookings++; 
+      totalBookings++;
       // Monthly Earnings
       if (bookingDate.getFullYear() === requestedYear) {
         const monthDifference = currentDate.getMonth() - bookingDate.getMonth();
@@ -541,54 +542,52 @@ const getAdminData = asyncHandler(async (req, res) => {
       });
 
       // Staff Booking Counts
-      const staffFind = await Staffs.findById(booking.salon_staff_Id.toString())
+      const staffFind = await Staffs.findById(
+        booking.salon_staff_Id.toString()
+      );
       const staffName = staffFind?.name;
       if (!staffBookingCounts[staffName]) {
         staffBookingCounts[staffName] = 0;
       }
       staffBookingCounts[staffName]++;
 
-booking.service_Ids.forEach((service) => {
-  const serviceName = service.name; 
-console.log(serviceName)
-  if (serviceCounts.hasOwnProperty(serviceName)) {
-    serviceCounts[serviceName]++;
-  }
-});
-
+      booking.service_Ids.forEach((service) => {
+        const serviceName = service.name;
+        console.log(serviceName);
+        if (serviceCounts.hasOwnProperty(serviceName)) {
+          serviceCounts[serviceName]++;
+        }
+      });
     }
   }
-if (totalBookings > 0) {
-  Object.keys(categoryCounts).forEach(categoryName => {
-    const count = categoryCounts[categoryName];
-    categoryCountsPercentage[categoryName] = (count / totalBookings) * 100;
-  });
+  if (totalBookings > 0) {
+    Object.keys(categoryCounts).forEach((categoryName) => {
+      const count = categoryCounts[categoryName];
+      categoryCountsPercentage[categoryName] = (count / totalBookings) * 100;
+    });
 
-  Object.keys(staffBookingCounts).forEach(staffName => {
-    const count = staffBookingCounts[staffName];
-    staffBookingPercentage[staffName] = (count / totalBookings) * 100;
-  });
+    Object.keys(staffBookingCounts).forEach((staffName) => {
+      const count = staffBookingCounts[staffName];
+      staffBookingPercentage[staffName] = (count / totalBookings) * 100;
+    });
 
-  Object.keys(serviceCounts).forEach(serviceName => {
-    const count = serviceCounts[serviceName];
-    servicePercentage[serviceName] = (count / totalBookings) * 100;
-  });
-} 
-else {
-  Object.keys(categoryCounts).forEach(categoryName => {
-    categoryCountsPercentage[categoryName] = 0;
-  });
+    Object.keys(serviceCounts).forEach((serviceName) => {
+      const count = serviceCounts[serviceName];
+      servicePercentage[serviceName] = (count / totalBookings) * 100;
+    });
+  } else {
+    Object.keys(categoryCounts).forEach((categoryName) => {
+      categoryCountsPercentage[categoryName] = 0;
+    });
 
-  Object.keys(staffBookingCounts).forEach(staffName => {
-    staffBookingPercentage[staffName] = 0;
-  });
+    Object.keys(staffBookingCounts).forEach((staffName) => {
+      staffBookingPercentage[staffName] = 0;
+    });
 
-  Object.keys(serviceCounts).forEach(serviceName => {
-    servicePercentage[serviceName] = 0;
-  });
-}
-
-
+    Object.keys(serviceCounts).forEach((serviceName) => {
+      servicePercentage[serviceName] = 0;
+    });
+  }
 
   const analyticsData = {
     monthlyEarnings,
@@ -605,12 +604,4 @@ else {
   return res.status(200).json(analyticsData);
 });
 
-
-
-
-
-
-
-
-
-export { getAllAnalytics ,getGraphsData,getAdminAnalytics,getAdminData };
+export { getAllAnalytics, getGraphsData, getAdminAnalytics, getAdminData };
