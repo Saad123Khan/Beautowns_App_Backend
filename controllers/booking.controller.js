@@ -639,7 +639,8 @@ const getUserBooking = asyncHandler(async (req, res) => {
     user_Id: req.params.id,
     isDeleted: false,
     isSessionExpired: false,
-  }).populate("service_Ids store_Id cancelledBy salon_staff_Id");
+  }).populate("service_Ids salon_staff_Id store_Id cancelledBy");
+
 
   if (booking?.length > 0) {
     return res.status(200).send({ status: true, booking: booking });
