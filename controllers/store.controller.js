@@ -987,8 +987,8 @@ const getAllStore = asyncHandler(async (req, res) => {
   
   
   const user_Id = req.query.user_Id;
-
-  if(user_Id != undefined)
+console.log(user_Id,"user_Id")
+  if(user_Id && user_Id != "undefined")
   {
   if (!user_Id) {
     return res
