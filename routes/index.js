@@ -77,7 +77,6 @@ const routes = (app) => {
   // Admin Notification
   app.use("/api/admin/notification", adminNotificationRoute);
 
-
   // Admin store cateogry
   app.use("/api/admin/store-category", adminStoreCategoryRoute);
 

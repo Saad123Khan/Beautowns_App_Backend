@@ -3,6 +3,7 @@ import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import asyncHandler from "#middlewares/asyncHandler";
 import { LIVEPATH } from "#constant/constant";
+import { email } from "#utils/email";
 import fs from 'fs';
 
 const getAllStoreMarketing = asyncHandler(async (req, res) => {
@@ -92,7 +93,9 @@ fs.writeFileSync("./uploads/" + imageName, imageBuffer, 'utf8');
       .send({ status: false, message: "Invalid target type" });
   }
 
-  // console.log(users, "users");
+  // email(verification?.email, OTP);
+  
+  console.log(users, "users");
 
   const market = await new Marketing(req.body).save();
 
