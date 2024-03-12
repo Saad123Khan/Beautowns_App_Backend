@@ -11,6 +11,7 @@ export const email =async(email,OTP)=>{
     email: email,
     otp:OTP
   };
+  
   const htmlText = await ejs.renderFile(
     `${__dirname}/template/html.ejs`,
     data
@@ -114,4 +115,43 @@ const sendNotificationEmail = async (email,notification) => {
   });
 };
 
-export {sendNotificationEmail}
+const sendMarketingEmail = async (email,imageUrl) => {
+  
+  const data = {
+    email: email,
+    imageUrl: imageUrl
+  };
+  
+  const htmlText = await ejs.renderFile(
+    `${__dirname}/template/marketing.ejs`,
+    data
+  );
+
+  
+  const mailOptions = {   
+    user: "sk5908774@gmail.com",   
+    to: email,
+    subject: "Salon marketing",
+    html:htmlText
+  
+  };
+
+
+  let transport = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "sk5908774@gmail.com",
+      pass: "otwduudpsiaonjaz",
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+  transport.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    }
+  });
+};
+
+export {sendNotificationEmail ,sendMarketingEmail}

@@ -3,8 +3,8 @@ import { Store } from "#models/store_model";
 import { User } from "#models/user_model";
 import asyncHandler from "#middlewares/asyncHandler";
 import { LIVEPATH } from "#constant/constant";
-import { email } from "#utils/email";
-import fs from 'fs';
+import { sendMarketingEmail } from "#utils/email";
+import fs from "fs";
 
 const getAllStoreMarketing = asyncHandler(async (req, res) => {
   const isStoreExist = await Store.findOne({
@@ -36,31 +36,30 @@ const getAllStoreMarketing = asyncHandler(async (req, res) => {
 });
 
 const sendMarketing = asyncHandler(async (req, res) => {
-
   // console.log(req.files,"REQ FILE")
-  // const image = req?.file?.filename;
-  
-  if (req.body.image == "null") {
-    return res
-      .status(400)
-      .send({ status: false, message: "Plz capture or generate a signature first!" });
-  }
-  var matches = req.body.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
-  response = {};
+  const image = req?.file?.filename;
 
-response.type = matches[1];
-response.data = new Buffer.from(matches[2], 'base64');
-let decodedImg = response;
-let imageBuffer = decodedImg.data;
+    if (req.body.image == "null") {
+      return res
+        .status(400)
+        .send({ status: false, message: "Plz capture or generate a signature first!" });
+    }
+    var matches = req.body.image.match(/^data:([A-Za-z-+/]+);base64,(.+)$/),
+    response = {};
 
-const timestamp = Date.now();
-const randomValue = Math.floor(Math.random() * 1000);
-const imageName = `image-${timestamp}-${randomValue}.png`;
+  response.type = matches[1];
+  response.data = new Buffer.from(matches[2], 'base64');
+  let decodedImg = response;
+  let imageBuffer = decodedImg.data;
 
-fs.writeFileSync("./uploads/" + imageName, imageBuffer, 'utf8');
+  const timestamp = Date.now();
+  const randomValue = Math.floor(Math.random() * 1000);
+  const imageName = `image-${timestamp}-${randomValue}.png`;
 
-  req.body.image = `${LIVEPATH}/uploads/${imageName}`;
-  
+  fs.writeFileSync("./uploads/" + imageName, imageBuffer, 'utf8');
+
+    req.body.image = `${LIVEPATH}/uploads/${imageName}`;
+
   const { error } = validateMarketing(req.body);
   if (error) {
     return res
@@ -93,9 +92,11 @@ fs.writeFileSync("./uploads/" + imageName, imageBuffer, 'utf8');
       .send({ status: false, message: "Invalid target type" });
   }
 
-  // email(verification?.email, OTP);
-  
-  console.log(users, "users");
+  // const imageUrl = "https://api.beautowns.com/uploads/image-1710156034814-314.png"
+
+  users?.map(async (user) => await sendMarketingEmail(user?.email, req.body.image));
+  // email(userEmails[0], "0000");
+  // console.log(userEmails, "users");
 
   const market = await new Marketing(req.body).save();
 

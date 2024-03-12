@@ -28,7 +28,7 @@ function validateMarketing(market) {
       otherwise: Joi.array().optional().allow(null),
     }),
     store_Id: Joi.string().required(),
-    image: Joi.string().required(),
+    // image: Joi.string().required(),
   });
 
   return schema.validate(market);
